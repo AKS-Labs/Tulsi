@@ -67,6 +67,7 @@ import com.aks_labs.tulsi.MainActivity.Companion.mainViewModel
 import com.aks_labs.tulsi.R
 import com.aks_labs.tulsi.compose.FolderIsEmpty
 import com.aks_labs.tulsi.compose.SearchTextField
+import com.aks_labs.tulsi.compose.components.SearchBar
 import com.aks_labs.tulsi.compose.dialogs.getDefaultShapeSpacerForPosition
 import com.aks_labs.tulsi.datastore.AlbumInfo
 import com.aks_labs.tulsi.datastore.AlbumsList
@@ -169,13 +170,12 @@ fun MoveCopyAlbumListView(
                 modifier = Modifier
                     .fillMaxWidth(1f)
             ) {
-                SearchTextField(
-                    searchedForText = searchedForText,
+                SearchBar(
+                    query = searchedForText,
                     placeholder = "Search for an album's name",
                     modifier = Modifier
                         .fillMaxWidth(1f)
-                        .height(56.dp)
-                        .padding(16.dp, 0.dp),
+                        .padding(horizontal = 8.dp),
                     onClear = {
                         searchedForText.value = ""
                     },

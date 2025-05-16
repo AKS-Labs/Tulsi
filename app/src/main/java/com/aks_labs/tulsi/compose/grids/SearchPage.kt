@@ -40,6 +40,7 @@ import com.aks_labs.tulsi.LocalNavController
 import com.aks_labs.tulsi.MainActivity.Companion.mainViewModel
 import com.aks_labs.tulsi.compose.SearchTextField
 import com.aks_labs.tulsi.compose.ViewProperties
+import com.aks_labs.tulsi.compose.components.SearchBar
 import com.aks_labs.tulsi.datastore.AlbumInfo
 import com.aks_labs.tulsi.datastore.BottomBarTab
 import com.aks_labs.tulsi.datastore.DefaultTabs
@@ -153,13 +154,12 @@ fun SearchPage(
             }
             val placeholder = remember { placeholdersList.random() }
 
-            SearchTextField(
-                searchedForText = searchedForText,
+            SearchBar(
+                query = searchedForText,
                 placeholder = placeholder,
                 modifier = Modifier
                     .fillMaxWidth(1f)
-                    .height(56.dp)
-                    .padding(8.dp, 0.dp),
+                    .padding(horizontal = 8.dp),
                 onSearch = {
                     if (!showLoadingSpinner) {
                         searchNow = true
