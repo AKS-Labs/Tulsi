@@ -45,14 +45,14 @@ fun SearchBar(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 6.dp, vertical = 0.dp)
             .shadow(
                 elevation = 6.dp,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(18.dp),
                 spotColor = Color.Gray.copy(alpha = 0.3f),
                 ambientColor = Color.Gray.copy(alpha = 0.2f)
             ),
-        shape = RoundedCornerShape(12.dp), // Smaller corner radius for more rectangular shape
+        shape = RoundedCornerShape(18.dp), // Smaller corner radius for more rectangular shape
         color = MaterialTheme.colorScheme.surfaceContainer // Use the theme's surface container color
     ) {
         TextField(
