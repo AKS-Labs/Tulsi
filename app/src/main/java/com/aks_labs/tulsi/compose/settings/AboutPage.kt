@@ -55,10 +55,15 @@ private const val TAG = "ABOUT_PAGE"
 fun AboutPage(popBackStack: () -> Unit) {
     val context = LocalContext.current
     val showVersionInfoDialog = remember { mutableStateOf(false) }
+    val showOriginalRepoDialog = remember { mutableStateOf(false) }
 
     VersionInfoDialog(
         showDialog = showVersionInfoDialog,
         changelog = stringResource(id = R.string.changelog)
+    )
+
+    OriginalRepositoryDialog(
+        showDialog = showOriginalRepoDialog
     )
 
     Column(
@@ -196,9 +201,18 @@ fun AboutPage(popBackStack: () -> Unit) {
                 title = "Version Info",
                 summary = versionName,
                 iconResID = R.drawable.info,
-                position = RowPosition.Bottom,
+                position = RowPosition.Middle,
             ) {
                 showVersionInfoDialog.value = true
+            }
+
+            PreferencesRow(
+                title = "Original Repository",
+                summary = "Based on LavenderPhotos by kaii-lb",
+                iconResID = R.drawable.code_blocks,
+                position = RowPosition.Bottom
+            ) {
+                showOriginalRepoDialog.value = true
             }
         }
     }
@@ -259,5 +273,75 @@ fun VersionInfoDialog(
     }
 }
 
+@Composable
+fun OriginalRepositoryDialog(
+    showDialog: MutableState<Boolean>
+) {
+    if (showDialog.value) {
+        AlertDialog(
+            onDismissRequest = {
+                showDialog.value = false
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDialog.value = false
+                    }
+                ) {
+                    Text(
+                        text = "Close",
+                        fontSize = TextUnit(14f, TextUnitType.Sp),
+                    )
+                }
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.SpaceEvenly,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Original Repository",
+                        fontSize = TextUnit(18f, TextUnitType.Sp),
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
 
+                    Spacer(modifier = Modifier.height(16.dp))
 
+                    Text(
+                        text = "Tulsi is a fork of LavenderPhotos that dares to be different. While LavenderPhotos is already a fantastic gallery app, Tulsi adds that extra bit of flair and functionality that makes your photo browsing experience just chef's kiss 👌",
+                        fontSize = TextUnit(14f, TextUnitType.Sp),
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "Original Author: kaii-lb",
+                        fontSize = TextUnit(14f, TextUnitType.Sp),
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    val context = LocalContext.current
+
+                    Button(
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                setData("https://github.com/kaii-lb/LavenderPhotos".toUri())
+                            }
+                            context.startActivity(intent)
+                        }
+                    ) {
+                        Text(
+                            text = "Visit Original Repository",
+                            fontSize = TextUnit(14f, TextUnitType.Sp),
+                        )
+                    }
+                }
+            }
+        )
+    }
+}
