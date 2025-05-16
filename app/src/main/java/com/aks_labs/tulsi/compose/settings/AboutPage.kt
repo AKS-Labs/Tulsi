@@ -100,13 +100,14 @@ fun AboutPage(popBackStack: () -> Unit) {
             }
 
             GlideImage(
-                model = R.drawable.lavender,
+                model = R.drawable.tulsi,
                 contentDescription = "app icon",
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground),
+                // Removed color filter to show the PNG image with its original colors
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .size(128.dp)
             )
+
 
             Text(
                 text = "Tulsi Photos",
@@ -131,12 +132,12 @@ fun AboutPage(popBackStack: () -> Unit) {
         ) {
             PreferencesRow(
                 title = "Developer",
-                summary = "kaii-lb",
+                summary = "AKS-Labs",
                 iconResID = R.drawable.code,
                 position = RowPosition.Top
             ) {
                 val intent = Intent(Intent.ACTION_VIEW).apply {
-                    setData("https://github.com/kaii-lb".toUri())
+                    setData("https://github.com/AKS-Labs/tulsi".toUri())
                 }
 
                 context.startActivity(intent)

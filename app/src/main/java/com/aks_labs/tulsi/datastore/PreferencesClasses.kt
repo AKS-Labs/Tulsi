@@ -250,7 +250,7 @@ class SettingsUserImpl(private val context: Context, private val viewModelScope:
 
     fun getUsername(): Flow<String?> =
         context.datastore.data.map {
-            it[usernameKey] ?: "No Username Found"
+            it[usernameKey] ?: "Tulsi"
         }
 
     fun setUsername(name: String) = viewModelScope.launch {
