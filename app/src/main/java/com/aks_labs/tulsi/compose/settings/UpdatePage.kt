@@ -203,10 +203,10 @@ private fun TopBar() {
 
 			val htmlString = remember {
 				"""
-					<p>This updater downloads apks from <a href="https://github.com/kaii-lb/TulsiPhotos/releases">GitHub Releases</a> which
+					<p>This updater downloads apks from <a href="https://github.com/AKS-Labs/Tulsi/releases">GitHub Releases</a> which
 						means that they don't go through the additional screening and testing performed at IzzyOnDroid, F-Droid or elsewhere.
 
-						<br><br>The builds hosted on GitHub are always signed, checked, and verified by the developer (kaii-lb), but it is up to you whether you want to use them or not.
+						<br><br>The builds hosted on GitHub are always signed, checked, and verified by the developer (AKS-Labs), but it is up to you whether you want to use them or not.
 
 						<br><br>Tulsi Photos never does auto-updates, and only ever updates with explicit user consent.
 					</p>
