@@ -92,4 +92,4 @@ Tulsi stands on the shoulders of the excellent [LavenderPhotos](https://github.c
 
 ---
 
-*"Good design is obvious. Great design is transparent." — Joe Sparano*
+*"Good design is obvious. Great design is transparent." *
