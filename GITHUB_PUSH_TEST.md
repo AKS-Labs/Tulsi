@@ -1,4 +1,4 @@
-# GitHub Push Test
+# GitHub Push Test - New Branch
 
 This file is created to test if GitHub is properly showing the latest commits.
 
