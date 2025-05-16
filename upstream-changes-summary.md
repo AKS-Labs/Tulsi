@@ -1,4 +1,4 @@
-# Upstream Changes Summary (v0.9.6-beta) - Updated
+# Upstream Changes Summary (v0.9.6-beta) - Final Version
 
 ## Changes from LavenderPhotos Repository
 
