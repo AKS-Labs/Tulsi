@@ -1,4 +1,8 @@
-# 📸 Tulsi Photos
+<p align="center">
+  <img src="assets/images/tulsi.png" alt="Tulsi App Icon" width="180"/>
+</p>
+
+<h1 align="center">📸 Tulsi Photos</h1>
 
 <img src="assets/images/tulsi.png" alt="Tulsi App Icon" width="120" align="right"/>
 
