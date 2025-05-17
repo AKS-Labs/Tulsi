@@ -135,10 +135,10 @@ fun AboutPage(popBackStack: () -> Unit) {
                 Text(
                     text = " Photos",
                     textAlign = TextAlign.Center,
-                    fontSize = TextUnit(24f, TextUnitType.Sp),
+                    fontSize = TextUnit(23f, TextUnitType.Sp),
                     fontFamily = PhotosTitleFont,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = TextUnit(0.25f, TextUnitType.Sp),
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = TextUnit(0.5f, TextUnitType.Sp),
                     style = LocalTextStyle.current.copy(
                         color = MaterialTheme.colorScheme.onBackground
                     )

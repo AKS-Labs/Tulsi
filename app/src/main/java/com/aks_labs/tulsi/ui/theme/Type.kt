@@ -17,9 +17,15 @@ val MontserratFont = FontFamily(
     Font(R.font.montserrat_regular, FontWeight.Normal)
 )
 
+// System font families
+val SansSerifCondensedFont = FontFamily.SansSerifCondensed
+val SerifFont = FontFamily.Serif
+val CursiveFont = FontFamily.Cursive
+val MonospaceFont = FontFamily.Monospace
+
 // App title font families
 val TulsiTitleFont = PacificoFont
-val PhotosTitleFont = MontserratFont
+val PhotosTitleFont = SansSerifCondensedFont // Changed from MontserratFont to SansSerifCondensedFont
 
 // Set of Material typography styles to start with
 val Typography = Typography(
