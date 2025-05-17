@@ -34,4 +34,4 @@ TULSI ENHANCEMENTS:
 
 Privacy Policy: No data is collected or shared. All your photos remain on your device.
 
-For source code access or questions: source-code@aks-labs.com
+For source code access or questions: akslabs.tech@gmail.com

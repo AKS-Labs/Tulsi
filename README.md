@@ -113,7 +113,7 @@ Tulsi Photos is open source software licensed under the GNU General Public Licen
 
 ### How to Access the Source Code:
 - **GitHub Repository**: The complete source code is available at [https://github.com/AKS-Labs/Tulsi](https://github.com/AKS-Labs/Tulsi)
-- **Direct Request**: You can request the source code by emailing [source-code@aks-labs.com](mailto:source-code@aks-labs.com)
+- **Direct Request**: You can request the source code by emailing [akslabs.tech@gmail.com](mailto:akslabs.tech@gmail.com)
 - **In-App Access**: The app includes an option to view the source code repository in the About section
 
 ### Building from Source:

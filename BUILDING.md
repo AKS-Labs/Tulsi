@@ -42,4 +42,4 @@ If you encounter any issues during the build process:
 
 ## Contact
 
-If you need assistance building from source, please email [source-code@aks-labs.com](mailto:source-code@aks-labs.com).
+If you need assistance building from source, please email [akslabs.tech@gmail.com](mailto:akslabs.tech@gmail.com).
