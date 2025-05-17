@@ -15,6 +15,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -276,6 +277,7 @@ fun AlbumsGridView(
                     4
                 }
             ),
+            contentPadding = PaddingValues(bottom = 120.dp), // Add bottom padding to ensure content is visible above the floating bottom bar
             modifier = Modifier
                 .fillMaxSize(1f)
                 .pullToRefresh(
