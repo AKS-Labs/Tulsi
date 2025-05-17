@@ -33,6 +33,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
@@ -122,23 +123,25 @@ fun AboutPage(popBackStack: () -> Unit) {
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Tulsi",
-                    textAlign = TextAlign.Center,
-                    fontSize = TextUnit(26f, TextUnitType.Sp),
+                    text = " Tulsi ",
                     fontFamily = TulsiTitleFont,
+                    fontStyle = FontStyle.Italic,
                     fontWeight = FontWeight.Normal,
-                    letterSpacing = TextUnit(0.5f, TextUnitType.Sp),
+                    fontSize = TextUnit(35f, TextUnitType.Sp),
+                    letterSpacing = TextUnit(0.9f, TextUnitType.Sp),
+                    textAlign = TextAlign.Center,
                     style = LocalTextStyle.current.copy(
                         color = MaterialTheme.colorScheme.onBackground
                     )
                 )
                 Text(
-                    text = " Photos",
+                    text = "Gallery",
+                    fontFamily = TulsiTitleFont,
+                    fontStyle = FontStyle.Italic,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = TextUnit(31f, TextUnitType.Sp),
+                    letterSpacing = TextUnit(1.3f, TextUnitType.Sp),
                     textAlign = TextAlign.Center,
-                    fontSize = TextUnit(23f, TextUnitType.Sp),
-                    fontFamily = PhotosTitleFont,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = TextUnit(0.5f, TextUnitType.Sp),
                     style = LocalTextStyle.current.copy(
                         color = MaterialTheme.colorScheme.onBackground
                     )

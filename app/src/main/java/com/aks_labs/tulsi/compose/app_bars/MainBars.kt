@@ -10,6 +10,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -69,6 +70,7 @@ import com.aks_labs.tulsi.helpers.GetPermissionAndRun
 import com.aks_labs.tulsi.helpers.setTrashedOnPhotoList
 import com.aks_labs.tulsi.mediastore.MediaStoreData
 import com.aks_labs.tulsi.mediastore.MediaType
+import com.aks_labs.tulsi.ui.theme.PacificoFont
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -86,19 +88,21 @@ fun MainAppTopBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = " Tulsi\uD83C\uDF3F ",
+                    text = " Tulsi ",
                     fontFamily = TulsiTitleFont,
+                    fontStyle = FontStyle.Italic,
                     fontWeight = FontWeight.Normal,
-                    fontSize = TextUnit(24f, TextUnitType.Sp),
-                    letterSpacing = TextUnit(0.5f, TextUnitType.Sp),
+                    fontSize = TextUnit(34f, TextUnitType.Sp),
+                    letterSpacing = TextUnit(0.9f, TextUnitType.Sp),
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = "Photos",
-                    fontFamily = PhotosTitleFont,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = TextUnit(22f, TextUnitType.Sp),
-                    letterSpacing = TextUnit(0.25f, TextUnitType.Sp),
+                    text = "Gallery",
+                    fontFamily = TulsiTitleFont,
+                    fontStyle = FontStyle.Italic,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = TextUnit(28f, TextUnitType.Sp),
+                    letterSpacing = TextUnit(1.3f, TextUnitType.Sp),
                     textAlign = TextAlign.Center
                 )
             }
