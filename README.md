@@ -8,7 +8,7 @@
 
 > *Because your photos deserve a gallery app with personality!*
 
-Tulsi is a fork of [LavenderPhotos](https://github.com/KaustubhPatange/LavenderPhotos) that dares to be different. While LavenderPhotos is already a fantastic gallery app, Tulsi adds that extra bit of flair and functionality that makes your photo browsing experience just *chef's kiss* 👌
+Tulsi is a fork of [LavenderPhotos](https://github.com/kaii-lb/LavenderPhotos) that dares to be different. While LavenderPhotos is already a fantastic gallery app, Tulsi adds that extra bit of flair and functionality that makes your photo browsing experience just *chef's kiss* 👌
 
 ## 🌟 Why Tulsi Exists
 
@@ -92,10 +92,50 @@ If you're tired of gallery apps that prioritize simplicity over functionality or
 
 Tulsi is maintained with love and an obsessive attention to detail. Because life's too short for boring gallery apps! 📱✨
 
+## License
+
+Tulsi Photos is licensed under the [GNU General Public License v3.0](LICENSE.md).
+
+As a fork of [LavenderPhotos](https://github.com/kaii-lb/LavenderPhotos), Tulsi Photos maintains the same GPLv3 license. This means:
+
+- You are free to use, modify, and distribute this software
+- If you distribute this software or derivatives, you must:
+  - Make the source code available
+  - Include the original copyright notices
+  - License your modifications under GPLv3
+  - Clearly mark what changes you have made
+
+For the full license text, see the [LICENSE.md](LICENSE.md) file.
+
+## Source Code Availability
+
+Tulsi Photos is open source software licensed under the GNU General Public License v3.0.
+
+### How to Access the Source Code:
+- **GitHub Repository**: The complete source code is available at [https://github.com/AKS-Labs/Tulsi](https://github.com/AKS-Labs/Tulsi)
+- **Direct Request**: You can request the source code by emailing [source-code@aks-labs.com](mailto:source-code@aks-labs.com)
+- **In-App Access**: The app includes an option to view the source code repository in the About section
+
+### Building from Source:
+For detailed build instructions, see the [BUILDING.md](BUILDING.md) file.
+
 ## 🙏 Acknowledgments
 
-Tulsi stands on the shoulders of the excellent [LavenderPhotos](https://github.com/KaustubhPatange/LavenderPhotos) project. All core functionality credit goes to the original developers. Tulsi simply adds a personal touch to an already fantastic foundation.
+Tulsi Photos stands on the shoulders of the excellent [LavenderPhotos](https://github.com/kaii-lb/LavenderPhotos) project created by [kaii-lb](https://github.com/kaii-lb). All core functionality credit goes to the original developers.
+
+Tulsi Photos is a fork that adds additional features and UI enhancements while respecting the original project's GPLv3 license. We are grateful to the original author for creating such a fantastic foundation.
+
+### Third-Party Libraries
+
+Tulsi Photos uses several open-source libraries:
+
+- [Glide](https://github.com/bumptech/glide) - Image loading and caching
+- [Room](https://developer.android.com/jetpack/androidx/releases/room) - Database management
+- [Jetpack Compose](https://developer.android.com/jetpack/compose) - UI framework
+- [Material Components](https://github.com/material-components/material-components-android) - UI components
+
+For a complete list of dependencies, see the [app/build.gradle.kts](app/build.gradle.kts) file.
 
 ---
 
-*"Good design is obvious. Great design is transparent." *
+*"Good design is obvious. Great design is transparent."*

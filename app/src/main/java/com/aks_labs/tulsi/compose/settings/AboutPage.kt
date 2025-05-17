@@ -207,6 +207,18 @@ fun AboutPage(popBackStack: () -> Unit) {
             }
 
             PreferencesRow(
+                title = "Source Code",
+                summary = "View or download the complete source code",
+                iconResID = R.drawable.code_blocks,
+                position = RowPosition.Middle
+            ) {
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    setData("https://github.com/AKS-Labs/Tulsi".toUri())
+                }
+                context.startActivity(intent)
+            }
+
+            PreferencesRow(
                 title = "Original Repository",
                 summary = "Based on LavenderPhotos by kaii-lb",
                 iconResID = R.drawable.code_blocks,
@@ -300,7 +312,7 @@ fun OriginalRepositoryDialog(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Original Repository",
+                        text = "Original Project",
                         fontSize = TextUnit(18f, TextUnitType.Sp),
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
@@ -309,7 +321,7 @@ fun OriginalRepositoryDialog(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "Tulsi is a fork of LavenderPhotos that dares to be different. While LavenderPhotos is already a fantastic gallery app, Tulsi adds that extra bit of flair and functionality that makes your photo browsing experience just chef's kiss 👌",
+                        text = "Tulsi is a fork of LavenderPhotos, an open source photo gallery app licensed under the GNU General Public License v3.0.",
                         fontSize = TextUnit(14f, TextUnitType.Sp),
                         textAlign = TextAlign.Center
                     )
@@ -327,19 +339,49 @@ fun OriginalRepositoryDialog(
 
                     val context = LocalContext.current
 
-                    Button(
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW).apply {
-                                setData("https://github.com/kaii-lb/LavenderPhotos".toUri())
-                            }
-                            context.startActivity(intent)
-                        }
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = "Visit Original Repository",
-                            fontSize = TextUnit(14f, TextUnitType.Sp),
-                        )
+                        Button(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_VIEW).apply {
+                                    setData("https://github.com/kaii-lb/LavenderPhotos".toUri())
+                                }
+                                context.startActivity(intent)
+                            }
+                        ) {
+                            Text(
+                                text = "Original Repository",
+                                fontSize = TextUnit(14f, TextUnitType.Sp),
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Button(
+                            onClick = {
+                                val intent = Intent(Intent.ACTION_VIEW).apply {
+                                    setData("https://github.com/AKS-Labs/Tulsi".toUri())
+                                }
+                                context.startActivity(intent)
+                            }
+                        ) {
+                            Text(
+                                text = "Tulsi Source Code",
+                                fontSize = TextUnit(14f, TextUnitType.Sp),
+                            )
+                        }
                     }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "License: GNU General Public License v3.0",
+                        fontSize = TextUnit(14f, TextUnitType.Sp),
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         )
