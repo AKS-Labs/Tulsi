@@ -49,9 +49,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
+import com.aks_labs.tulsi.ui.theme.PhotosTitleFont
+import com.aks_labs.tulsi.ui.theme.TulsiTitleFont
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aks_labs.tulsi.MainActivity.Companion.mainViewModel
 import com.aks_labs.tulsi.R
@@ -80,16 +83,24 @@ fun MainAppTopBar(
     DualFunctionTopAppBar(
         alternated = alternate,
         title = {
-            Row {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = " Tulsi\uD83C\uDF3F ",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = TextUnit(22f, TextUnitType.Sp)
+                    fontFamily = TulsiTitleFont,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = TextUnit(24f, TextUnitType.Sp),
+                    letterSpacing = TextUnit(0.5f, TextUnitType.Sp),
+                    textAlign = TextAlign.Center
                 )
                 Text(
                     text = "Photos",
-                    fontWeight = FontWeight.Normal,
-                    fontSize = TextUnit(22f, TextUnitType.Sp)
+                    fontFamily = PhotosTitleFont,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = TextUnit(22f, TextUnitType.Sp),
+                    letterSpacing = TextUnit(0.25f, TextUnitType.Sp),
+                    textAlign = TextAlign.Center
                 )
             }
         },

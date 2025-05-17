@@ -48,6 +48,8 @@ import com.aks_labs.tulsi.compose.dialogs.ExplanationDialog
 import com.aks_labs.tulsi.compose.dialogs.FeatureNotAvailableDialog
 import com.aks_labs.tulsi.helpers.MultiScreenViewType
 import com.aks_labs.tulsi.helpers.RowPosition
+import com.aks_labs.tulsi.ui.theme.PhotosTitleFont
+import com.aks_labs.tulsi.ui.theme.TulsiTitleFont
 
 private const val TAG = "ABOUT_PAGE"
 
@@ -115,15 +117,33 @@ fun AboutPage(popBackStack: () -> Unit) {
             )
 
 
-            Text(
-                text = "Tulsi Photos",
-                textAlign = TextAlign.Center,
-                fontSize = TextUnit(22f, TextUnitType.Sp),
-                fontWeight = FontWeight.Bold,
-                style = LocalTextStyle.current.copy(
-                    color = MaterialTheme.colorScheme.onBackground
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Tulsi",
+                    textAlign = TextAlign.Center,
+                    fontSize = TextUnit(26f, TextUnitType.Sp),
+                    fontFamily = TulsiTitleFont,
+                    fontWeight = FontWeight.Normal,
+                    letterSpacing = TextUnit(0.5f, TextUnitType.Sp),
+                    style = LocalTextStyle.current.copy(
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 )
-            )
+                Text(
+                    text = " Photos",
+                    textAlign = TextAlign.Center,
+                    fontSize = TextUnit(24f, TextUnitType.Sp),
+                    fontFamily = PhotosTitleFont,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = TextUnit(0.25f, TextUnitType.Sp),
+                    style = LocalTextStyle.current.copy(
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
