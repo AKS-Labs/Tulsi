@@ -6,6 +6,8 @@ import android.hardware.biometrics.BiometricPrompt
 import android.net.Uri
 import android.os.CancellationSignal
 import android.util.Log
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -443,8 +446,8 @@ fun LockedFolderEntryView(
                         context.mainExecutor,
                         promptCallback
                     )
-                },
-                enabled = canOpenSecureFolder
+                },shape = RoundedCornerShape(16.dp),
+                enabled = canOpenSecureFolder,
             ) {
                 Text(
                     text = "Unlock Folder",
@@ -455,7 +458,7 @@ fun LockedFolderEntryView(
             Button(
                 onClick = {
                     showHelpDialog.value = true
-                },
+                },shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
                     contentColor = MaterialTheme.colorScheme.onSurface

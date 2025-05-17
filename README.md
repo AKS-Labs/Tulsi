@@ -1,5 +1,7 @@
 # 📸 Tulsi Photos
 
+<img src="assets/images/tulsi.png" alt="Tulsi App Icon" width="120" align="right"/>
+
 > *Because your photos deserve a gallery app with personality!*
 
 Tulsi is a fork of [LavenderPhotos](https://github.com/KaustubhPatange/LavenderPhotos) that dares to be different. While LavenderPhotos is already a fantastic gallery app, Tulsi adds that extra bit of flair and functionality that makes your photo browsing experience just *chef's kiss* 👌

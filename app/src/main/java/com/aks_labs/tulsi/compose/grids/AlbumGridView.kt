@@ -533,7 +533,7 @@ private fun CategoryList(
         modifier = Modifier
             .fillMaxWidth(1f)
             .wrapContentHeight()
-            .padding(8.dp)
+            .padding(12.dp)
             .background(MaterialTheme.colorScheme.background),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly
@@ -542,6 +542,7 @@ private fun CategoryList(
             onClick = {
                 navigateToFavourites()
             },
+            shape = RoundedCornerShape(30),
             modifier = Modifier
                 .weight(1f)
                 .height(48.dp)
@@ -576,12 +577,13 @@ private fun CategoryList(
             }
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(18.dp))
 
         OutlinedButton(
             onClick = {
                 navigateToTrash()
             },
+            shape = RoundedCornerShape(30),
             modifier = Modifier
                 .weight(1f)
                 .height(48.dp)
