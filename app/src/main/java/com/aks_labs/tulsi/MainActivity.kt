@@ -128,7 +128,7 @@ import com.aks_labs.tulsi.datastore.Debugging
 import com.aks_labs.tulsi.datastore.DefaultTabs
 import com.aks_labs.tulsi.datastore.Editing
 import com.aks_labs.tulsi.datastore.LookAndFeel
-import com.aks_labs.tulsi.datastore.MainPhotosView
+import com.aks_labs.tulsi.datastore.MainGalleryView
 import com.aks_labs.tulsi.datastore.PhotoGrid
 import com.aks_labs.tulsi.datastore.Versions
 import com.aks_labs.tulsi.helpers.BottomBarTabSaver
@@ -140,14 +140,14 @@ import com.aks_labs.tulsi.helpers.Screens
 import com.aks_labs.tulsi.helpers.appStorageDir
 import com.aks_labs.tulsi.mediastore.MediaStoreData
 import com.aks_labs.tulsi.mediastore.MediaType
-import com.aks_labs.tulsi.models.multi_album.groupPhotosBy
+import com.aks_labs.tulsi.models.multi_album.groupGalleryBy
 import com.aks_labs.tulsi.models.custom_album.CustomAlbumViewModel
 import com.aks_labs.tulsi.models.custom_album.CustomAlbumViewModelFactory
 import com.aks_labs.tulsi.models.main_activity.MainViewModel
 import com.aks_labs.tulsi.models.main_activity.MainViewModelFactory
 import com.aks_labs.tulsi.models.multi_album.MultiAlbumViewModel
 import com.aks_labs.tulsi.models.multi_album.MultiAlbumViewModelFactory
-import com.aks_labs.tulsi.ui.theme.PhotosTheme
+import com.aks_labs.tulsi.ui.theme.GalleryTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.reflect.typeOf
@@ -205,7 +205,7 @@ class MainActivity : ComponentActivity() {
                     initialValue = initial
                 )
 
-            PhotosTheme(
+            GalleryTheme(
                 darkTheme = followDarkTheme,
                 dynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
             ) {
@@ -279,7 +279,7 @@ class MainActivity : ComponentActivity() {
 
 //        mainViewModel.settings.AlbumsList.addToAlbumsList("DCIM/Camera")
 
-        val albumsList by mainViewModel.settings.MainPhotosView.getAlbums()
+        val albumsList by mainViewModel.settings.MainGalleryView.getAlbums()
             .collectAsStateWithLifecycle(initialValue = emptyList())
         val currentSortMode by mainViewModel.settings.PhotoGrid.getSortMode()
             .collectAsStateWithLifecycle(initialValue = MediaItemSortMode.DateTaken)
@@ -302,13 +302,13 @@ class MainActivity : ComponentActivity() {
             )
         )
 
-        // update main photos view albums list
+        // update main Gallery view albums list
         LaunchedEffect(albumsList) {
             if (navControllerLocal.currentBackStackEntry?.destination?.route != MultiScreenViewType.MainScreen.name
                 || multiAlbumViewModel.albumInfo.paths.toSet() == albumsList
             ) return@LaunchedEffect
 
-            Log.d(TAG, "Refreshing main photos view")
+            Log.d(TAG, "Refreshing main Gallery view")
             Log.d(TAG, "In view model: ${multiAlbumViewModel.albumInfo.paths} new: $albumsList")
             multiAlbumViewModel.reinitDataSource(
                 context = context,
@@ -328,7 +328,7 @@ class MainActivity : ComponentActivity() {
             val currentMedia = multiAlbumViewModel.mediaFlow.value
             val filteredMedia = currentMedia.filter { it.type != MediaType.Section }
             if (filteredMedia.isNotEmpty()) {
-                val regroupedMedia = groupPhotosBy(filteredMedia, multiAlbumViewModel.sortBy, isGridView)
+                val regroupedMedia = groupGalleryBy(filteredMedia, multiAlbumViewModel.sortBy, isGridView)
                 multiAlbumViewModel.setGroupedMedia(regroupedMedia)
             }
 
@@ -821,39 +821,6 @@ class MainActivity : ComponentActivity() {
         }
 
         val coroutineScope = rememberCoroutineScope()
-        val checkForUpdatesOnStartup by mainViewModel.settings.Versions.getCheckUpdatesOnStartup()
-            .collectAsStateWithLifecycle(initialValue = false)
-
-        // so it only checks once
-        LaunchedEffect(checkForUpdatesOnStartup) {
-            if (checkForUpdatesOnStartup) {
-                mainViewModel.updater.refresh { state ->
-                    Log.d(TAG, "Checking for app updates...")
-
-                    when (state) {
-                        CheckUpdateState.Succeeded -> {
-                            if (mainViewModel.updater.hasUpdates.value) {
-                                Log.d(TAG, "Update found! Notifying user...")
-
-                                coroutineScope.launch {
-                                    LavenderSnackbarController.pushEvent(
-                                        LavenderSnackbarEvents.MessageEvent(
-                                            message = "New app version available!",
-                                            iconResId = R.drawable.error_2,
-                                            duration = SnackbarDuration.Short
-                                        )
-                                    )
-                                }
-                            }
-                        }
-
-                        else -> {
-                            Log.d(TAG, "No update found.")
-                        }
-                    }
-                }
-            }
-        }
     }
 
     @Composable
@@ -864,7 +831,7 @@ class MainActivity : ComponentActivity() {
         multiAlbumViewModel: MultiAlbumViewModel,
     ) {
         val context = LocalContext.current
-        val albumsList by mainViewModel.settings.MainPhotosView.getAlbums()
+        val albumsList by mainViewModel.settings.MainGalleryView.getAlbums()
             .collectAsStateWithLifecycle(initialValue = emptyList())
         val mediaStoreData =
             multiAlbumViewModel.mediaFlow.collectAsStateWithLifecycle(context = Dispatchers.IO)
@@ -987,7 +954,7 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
 
-                            stateValue == DefaultTabs.TabTypes.photos -> {
+                            stateValue == DefaultTabs.TabTypes.Gallery -> {
                                 if (albumsList.toSet() != multiAlbumViewModel.albumInfo.paths.toSet()) {
                                     multiAlbumViewModel.reinitDataSource(
                                         context = context,

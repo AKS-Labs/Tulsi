@@ -184,7 +184,7 @@ fun PermissionHandler(
 
                             PermissionButton(
                                 name = "Read Images",
-                                description = "Allow Tulsi Photos to discover photos on the device",
+                                description = "Allow Tulsi Gallery to discover Gallery on the device",
                                 position = RowPosition.Top,
                                 granted = !mainViewModel.permissionQueue.contains(Manifest.permission.READ_MEDIA_IMAGES)
                             ) {
@@ -231,7 +231,7 @@ fun PermissionHandler(
 
                             PermissionButton(
                                 name = "Read Videos",
-                                description = "Allow Tulsi Photos to discover videos on the device",
+                                description = "Allow Tulsi Gallery to discover videos on the device",
                                 position = RowPosition.Middle,
                                 granted = !mainViewModel.permissionQueue.contains(Manifest.permission.READ_MEDIA_VIDEO)
                             ) {
@@ -278,7 +278,7 @@ fun PermissionHandler(
 
                             PermissionButton(
                                 name = "Read External Storage",
-                                description = "Allow Tulsi Photos to discover photos and videos on the device",
+                                description = "Allow Tulsi Gallery to discover Gallery and videos on the device",
                                 position = RowPosition.Top,
                                 granted = !mainViewModel.permissionQueue.contains(Manifest.permission.READ_EXTERNAL_STORAGE)
                             ) {
@@ -331,22 +331,7 @@ fun PermissionHandler(
                         }
                     }
 
-                    item {
-                        PreferencesSeparatorText(
-                            text = "Other Info"
-                        )
-                    }
 
-                    item {
-                        PreferencesRow(
-                            title = "Install Packages",
-                            summary = "If you use the in-app updater, Tulsi Photos will request the Install Packages permission.",
-                            iconResID = R.drawable.error_2,
-                            position = RowPosition.Single,
-                            backgroundColor = MaterialTheme.colorScheme.surfaceContainer,
-                            contentColor = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
                 }
 
                 if (!isLandscape) {
@@ -601,9 +586,9 @@ fun FullWidthDialogButton(
 
 private object Explanations {
     const val READ_MEDIA =
-        "This permission is needed to find photos and videos on the device. Tulsi Photos is very strict with what files it reads, and never shares or exploits this info."
+        "This permission is needed to find Gallery and videos on the device. Tulsi Gallery is very strict with what files it reads, and never shares or exploits this info."
     const val MANAGE_MEDIA =
-        "This permission is optional, but is highly recommended. Manage Media permission allows Tulsi Photos to use Android's Content Resolver API to trash/delete/move/copy media, which makes the process much smoother and more interoperable with other apps."
+        "This permission is optional, but is highly recommended. Manage Media permission allows Tulsi Gallery to use Android's Content Resolver API to trash/delete/move/copy media, which makes the process much smoother and more interoperable with other apps."
 }
 
 

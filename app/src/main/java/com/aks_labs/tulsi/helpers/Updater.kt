@@ -43,7 +43,7 @@ class Updater(
     }
 
     private val updateFile by derivedStateOf {
-        val file = File(context.appStorageDir, "photos_signed_release_${githubVersionName.value}.apk")
+        val file = File(context.appStorageDir, "Gallery_signed_release_${githubVersionName.value}.apk")
         file.parentFile?.mkdirs()
         file
     }
@@ -101,61 +101,18 @@ class Updater(
    		}
     }
 
-    /** starts downloading update and returns whether download was successful */
+    /** Update functionality has been removed */
     fun startUpdate(
         progress: (progress: Float) -> Unit,
         onDownloadStopped: (success: Boolean) -> Unit
     ) {
-        if (updateFile.exists() && updateFile.length() > 0) {
-            installUpdate()
-            return
-        }
-
-        val url = "https://github.com/AKS-Labs/Tulsi/releases/download/${githubVersionName.value}/photos_signed_release.apk"
-
-        try {
-			// TODO: switch to fuel-android for better usage
-			coroutineScope.launch(Dispatchers.IO) {
-				Fuel.download(url)
-					.fileDestination { _, _ ->
-						updateFile
-					}
-					.progress { readBytes, totalBytes ->
-						val percent = readBytes.toFloat() / totalBytes * 100f
-						Log.d(TAG, "Download progress $percent% out of ${totalBytes.toFloat() / 1000000}mb")
-						progress(percent)
-					}
-					.response { result -> // TODO: parse result output | failure, success, etc
-                        result.fold(
-                            success = {
-                            	Log.d(TAG, "Download succeeded")
-                                onDownloadStopped(true)
-                            },
-
-                            failure = {
-                                onDownloadStopped(false)
-                                Log.d(TAG, "Download failed, aborting...")
-                                Log.d(TAG, result.toString())
-                            }
-                        )
-					}
-			}
-		} catch (e: Throwable) {
-			Log.e(TAG, e.toString())
-			e.printStackTrace()
-		}
+        Log.d(TAG, "Update functionality has been removed")
+        onDownloadStopped(false)
     }
 
+    /** Update functionality has been removed */
     fun installUpdate() {
-        val intent = Intent().apply {
-            action = Intent.ACTION_VIEW
-            data = FileProvider.getUriForFile(context, LAVENDER_FILE_PROVIDER_AUTHORITY, updateFile)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-
-        context.startActivity(intent)
+        Log.d(TAG, "Update functionality has been removed")
     }
 
     fun getChangelog() : String =

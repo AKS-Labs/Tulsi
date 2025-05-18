@@ -49,7 +49,7 @@ import com.aks_labs.tulsi.compose.dialogs.ExplanationDialog
 import com.aks_labs.tulsi.compose.dialogs.FeatureNotAvailableDialog
 import com.aks_labs.tulsi.helpers.MultiScreenViewType
 import com.aks_labs.tulsi.helpers.RowPosition
-import com.aks_labs.tulsi.ui.theme.PhotosTitleFont
+import com.aks_labs.tulsi.ui.theme.GalleryTitleFont
 import com.aks_labs.tulsi.ui.theme.TulsiTitleFont
 
 private const val TAG = "ABOUT_PAGE"
@@ -176,7 +176,7 @@ fun AboutPage(popBackStack: () -> Unit) {
             if (showPrivacyPolicy.value) {
                 ExplanationDialog(
                     title = "Privacy Policy",
-                    explanation = "There isn't one! None of your data goes anywhere but this device. No AI is trained on it, no algorithms to harvest information, nothing. Tulsi Photos has and always will be a privacy focused gallery app.",
+                    explanation = "There isn't one! None of your data goes anywhere but this device. No AI is trained on it, no algorithms to harvest information, nothing. Tulsi Gallery has and always will be a privacy focused gallery app.",
                     showDialog = showPrivacyPolicy,
                 )
             }
@@ -193,17 +193,6 @@ fun AboutPage(popBackStack: () -> Unit) {
             val showNotImplDialog = remember { mutableStateOf(false) }
             if (showNotImplDialog.value) {
                 FeatureNotAvailableDialog(showDialog = showNotImplDialog)
-            }
-
-            val navController = LocalNavController.current
-            PreferencesRow(
-                title = "Updates",
-                summary = "keep the app up to date",
-                iconResID = R.drawable.update,
-                position = RowPosition.Middle,
-                goesToOtherPage = true
-            ) {
-                navController.navigate(MultiScreenViewType.UpdatesPage.name)
             }
 
             PreferencesRow(
@@ -244,7 +233,7 @@ fun AboutPage(popBackStack: () -> Unit) {
 
             PreferencesRow(
                 title = "Original Repository",
-                summary = "Based on LavenderPhotos by kaii-lb",
+                summary = "Based on LavenderGallery by kaii-lb",
                 iconResID = R.drawable.code_blocks,
                 position = RowPosition.Bottom
             ) {
@@ -345,7 +334,7 @@ fun OriginalRepositoryDialog(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "Tulsi is a fork of LavenderPhotos, an open source photo gallery app licensed under the GNU General Public License v3.0.",
+                        text = "Tulsi is a fork of LavenderGallery, an open source photo gallery app licensed under the GNU General Public License v3.0.",
                         fontSize = TextUnit(14f, TextUnitType.Sp),
                         textAlign = TextAlign.Center
                     )
@@ -370,7 +359,7 @@ fun OriginalRepositoryDialog(
                         Button(
                             onClick = {
                                 val intent = Intent(Intent.ACTION_VIEW).apply {
-                                    setData("https://github.com/kaii-lb/LavenderPhotos".toUri())
+                                    setData("https://github.com/kaii-lb/LavenderGallery".toUri())
                                 }
                                 context.startActivity(intent)
                             }

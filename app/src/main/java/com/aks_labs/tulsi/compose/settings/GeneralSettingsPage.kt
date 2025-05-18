@@ -48,7 +48,7 @@ import com.aks_labs.tulsi.datastore.AlbumsList
 import com.aks_labs.tulsi.datastore.BottomBarTab
 import com.aks_labs.tulsi.datastore.DefaultTabs
 import com.aks_labs.tulsi.datastore.Editing
-import com.aks_labs.tulsi.datastore.MainPhotosView
+import com.aks_labs.tulsi.datastore.MainGalleryView
 import com.aks_labs.tulsi.datastore.PhotoGrid
 import com.aks_labs.tulsi.datastore.Versions
 import com.aks_labs.tulsi.datastore.Video
@@ -154,7 +154,7 @@ fun GeneralSettingsPage(currentTab: MutableState<BottomBarTab>) {
             }
 
             item {
-                val mainPhotosAlbums by mainViewModel.settings.MainPhotosView.getAlbums()
+                val mainGalleryAlbums by mainViewModel.settings.MainGalleryView.getAlbums()
                     .collectAsStateWithLifecycle(initialValue = emptyList())
                 val allAlbums by mainViewModel.settings.AlbumsList.getAlbumsList()
                     .collectAsStateWithLifecycle(initialValue = emptyList())
@@ -167,11 +167,11 @@ fun GeneralSettingsPage(currentTab: MutableState<BottomBarTab>) {
                     iconResID = R.drawable.photogrid,
                     position = RowPosition.Single,
                     showBackground = false,
-                    summary = "Select albums that will have their photos displayed in the main photo view"
+                    summary = "Select albums that will have their Gallery displayed in the main photo view"
                 ) {
                     selectedAlbums.clear()
                     selectedAlbums.addAll(
-                        mainPhotosAlbums.map {
+                        mainGalleryAlbums.map {
                             it.apply {
                                 removeSuffix("/")
                             }
@@ -187,10 +187,10 @@ fun GeneralSettingsPage(currentTab: MutableState<BottomBarTab>) {
                         body = "Albums selected here will show up in the main photo view",
                         showDialog = showAlbumsSelectionDialog,
                         onConfirm = {
-                            mainViewModel.settings.MainPhotosView.clear()
+                            mainViewModel.settings.MainGalleryView.clear()
 
                             selectedAlbums.forEach { album ->
-                                mainViewModel.settings.MainPhotosView.addAlbum(album.removeSuffix("/"))
+                                mainViewModel.settings.MainGalleryView.addAlbum(album.removeSuffix("/"))
                             }
                         },
                         buttons = {
@@ -301,7 +301,7 @@ fun GeneralSettingsPage(currentTab: MutableState<BottomBarTab>) {
 
                 PreferencesSwitchRow(
                     title = "Media Sorting",
-                    summary = "Sets the sorting of photos and videos in grids",
+                    summary = "Sets the sorting of Gallery and videos in grids",
                     iconResID = R.drawable.sorting,
                     position = RowPosition.Single,
                     showBackground = false,
@@ -340,7 +340,7 @@ fun GeneralSettingsPage(currentTab: MutableState<BottomBarTab>) {
 
                 PreferencesRow(
                     title = "Default Tab",
-                    summary = "Tulsi Photos will auto-open this tab at startup",
+                    summary = "Tulsi Gallery will auto-open this tab at startup",
                     iconResID = R.drawable.folder_open,
                     position = RowPosition.Single,
                     showBackground = false
@@ -372,27 +372,8 @@ fun GeneralSettingsPage(currentTab: MutableState<BottomBarTab>) {
                 }
             }
 
-            item {
-                PreferencesSeparatorText(
-                    text = "Updates"
-                )
-            }
 
-            item {
-                val checkForUpdatesOnStartup by mainViewModel.settings.Versions.getCheckUpdatesOnStartup()
-                    .collectAsStateWithLifecycle(initialValue = false)
 
-                PreferencesSwitchRow(
-                    title = "Check for Updates",
-                    iconResID = R.drawable.update,
-                    summary = "Notifies of new version when you open the app. Does not auto-install the update",
-                    position = RowPosition.Single,
-                    showBackground = false,
-                    checked = checkForUpdatesOnStartup
-                ) {
-                    mainViewModel.settings.Versions.setCheckUpdatesOnStartup(it)
-                }
-            }
         }
     }
 }
