@@ -77,17 +77,17 @@ This multi-layered approach ensures that no matter what device or Android versio
 Experience Tulsi Gallery's beautiful interface and thoughtful design. These screenshots showcase the app's elegant UI, featuring the floating bottom app bar, intuitive navigation, and visually pleasing layout.
 
 <div align="center">
-  <img src="/assets/images/1.png" width="250" alt="Tulsi Gallery Screenshot 1" style="margin-right: 10px;" />
+  <img src="/assets/images/1.png" width="300" alt="Tulsi Gallery Screenshot 1" style="margin-right: 10px;" />
   <img src="/assets/images/2.png" width="300" alt="Tulsi Gallery Screenshot 2" style="margin: 0 10px;" />
-  <img src="/assets/images/3.png" width="250" alt="Tulsi Gallery Screenshot 3" style="margin-left: 10px;" />
+  <img src="/assets/images/3.png" width="300" alt="Tulsi Gallery Screenshot 3" style="margin-left: 10px;" />
 </div>
 
 <br />
 
 <div align="center">
-  <img src="/assets/images/4.png" width="250" alt="Tulsi Gallery Screenshot 4" style="margin-right: 10px;" />
+  <img src="/assets/images/4.png" width="300" alt="Tulsi Gallery Screenshot 4" style="margin-right: 10px;" />
   <img src="/assets/images/5.png" width="300" alt="Tulsi Gallery Screenshot 5" style="margin: 0 10px;" />
-  <img src="/assets/images/6.png" width="250" alt="Tulsi Gallery Screenshot 6" style="margin-left: 10px;" />
+  <img src="/assets/images/6.png" width="300" alt="Tulsi Gallery Screenshot 6" style="margin-left: 10px;" />
 </div>
 
 ## 🚀 Try Tulsi Today!
