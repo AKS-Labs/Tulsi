@@ -208,7 +208,7 @@ private fun TopBar() {
 
 						<br><br>The builds hosted on GitHub are always signed, checked, and verified by the developer (AKS-Labs), but it is up to you whether you want to use them or not.
 
-						<br><br>Tulsi Photos never does auto-updates, and only ever updates with explicit user consent.
+						<br><br>Tulsi Gallery never does auto-updates, and only ever updates with explicit user consent.
 					</p>
 				""".trimIndent()
 			}

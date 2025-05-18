@@ -14,7 +14,7 @@ import com.aks_labs.tulsi.MainActivity
 import com.aks_labs.tulsi.database.entities.MediaEntity
 import com.aks_labs.tulsi.helpers.MediaItemSortMode
 import com.aks_labs.tulsi.helpers.getDateTakenForMedia
-import com.aks_labs.tulsi.models.multi_album.groupPhotosBy
+import com.aks_labs.tulsi.models.multi_album.groupGalleryBy
 
 /** Loads metadata from the media store for images and videos. */
 class TrashStoreDataSource(
@@ -131,7 +131,7 @@ class TrashStoreDataSource(
         }
         mediaCursor.close()
 
-        return groupPhotosBy(data, sortBy)
+        return groupGalleryBy(data, sortBy)
     }
 }
 

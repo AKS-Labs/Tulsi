@@ -36,7 +36,7 @@ import com.aks_labs.tulsi.helpers.MediaItemSortMode
 import com.aks_labs.tulsi.mediastore.MediaStoreData
 import com.aks_labs.tulsi.models.favourites_grid.FavouritesViewModel
 import com.aks_labs.tulsi.models.favourites_grid.FavouritesViewModelFactory
-import com.aks_labs.tulsi.models.multi_album.groupPhotosBy
+import com.aks_labs.tulsi.models.multi_album.groupGalleryBy
 import kotlinx.coroutines.Dispatchers
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,7 +54,7 @@ fun FavouritesGridView(
 
     val groupedMedia = remember {
         mutableStateOf(
-            groupPhotosBy(
+            groupGalleryBy(
                 mediaStoreData.value,
                 MediaItemSortMode.LastModified
             )
@@ -62,7 +62,7 @@ fun FavouritesGridView(
     }
 
     LaunchedEffect(mediaStoreData.value) {
-        groupedMedia.value = groupPhotosBy(mediaStoreData.value, MediaItemSortMode.LastModified)
+        groupedMedia.value = groupGalleryBy(mediaStoreData.value, MediaItemSortMode.LastModified)
     }
 
     val showBottomSheet by remember {

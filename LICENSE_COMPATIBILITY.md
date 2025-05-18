@@ -1,6 +1,6 @@
 # License Compatibility Analysis
 
-This document verifies that all dependencies used in Tulsi Photos have licenses compatible with the GNU General Public License v3.0 (GPLv3).
+This document verifies that all dependencies used in Tulsi Gallery have licenses compatible with the GNU General Public License v3.0 (GPLv3).
 
 ## License Compatibility with GPLv3
 
@@ -30,7 +30,7 @@ The following licenses are generally considered compatible with GPLv3 when used 
 
 ## Conclusion
 
-All dependencies used in Tulsi Photos have licenses that are compatible with the GPLv3. This means:
+All dependencies used in Tulsi Gallery have licenses that are compatible with the GPLv3. This means:
 
 1. We can legally distribute the app under the GPLv3 license
 2. Users who receive the app can exercise all the freedoms granted by the GPLv3

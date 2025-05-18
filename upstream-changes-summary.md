@@ -1,8 +1,8 @@
 # Upstream Changes Summary (v0.9.6-beta) - Final Version
 
-## Changes from LavenderPhotos Repository
+## Changes from LavenderGallery Repository
 
-The original LavenderPhotos repository has made several updates that we attempted to incorporate into our Tulsi fork:
+The original LavenderGallery repository has made several updates that we attempted to incorporate into our Tulsi fork:
 
 1. **Version Update**
    - Updated version code to 96
@@ -39,7 +39,7 @@ We encountered several challenges when trying to incorporate these changes:
      - Selection functionality fixes for grid view mode
      - Google Lens integration
      - Floating bottom app bar customizations
-     - Reordered navigation tabs (Search, Photos, Albums, Secure)
+     - Reordered navigation tabs (Search, Gallery, Albums, Secure)
 
 ## Recommended Approach
 

@@ -1,0 +1,10 @@
+Incorporate upstream changes from LavenderGallery v0.9.6-beta
+
+Key changes:
+- Updated version to v0.9.6-beta (version code 96)
+- Converted package name from com.aks_labs.tulsi to com.aks_labs.tulsi
+- Added fix for albums with over 5000 items
+- Added fix for custom tabs not loading
+- Added ability to include entire folders in custom albums
+
+This commit includes all the necessary changes to incorporate the upstream features while maintaining our custom package structure and features.

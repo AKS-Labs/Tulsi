@@ -1,13 +1,13 @@
 # Third-Party Licenses
 
-Tulsi Photos uses several open-source libraries. This file contains the licenses for these libraries.
+Tulsi Gallery uses several open-source libraries. This file contains the licenses for these libraries.
 
-## LavenderPhotos
+## LavenderGallery
 
-Tulsi Photos is a fork of LavenderPhotos.
+Tulsi Gallery is a fork of LavenderGallery.
 
 **License**: GNU General Public License v3.0
-**Source**: https://github.com/kaii-lb/LavenderPhotos
+**Source**: https://github.com/kaii-lb/LavenderGallery
 
 ## Glide
 

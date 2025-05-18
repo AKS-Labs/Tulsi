@@ -48,7 +48,7 @@ import com.aks_labs.tulsi.helpers.MediaItemSortMode
 import com.aks_labs.tulsi.helpers.MultiScreenViewType
 import com.aks_labs.tulsi.mediastore.MediaStoreData
 import com.aks_labs.tulsi.mediastore.MediaType
-import com.aks_labs.tulsi.models.multi_album.groupPhotosBy
+import com.aks_labs.tulsi.models.multi_album.groupGalleryBy
 import com.aks_labs.tulsi.models.search_page.SearchViewModel
 import com.aks_labs.tulsi.models.search_page.SearchViewModelFactory
 import kotlinx.coroutines.Dispatchers
@@ -90,7 +90,7 @@ fun SearchPage(
     LaunchedEffect(isGridView) {
         val mediaItems = originalGroupedMedia.value.filter { it.type != MediaType.Section }
         if (mediaItems.isNotEmpty()) {
-            groupedMedia.value = groupPhotosBy(mediaItems, MediaItemSortMode.DateTaken, isGridView)
+            groupedMedia.value = groupGalleryBy(mediaItems, MediaItemSortMode.DateTaken, isGridView)
         }
     }
 
@@ -191,7 +191,7 @@ fun SearchPage(
                 // Filter out section items and regroup with current grid view mode
                 val mediaItems = originalGroupedMedia.value.filter { it.type != MediaType.Section }
                 groupedMedia.value = if (mediaItems.isNotEmpty()) {
-                    groupPhotosBy(mediaItems, MediaItemSortMode.DateTaken, isGridView)
+                    groupGalleryBy(mediaItems, MediaItemSortMode.DateTaken, isGridView)
                 } else {
                     originalGroupedMedia.value
                 }
@@ -219,7 +219,7 @@ fun SearchPage(
 
                     // Get the current grid view mode from MainViewModel
                     val isGridView = mainViewModel.isGridViewMode.value
-                    groupedMedia.value = groupPhotosBy(local, MediaItemSortMode.DateTaken, isGridView)
+                    groupedMedia.value = groupGalleryBy(local, MediaItemSortMode.DateTaken, isGridView)
                     hideLoadingSpinner = true
 
                     return@launch
@@ -248,7 +248,7 @@ fun SearchPage(
 
                         // Get the current grid view mode from MainViewModel
                         val isGridView = mainViewModel.isGridViewMode.value
-                        groupedMedia.value = groupPhotosBy(local, MediaItemSortMode.DateTaken, isGridView)
+                        groupedMedia.value = groupGalleryBy(local, MediaItemSortMode.DateTaken, isGridView)
                         hideLoadingSpinner = true
 
                         return@launch
@@ -264,7 +264,7 @@ fun SearchPage(
 
                 // Get the current grid view mode from MainViewModel
                 val isGridView = mainViewModel.isGridViewMode.value
-                groupedMedia.value = groupPhotosBy(groupedMediaLocal, MediaItemSortMode.DateTaken, isGridView)
+                groupedMedia.value = groupGalleryBy(groupedMediaLocal, MediaItemSortMode.DateTaken, isGridView)
                 hideLoadingSpinner = true
             }
         }

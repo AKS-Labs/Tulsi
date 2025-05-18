@@ -23,11 +23,11 @@ private const val TAG = "DATA_AND_BACKUP"
 class DataAndBackupHelper {
     companion object {
         private const val EXPORT_DIR = "Exports"
-        private const val UNENCRYPTED_DIR = "Lavender_Photos_Secure_Folder_Export"
-        private const val RAW_DIR = "Lavender_Photos_Secure_Folder_Export_Raw"
-        private const val ZIP_NAME = "Lavender_Photos_Secure_Folder_Backup"
-        private const val FAV_DIR = "Lavender_Photos_Favourites_Export"
-        private const val FAV_ZIP = "Lavender_Photos_Favourites_Backup"
+        private const val UNENCRYPTED_DIR = "Lavender_Gallery_Secure_Folder_Export"
+        private const val RAW_DIR = "Lavender_Gallery_Secure_Folder_Export_Raw"
+        private const val ZIP_NAME = "Lavender_Gallery_Secure_Folder_Backup"
+        private const val FAV_DIR = "Lavender_Gallery_Favourites_Export"
+        private const val FAV_ZIP = "Lavender_Gallery_Favourites_Backup"
     }
 
     private fun getCurrentDate() = Instant.fromEpochMilliseconds(System.currentTimeMillis())

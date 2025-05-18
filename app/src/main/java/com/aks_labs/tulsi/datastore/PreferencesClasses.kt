@@ -464,15 +464,15 @@ class SettingsEditingImpl(
     }
 }
 
-class SettingMainPhotosViewImpl(
+class SettingMainGalleryViewImpl(
     private val context: Context,
     private val viewModelScope: CoroutineScope
 ) {
-    private val mainPhotosAlbumsList = stringPreferencesKey("main_photos_albums_list")
+    private val mainGalleryAlbumsList = stringPreferencesKey("main_Gallery_albums_list")
 
     fun getAlbums(): Flow<List<String>> =
         context.datastore.data.map {
-            val string = it[mainPhotosAlbumsList] ?: defaultAlbumsList
+            val string = it[mainGalleryAlbumsList] ?: defaultAlbumsList
 
             val list = mutableListOf<String>()
             string.split(separator).forEach { album ->
@@ -510,19 +510,19 @@ class SettingMainPhotosViewImpl(
 
     fun addAlbum(relativePath: String) = viewModelScope.launch {
         context.datastore.edit {
-            var list = it[mainPhotosAlbumsList] ?: defaultAlbumsList
+            var list = it[mainGalleryAlbumsList] ?: defaultAlbumsList
 
             val addedPath = relativePath.removeSuffix("/") + separator
 
             if (!list.contains(addedPath)) list += addedPath
 
-            it[mainPhotosAlbumsList] = list
+            it[mainGalleryAlbumsList] = list
         }
     }
 
     fun clear() = viewModelScope.launch {
         context.datastore.edit {
-            it[mainPhotosAlbumsList] = ""
+            it[mainGalleryAlbumsList] = ""
         }
     }
 
@@ -651,11 +651,11 @@ class SettingsDefaultTabsImpl(
 
     private fun getDefaultTabList() = run {
         val search = Json.encodeToString(DefaultTabs.TabTypes.search)
-        val photos = Json.encodeToString(DefaultTabs.TabTypes.photos)
+        val Gallery = Json.encodeToString(DefaultTabs.TabTypes.Gallery)
         val albums = Json.encodeToString(DefaultTabs.TabTypes.albums)
         val secure = Json.encodeToString(DefaultTabs.TabTypes.secure)
 
-        search + separator + photos + separator + albums + separator + secure
+        search + separator + Gallery + separator + albums + separator + secure
     }
 }
 

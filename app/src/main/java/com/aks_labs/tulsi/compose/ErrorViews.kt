@@ -46,7 +46,7 @@ enum class ViewProperties(
         operation = ImageFunctions.LoadNormalImage
     ),
     SearchLoading(
-        emptyText = "Search for some photos!",
+        emptyText = "Search for some Gallery!",
         emptyIconResId = R.drawable.search,
         prefix = "",
         operation = ImageFunctions.LoadNormalImage

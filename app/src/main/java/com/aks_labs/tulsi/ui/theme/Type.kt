@@ -24,7 +24,7 @@ val MonospaceFont = FontFamily.Monospace
 
 // App title font families
 val TulsiTitleFont = PacificoFont
-val PhotosTitleFont = MonospaceFont // Changed from MontserratFont to MonospaceFont
+val GalleryTitleFont = MonospaceFont // Changed from MontserratFont to MonospaceFont
 
 // Set of Material typography styles to start with
 val Typography = Typography(

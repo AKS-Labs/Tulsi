@@ -1,6 +1,6 @@
 # Process for Handling Source Code Requests
 
-This document outlines the internal process for handling source code requests for Tulsi Photos, as required by the GNU General Public License v3.0 (GPLv3).
+This document outlines the internal process for handling source code requests for Tulsi Gallery, as required by the GNU General Public License v3.0 (GPLv3).
 
 ## Monitoring Email Requests
 
@@ -12,7 +12,7 @@ This document outlines the internal process for handling source code requests fo
 
 When a source code request is received:
 
-1. **Verify the request**: Ensure it's a legitimate request for the Tulsi Photos source code
+1. **Verify the request**: Ensure it's a legitimate request for the Tulsi Gallery source code
 2. **Respond with GitHub link**: Send a response that includes:
    - A link to the GitHub repository: https://github.com/AKS-Labs/Tulsi
    - Instructions for cloning the repository: `git clone https://github.com/AKS-Labs/Tulsi.git`
@@ -21,11 +21,11 @@ When a source code request is received:
 ### Template Response
 
 ```
-Subject: Tulsi Photos Source Code Request
+Subject: Tulsi Gallery Source Code Request
 
 Hello,
 
-Thank you for your interest in the Tulsi Photos source code. As per the GNU General Public License v3.0 (GPLv3), we're happy to provide access to the complete source code.
+Thank you for your interest in the Tulsi Gallery source code. As per the GNU General Public License v3.0 (GPLv3), we're happy to provide access to the complete source code.
 
 You can access the source code in the following ways:
 

@@ -1,9 +1,9 @@
-# Changes from Original LavenderPhotos
+# Changes from Original LavenderGallery
 
-This document outlines the major changes made to the original LavenderPhotos codebase in the Tulsi fork.
+This document outlines the major changes made to the original LavenderGallery codebase in the Tulsi fork.
 
 ## Package Name Change
-- Changed package name from `com.kaii.photos` to `com.aks_labs.tulsi`
+- Changed package name from `com.kaii.Gallery` to `com.aks_labs.tulsi`
 - Updated all import statements and references accordingly
 
 ## UI Enhancements
@@ -21,7 +21,7 @@ This document outlines the major changes made to the original LavenderPhotos cod
 
 ## Navigation Improvements
 - Reordered navigation tabs to: Search, Screenshots, Albums, Secure
-- Changed Photos tab to Screenshots tab for more distinctive purpose
+- Changed Gallery tab to Screenshots tab for more distinctive purpose
 - Made Search the default opening tab
 
 ## Bug Fixes

@@ -120,7 +120,7 @@ fun GetDirectoryPermissionAndRun(
     ConfirmationDialogWithBody(
         showDialog = showNoPermissionForDirDialog,
         dialogTitle = "Permission Needed",
-        dialogBody = "Tulsi Photos needs permission to access this album. Please grant it the permission by selecting \"Use This Folder\" on the next screen.\n This is a one-time permission.",
+        dialogBody = "Tulsi Gallery needs permission to access this album. Please grant it the permission by selecting \"Use This Folder\" on the next screen.\n This is a one-time permission.",
         confirmButtonLabel = "Grant"
     ) {
         if (currentIndex < absoluteDirPaths.size) {

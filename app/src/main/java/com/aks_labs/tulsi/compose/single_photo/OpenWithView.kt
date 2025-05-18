@@ -116,7 +116,7 @@ import com.aks_labs.tulsi.helpers.shareImage
 import com.aks_labs.tulsi.mediastore.MediaType
 import com.aks_labs.tulsi.mediastore.copyUriToUri
 import com.aks_labs.tulsi.models.multi_album.formatDate
-import com.aks_labs.tulsi.ui.theme.PhotosTheme
+import com.aks_labs.tulsi.ui.theme.GalleryTheme
 import kotlinx.coroutines.delay
 import java.io.File
 
@@ -154,7 +154,7 @@ class OpenWithView : ComponentActivity() {
                     else -> 0
                 }
 
-            PhotosTheme(
+            GalleryTheme(
                 darkTheme = followDarkTheme,
                 dynamicColor = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
             ) {
@@ -853,7 +853,7 @@ private fun BottomBar(
                     if (showNotImplementedDialog.value) {
                         ExplanationDialog(
                             title = "Unimplemented",
-                            explanation = "Editing videos has not been implemented yet as of version ${BuildConfig.VERSION_NAME} of Tulsi Photos. This feature will be added as soon as possible, thank you for your patience.",
+                            explanation = "Editing videos has not been implemented yet as of version ${BuildConfig.VERSION_NAME} of Tulsi Gallery. This feature will be added as soon as possible, thank you for your patience.",
                             showDialog = showNotImplementedDialog
                         )
                     }
@@ -868,7 +868,7 @@ private fun BottomBar(
                                 val extension = mimeType.split("/")[1]
                                 val currentTime = System.currentTimeMillis()
                                 val date = formatDate(currentTime / 1000, MediaItemSortMode.DateTaken)
-                                val name = "Tulsi Photos edited file at $date.$extension"
+                                val name = "Tulsi Gallery edited file at $date.$extension"
                                 val destination = File(Environment.DIRECTORY_PICTURES, name) // TODO: maybe move into subdir?
 
                                 val contentValues = ContentValues().apply {

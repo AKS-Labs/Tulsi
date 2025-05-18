@@ -9,7 +9,7 @@ import com.aks_labs.tulsi.helpers.MediaItemSortMode
 import com.aks_labs.tulsi.mediastore.MediaStoreData
 import com.aks_labs.tulsi.mediastore.MediaStoreDataSource
 import com.aks_labs.tulsi.mediastore.getMediaStoreDataFromUri
-import com.aks_labs.tulsi.models.multi_album.groupPhotosBy
+import com.aks_labs.tulsi.models.multi_album.groupGalleryBy
 
 // private const val TAG = "CUSTOM_ALBUM_DATA_SOURCE"
 
@@ -58,7 +58,7 @@ class CustomAlbumDataSource(
         }
         mediaCursor.close()
 
-        return groupPhotosBy(data, sortBy)
+        return groupGalleryBy(data, sortBy)
     }
 }
 

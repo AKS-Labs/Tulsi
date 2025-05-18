@@ -53,7 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
-import com.aks_labs.tulsi.ui.theme.PhotosTitleFont
+import com.aks_labs.tulsi.ui.theme.GalleryTitleFont
 import com.aks_labs.tulsi.ui.theme.TulsiTitleFont
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aks_labs.tulsi.MainActivity.Companion.mainViewModel
@@ -108,9 +108,9 @@ fun MainAppTopBar(
             }
         },
         actions = {
-            // Grid view toggle for Photos and Search tabs
+            // Grid view toggle for Gallery and Search tabs
             AnimatedVisibility(
-                visible = currentView.value == DefaultTabs.TabTypes.photos || currentView.value == DefaultTabs.TabTypes.search,
+                visible = currentView.value == DefaultTabs.TabTypes.Gallery || currentView.value == DefaultTabs.TabTypes.search,
                 enter = scaleIn(
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioMediumBouncy,

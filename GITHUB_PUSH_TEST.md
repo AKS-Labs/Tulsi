@@ -4,8 +4,8 @@ This file is created to test if GitHub is properly showing the latest commits.
 
 ## Changes Made
 
-1. Incorporated upstream changes from LavenderPhotos v0.9.6-beta
-2. Converted package name from `com.kaii.photos` to `com.aks_labs.tulsi`
+1. Incorporated upstream changes from LavenderGallery v0.9.6-beta
+2. Converted package name from `com.kaii.Gallery` to `com.aks_labs.tulsi`
 3. Fixed conflicts and issues during the conversion
 4. Successfully built the project with the new package name
 

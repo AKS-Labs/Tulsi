@@ -499,7 +499,7 @@ fun DeleteIntervalDialog(
 
     SelectableButtonListDialog(
         title = "Delete Interval",
-        body = "Photos in the trash bin older than this date will be permanently deleted",
+        body = "Gallery in the trash bin older than this date will be permanently deleted",
         showDialog = showDialog,
         buttons = {
             RadioButtonRow(

@@ -25,9 +25,9 @@ object DefaultTabs {
             id = 3
         )
 
-        val photos = BottomBarTab(
+        val Gallery = BottomBarTab(
             name = "Photos",
-            albumPaths = listOf("main_photos"),
+            albumPaths = listOf("main_Gallery"),
             index = 1,
             icon = StoredDrawable.PhotoGrid,
             id = 0
@@ -52,7 +52,7 @@ object DefaultTabs {
 
     val defaultList = listOf(
         TabTypes.search,
-        TabTypes.photos,
+        TabTypes.Gallery,
         TabTypes.albums,
         TabTypes.secure
     )

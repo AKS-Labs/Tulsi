@@ -33,7 +33,7 @@ private val LightColorScheme = lightColorScheme(
 )
 
 @Composable
-fun PhotosTheme(
+fun GalleryTheme(
     darkTheme: Int = 0,
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit

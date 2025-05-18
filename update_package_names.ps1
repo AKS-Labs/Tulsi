@@ -3,7 +3,7 @@ $files = Get-ChildItem -Path app/src/main/java/ -Recurse -Include *.kt | Select-
 foreach ($file in $files) {
     Write-Host "Processing $file"
     $content = Get-Content -Path $file -Raw
-    $newContent = $content -replace "com\.kaii\.photos", "com.aks_labs.tulsi"
+    $newContent = $content -replace "com\.kaii\.Gallery", "com.aks_labs.tulsi"
     Set-Content -Path $file -Value $newContent
 }
 

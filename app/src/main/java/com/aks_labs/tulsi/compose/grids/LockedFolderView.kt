@@ -50,7 +50,7 @@ import com.aks_labs.tulsi.helpers.getSecuredCacheImageForFile
 import com.aks_labs.tulsi.mediastore.LAVENDER_FILE_PROVIDER_AUTHORITY
 import com.aks_labs.tulsi.mediastore.MediaStoreData
 import com.aks_labs.tulsi.mediastore.MediaType
-import com.aks_labs.tulsi.models.multi_album.groupPhotosBy
+import com.aks_labs.tulsi.models.multi_album.groupGalleryBy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -190,7 +190,7 @@ fun LockedFolderView(
                 mediaStoreData.add(item)
             }
 
-            groupedMedia.value = groupPhotosBy(mediaStoreData, MediaItemSortMode.LastModified)
+            groupedMedia.value = groupGalleryBy(mediaStoreData, MediaItemSortMode.LastModified)
         }
     }
 

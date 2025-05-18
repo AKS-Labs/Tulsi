@@ -75,24 +75,24 @@ fun searchWithGoogleLens(uri: Uri, context: Context): Boolean {
             Log.e(TAG, "Failed to launch Google Lens with ACTION_SEND: ${e.message}")
         }
 
-        // Approach 2: Use Google Photos with ACTION_SEND
+        // Approach 2: Use Google Gallery with ACTION_SEND
         if (!success) {
             try {
-                val photosIntent = Intent(Intent.ACTION_SEND).apply {
+                val GalleryIntent = Intent(Intent.ACTION_SEND).apply {
                     type = "image/*"
                     putExtra(Intent.EXTRA_STREAM, contentUri)
-                    setPackage("com.google.android.apps.photos")
+                    setPackage("com.google.android.apps.Gallery")
                     putExtra("lens", true) // Hint to open in Lens mode
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
 
-                context.startActivity(photosIntent)
+                context.startActivity(GalleryIntent)
                 vibrateDevice(context) // Provide haptic feedback
-                Log.d(TAG, "Google Photos launched with ACTION_SEND")
+                Log.d(TAG, "Google Gallery launched with ACTION_SEND")
                 success = true
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to launch Google Photos: ${e.message}")
+                Log.e(TAG, "Failed to launch Google Gallery: ${e.message}")
             }
         }
 

@@ -46,7 +46,7 @@ import com.aks_labs.tulsi.compose.ConfirmCancelRow
 import com.aks_labs.tulsi.compose.HorizontalSeparator
 import com.aks_labs.tulsi.compose.TitleCloseRow
 import com.aks_labs.tulsi.datastore.AlbumInfo
-import com.aks_labs.tulsi.datastore.MainPhotosView
+import com.aks_labs.tulsi.datastore.MainGalleryView
 import com.aks_labs.tulsi.helpers.getParentFromPath
 
 private const val TAG = "ALBUM_PATHS_DIALOG"
@@ -67,7 +67,7 @@ fun AlbumPathsDialog(
     }
     
     // Get all available paths from settings
-    val allPaths by mainViewModel.settings.MainPhotosView.getAvailablePaths()
+    val allPaths by mainViewModel.settings.MainGalleryView.getAvailablePaths()
         .collectAsStateWithLifecycle(initialValue = emptyList())
     
     // Group paths by parent directory

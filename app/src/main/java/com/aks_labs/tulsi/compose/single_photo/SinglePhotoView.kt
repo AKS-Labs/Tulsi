@@ -478,7 +478,7 @@ private fun BottomBar(
                     if (showNotImplementedDialog.value) {
                         ExplanationDialog(
                             title = "Unimplemented",
-                            explanation = "Editing videos has not been implemented yet as of version ${BuildConfig.VERSION_NAME} of Tulsi Photos. This feature will be added as soon as possible, thank you for your patience.",
+                            explanation = "Editing videos has not been implemented yet as of version ${BuildConfig.VERSION_NAME} of Tulsi Gallery. This feature will be added as soon as possible, thank you for your patience.",
                             showDialog = showNotImplementedDialog
                         )
                     }

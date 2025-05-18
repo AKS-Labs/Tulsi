@@ -1,6 +1,6 @@
-# Building Tulsi Photos from Source
+# Building Tulsi Gallery from Source
 
-This document provides instructions for building Tulsi Photos from source code.
+This document provides instructions for building Tulsi Gallery from source code.
 
 ## Prerequisites
 

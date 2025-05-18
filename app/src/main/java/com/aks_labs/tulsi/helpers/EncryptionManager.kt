@@ -22,7 +22,7 @@ object EncryptionManager {
     private const val ENCRYPTION_ALGORITHM = KeyProperties.KEY_ALGORITHM_AES
     private const val ENCRYPTION_BLOCK_MODE = KeyProperties.BLOCK_MODE_CBC
     private const val ENCRYPTION_PADDING = KeyProperties.ENCRYPTION_PADDING_PKCS7
-    private const val KEY_NAME = "TulsiPhotosSecureFolderKey"
+    private const val KEY_NAME = "TulsiGallerySecureFolderKey"
 
     private const val TRANSFORMATION = "$ENCRYPTION_ALGORITHM/$ENCRYPTION_BLOCK_MODE/$ENCRYPTION_PADDING"
 

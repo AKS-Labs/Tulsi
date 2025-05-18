@@ -13,7 +13,7 @@ import com.aks_labs.tulsi.database.entities.MediaEntity
 import com.aks_labs.tulsi.datastore.SQLiteQuery
 import com.aks_labs.tulsi.helpers.MediaItemSortMode
 import com.aks_labs.tulsi.helpers.getDateTakenForMedia
-import com.aks_labs.tulsi.models.multi_album.groupPhotosBy
+import com.aks_labs.tulsi.models.multi_album.groupGalleryBy
 
 // private const val TAG = "MULTI_ALBUM_DATA_SOURCE"
 
@@ -127,7 +127,7 @@ class MultiAlbumDataSource(
         }
         mediaCursor.close()
 
-        return groupPhotosBy(data, sortBy, isGridView)
+        return groupGalleryBy(data, sortBy, isGridView)
     }
 }
 

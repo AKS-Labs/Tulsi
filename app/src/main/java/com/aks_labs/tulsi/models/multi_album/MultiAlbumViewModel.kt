@@ -12,7 +12,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aks_labs.tulsi.MainActivity.Companion.mainViewModel
 import com.aks_labs.tulsi.datastore.AlbumInfo
-import com.aks_labs.tulsi.datastore.MainPhotosView
+import com.aks_labs.tulsi.datastore.MainGalleryView
 import com.aks_labs.tulsi.helpers.MediaItemSortMode
 import com.aks_labs.tulsi.helpers.SectionItem
 import com.aks_labs.tulsi.mediastore.MediaStoreData
@@ -115,7 +115,7 @@ class MultiAlbumViewModel(
         album: AlbumInfo,
         sortBy: MediaItemSortMode
     ) = run {
-        val query = mainViewModel.settings.MainPhotosView.getSQLiteQuery(album.paths)
+        val query = mainViewModel.settings.MainGalleryView.getSQLiteQuery(album.paths)
         Log.d(TAG, "query is $query")
 
         albumInfo = album
@@ -131,8 +131,8 @@ class MultiAlbumViewModel(
     }
 }
 
-/** Groups photos by date or returns a simple grid */
-fun groupPhotosBy(
+/** Groups Gallery by date or returns a simple grid */
+fun groupGalleryBy(
     media: List<MediaStoreData>,
     sortBy: MediaItemSortMode = MediaItemSortMode.DateTaken,
     isGridView: Boolean = false

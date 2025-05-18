@@ -16,7 +16,7 @@ android {
         applicationId = "com.aks_labs.tulsi"
         minSdk = 30
         targetSdk = 35
-        versionCode = 97
+        versionCode = 98
         versionName = "v0.9.7-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

@@ -267,7 +267,7 @@ fun LockedFolderEntryView(
             coroutineScope.launch {
                 LavenderSnackbarController.pushEvent(
                     LavenderSnackbarEvents.MessageEvent(
-                        message = "Can't encrypt photos without permission",
+                        message = "Can't encrypt Gallery without permission",
                         iconResId = R.drawable.error_2,
                         duration = SnackbarDuration.Long
                     )
@@ -314,7 +314,7 @@ fun LockedFolderEntryView(
     if (migrating) {
         LoadingDialog(
             title = "Migrating",
-            body = "Backing up and encrypting your photos, hold on..."
+            body = "Backing up and encrypting your Gallery, hold on..."
         )
 
         return
@@ -323,7 +323,7 @@ fun LockedFolderEntryView(
     if (showExplanationForMigration.value) {
         ExplanationDialog(
             title = "Migration Notice",
-            explanation = "Secure folder is now encrypted! All your photos are now fully safe and untouchable by anyone. \n\nAs a precaution, a copy of your secured photos is now present in an export folder, you can find it in the albums page or under \"Internal Storage/Android/media/com.aks_labs.tulsi/TulsiPhotos/Exports\".",
+            explanation = "Secure folder is now encrypted! All your Gallery are now fully safe and untouchable by anyone. \n\nAs a precaution, a copy of your secured Gallery is now present in an export folder, you can find it in the albums page or under \"Internal Storage/Android/media/com.aks_labs.tulsi/TulsiGallery/Exports\".",
             showDialog = showExplanationForMigration
         )
     }

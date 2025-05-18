@@ -11,7 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aks_labs.tulsi.MainActivity.Companion.mainViewModel
 import com.aks_labs.tulsi.datastore.AlbumInfo
-import com.aks_labs.tulsi.datastore.MainPhotosView
+import com.aks_labs.tulsi.datastore.MainGalleryView
 import com.aks_labs.tulsi.helpers.MediaItemSortMode
 import com.aks_labs.tulsi.mediastore.MediaStoreData
 import com.aks_labs.tulsi.mediastore.content_provider.CustomAlbumDataSource
@@ -74,7 +74,7 @@ class CustomAlbumViewModel(
         album: AlbumInfo,
         sortBy: MediaItemSortMode
     ) = run {
-        val query = mainViewModel.settings.MainPhotosView.getSQLiteQuery(album.paths)
+        val query = mainViewModel.settings.MainGalleryView.getSQLiteQuery(album.paths)
         Log.d(TAG, "query is $query")
 
         this.albumInfo = album

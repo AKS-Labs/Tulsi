@@ -10,7 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aks_labs.tulsi.MainActivity.Companion.mainViewModel
 import com.aks_labs.tulsi.datastore.AlbumInfo
-import com.aks_labs.tulsi.datastore.MainPhotosView
+import com.aks_labs.tulsi.datastore.MainGalleryView
 import com.aks_labs.tulsi.mediastore.AlbumStoreDataSource
 import com.aks_labs.tulsi.mediastore.MediaStoreData
 import kotlinx.coroutines.Dispatchers
@@ -49,7 +49,7 @@ class AlbumsViewModel(context: Context, var albumInfo: List<AlbumInfo>) : ViewMo
     ) = run {
         albumInfo = albums
         val queries = albums.map { album ->
-            val query = mainViewModel.settings.MainPhotosView.getSQLiteQuery(albums = album.paths)
+            val query = mainViewModel.settings.MainGalleryView.getSQLiteQuery(albums = album.paths)
             Pair(album, query)
         }
 
