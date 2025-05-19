@@ -8,7 +8,7 @@
 
 > *Because your Gallery deserve a gallery app with personality!*
 
-Tulsi is a fork of [LavenderGallery](https://github.com/kaii-lb/LavenderGallery) that dares to be different. While LavenderGallery is already a fantastic gallery app, Tulsi adds that extra bit of flair and functionality that makes your photo browsing experience just *chef's kiss* 👌
+Tulsi is a fork of [LavenderGallery](https://github.com/kaii-lb/LavenderPhotos) that dares to be different. While LavenderGallery is already a fantastic gallery app, Tulsi adds that extra bit of flair and functionality that makes your photo browsing experience just *chef's kiss* 👌
 
 ## 🌟 Why Tulsi Exists
 
@@ -105,7 +105,7 @@ Tulsi is maintained with love and an obsessive attention to detail. Because life
 
 Tulsi Gallery is licensed under the [GNU General Public License v3.0](LICENSE.md).
 
-As a fork of [LavenderGallery](https://github.com/kaii-lb/LavenderGallery), Tulsi Gallery maintains the same GPLv3 license. This means:
+As a fork of [LavenderGallery](https://github.com/kaii-lb/LavenderPhotos), Tulsi Gallery maintains the same GPLv3 license. This means:
 
 - You are free to use, modify, and distribute this software
 - If you distribute this software or derivatives, you must:
@@ -130,7 +130,7 @@ For detailed build instructions, see the [BUILDING.md](BUILDING.md) file.
 
 ## 🙏 Acknowledgments
 
-Tulsi Gallery stands on the shoulders of the excellent [LavenderGallery](https://github.com/kaii-lb/LavenderGallery) project created by [kaii-lb](https://github.com/kaii-lb). All core functionality credit goes to the original developers.
+Tulsi Gallery stands on the shoulders of the excellent [LavenderGallery](https://github.com/kaii-lb/LavenderPhotos) project created by [kaii-lb](https://github.com/kaii-lb). All core functionality credit goes to the original developers.
 
 Tulsi Gallery is a fork that adds additional features and UI enhancements while respecting the original project's GPLv3 license. We are grateful to the original author for creating such a fantastic foundation.
 
