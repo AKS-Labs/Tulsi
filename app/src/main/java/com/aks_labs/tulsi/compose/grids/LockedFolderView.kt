@@ -213,27 +213,7 @@ fun LockedFolderView(
         }
     }
 
-    val sheetState = rememberStandardBottomSheetState(
-        skipHiddenState = false,
-        initialValue = SheetValue.Hidden,
-    )
-
-    LaunchedEffect(key1 = showBottomSheet) {
-        if (showBottomSheet) {
-            sheetState.expand()
-        } else {
-            sheetState.hide()
-        }
-    }
-
-    val scaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = sheetState
-    )
-
-    BottomSheetScaffold(
-        scaffoldState = scaffoldState,
-        sheetDragHandle = {},
-        sheetSwipeEnabled = false,
+    Scaffold(
         topBar = {
             SecureFolderViewTopAppBar(
                 selectedItemsList = selectedItemsList,
@@ -242,22 +222,35 @@ fun LockedFolderView(
                 navController.popBackStack()
             }
         },
-        sheetContent = {
-            SecureFolderViewBottomAppBar(
-                selectedItemsList = selectedItemsList,
-                groupedMedia = groupedMedia,
-                isGettingPermissions = isGettingPermissions
-            )
+        bottomBar = {
+            AnimatedVisibility(
+                visible = showBottomSheet,
+                enter = slideInVertically { it } + fadeIn(),
+                exit = slideOutVertically { it } + fadeOut()
+            ) {
+                SecureFolderViewBottomAppBar(
+                    selectedItemsList = selectedItemsList,
+                    groupedMedia = groupedMedia,
+                    isGettingPermissions = isGettingPermissions
+                )
+            }
         },
-        sheetPeekHeight = 0.dp,
-        sheetShape = RectangleShape,
-        modifier = Modifier
-            .fillMaxSize(1f),
+        containerColor = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onBackground,
+        modifier = Modifier.fillMaxSize(1f)
     ) { padding ->
         Column(
             modifier = Modifier
-                .padding(padding)
-                .fillMaxSize(1f),
+                .padding(
+                    start = padding.calculateLeftPadding(LocalLayoutDirection.current),
+                    top = padding.calculateTopPadding(),
+                    end = padding.calculateRightPadding(LocalLayoutDirection.current),
+                    bottom = 0.dp // Remove bottom padding to allow content to be visible behind the bottom bar
+                )
+                .fillMaxSize(1f)
+                .windowInsetsPadding(
+                    WindowInsets.navigationBars
+                ),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

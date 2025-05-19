@@ -151,33 +151,11 @@ private fun SingleAlbumViewCommon(
         }
     }
 
-    val sheetState = rememberStandardBottomSheetState(
-        skipHiddenState = false,
-        initialValue = SheetValue.Hidden,
-    )
-
-    LaunchedEffect(key1 = showBottomSheet) {
-        if (showBottomSheet) {
-            sheetState.expand()
-        } else {
-            sheetState.hide()
-        }
-    }
-
-    val scaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = sheetState
-    )
-
     LaunchedEffect(albumInfo) {
         reinitDataSource()
     }
 
-    BottomSheetScaffold(
-        scaffoldState = scaffoldState,
-        sheetDragHandle = {},
-        sheetSwipeEnabled = false,
-        modifier = Modifier
-            .fillMaxSize(1f),
+    Scaffold(
         topBar = {
             SingleAlbumViewTopBar(
                 albumInfo = albumInfo,
@@ -188,18 +166,30 @@ private fun SingleAlbumViewCommon(
                 navController.popBackStack()
             }
         },
-        sheetContent = {
-            SingleAlbumViewBottomBar(
-                albumInfo = albumInfo,
-                selectedItemsList = selectedItemsList
-            )
+        bottomBar = {
+            AnimatedVisibility(
+                visible = showBottomSheet,
+                enter = slideInVertically { it } + fadeIn(),
+                exit = slideOutVertically { it } + fadeOut()
+            ) {
+                SingleAlbumViewBottomBar(
+                    albumInfo = albumInfo,
+                    selectedItemsList = selectedItemsList
+                )
+            }
         },
-        sheetPeekHeight = 0.dp,
-        sheetShape = RectangleShape
+        containerColor = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onBackground,
+        modifier = Modifier.fillMaxSize(1f)
     ) { padding ->
         Column(
             modifier = Modifier
-                .padding(padding)
+                .padding(
+                    start = padding.calculateLeftPadding(LocalLayoutDirection.current),
+                    top = padding.calculateTopPadding(),
+                    end = padding.calculateRightPadding(LocalLayoutDirection.current),
+                    bottom = 0.dp // Remove bottom padding to allow content to be visible behind the bottom bar
+                )
                 .fillMaxSize(1f)
                 .windowInsetsPadding(
                     WindowInsets.navigationBars

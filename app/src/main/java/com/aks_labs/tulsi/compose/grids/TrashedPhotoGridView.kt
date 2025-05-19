@@ -131,27 +131,7 @@ fun TrashedPhotoGridView(
         navController.popBackStack()
     }
 
-    val sheetState = rememberStandardBottomSheetState(
-        skipHiddenState = false,
-        initialValue = SheetValue.Hidden,
-    )
-    val scaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = sheetState
-    )
-    LaunchedEffect(key1 = showBottomSheet) {
-        if (showBottomSheet) {
-            sheetState.expand()
-        } else {
-            sheetState.hide()
-        }
-    }
-
-    BottomSheetScaffold(
-        scaffoldState = scaffoldState,
-        sheetDragHandle = {},
-        sheetSwipeEnabled = false,
-        modifier = Modifier
-            .fillMaxSize(1f),
+    Scaffold(
         topBar = {
             TrashedPhotoGridViewTopBar(
                 selectedItemsList = selectedItemsList,
@@ -161,15 +141,27 @@ fun TrashedPhotoGridView(
                 navController.popBackStack()
             }
         },
-        sheetContent = {
-            TrashedPhotoGridViewBottomBar(selectedItemsList = selectedItemsList)
+        bottomBar = {
+            AnimatedVisibility(
+                visible = showBottomSheet,
+                enter = slideInVertically { it } + fadeIn(),
+                exit = slideOutVertically { it } + fadeOut()
+            ) {
+                TrashedPhotoGridViewBottomBar(selectedItemsList = selectedItemsList)
+            }
         },
-        sheetPeekHeight = 0.dp,
-        sheetShape = RectangleShape
+        containerColor = Color.Transparent,
+        contentColor = MaterialTheme.colorScheme.onBackground,
+        modifier = Modifier.fillMaxSize(1f)
     ) { padding ->
         Column(
             modifier = Modifier
-                .padding(padding)
+                .padding(
+                    start = padding.calculateLeftPadding(LocalLayoutDirection.current),
+                    top = padding.calculateTopPadding(),
+                    end = padding.calculateRightPadding(LocalLayoutDirection.current),
+                    bottom = 0.dp // Remove bottom padding to allow content to be visible behind the bottom bar
+                )
                 .fillMaxSize(1f)
                 .windowInsetsPadding(
                     WindowInsets.navigationBars
