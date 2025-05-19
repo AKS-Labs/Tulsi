@@ -233,7 +233,7 @@ fun AboutPage(popBackStack: () -> Unit) {
 
             PreferencesRow(
                 title = "Original Repository",
-                summary = "Based on LavenderGallery by kaii-lb",
+                summary = "Based on LavenderPhotos by kaii-lb",
                 iconResID = R.drawable.code_blocks,
                 position = RowPosition.Bottom
             ) {
@@ -334,7 +334,7 @@ fun OriginalRepositoryDialog(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "Tulsi is a fork of LavenderGallery, an open source photo gallery app licensed under the GNU General Public License v3.0.",
+                        text = "Tulsi is a fork of LavenderPhotos, an open source photo gallery app licensed under the GNU General Public License v3.0.",
                         fontSize = TextUnit(14f, TextUnitType.Sp),
                         textAlign = TextAlign.Center
                     )
@@ -359,7 +359,7 @@ fun OriginalRepositoryDialog(
                         Button(
                             onClick = {
                                 val intent = Intent(Intent.ACTION_VIEW).apply {
-                                    setData("https://github.com/kaii-lb/LavenderGallery".toUri())
+                                    setData("https://github.com/kaii-lb/LavenderPhotos".toUri())
                                 }
                                 context.startActivity(intent)
                             }
