@@ -20,7 +20,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
@@ -31,11 +33,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
@@ -43,6 +47,43 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowInsetsCompat
+
+/**
+ * Creates a floating bottom app bar with consistent styling across the app
+ * @param content The content to display inside the floating bottom app bar
+ */
+@Composable
+fun FloatingBottomAppBar(
+    content: @Composable () -> Unit
+) {
+    // Outer Box container with transparent background
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 16.dp)
+            .background(Color.Transparent),
+        contentAlignment = Alignment.Center
+    ) {
+        // Floating bottom bar container
+        Box(
+            modifier = Modifier
+                .height(76.dp)
+                .fillMaxWidth(0.95f)
+                .shadow(
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(percent = 35),
+                    spotColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                )
+                .background(
+                    color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+                    shape = RoundedCornerShape(percent = 35)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            content()
+        }
+    }
+}
 
 /** please only use dialogComposable for its intended purpose */
 @Composable

@@ -138,11 +138,7 @@ fun IsSelectingTopBar(
 fun IsSelectingBottomAppBar(
     items: @Composable (RowScope.() -> Unit)
 ) {
-    BottomAppBar(
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-        contentPadding = PaddingValues(0.dp)
-    ) {
+    FloatingBottomAppBar {
         Row(
             modifier = Modifier
                 .fillMaxSize(1f),
