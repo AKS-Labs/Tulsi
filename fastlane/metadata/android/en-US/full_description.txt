@@ -1,0 +1,40 @@
+✨ TULSI GALLERY - ELEGANCE MEETS PRIVACY ✨
+
+Tulsi Gallery is a beautiful, feature-rich photo gallery app that respects your privacy. With zero data collection, no ads, and thoughtful design, it's the gallery app your memories deserve.
+
+🔒 COMPLETE PRIVACY
+• No data collection or transmission
+• No internet required (except for Google Lens)
+• No ads or tracking
+• Open source and transparent
+
+🎨 BEAUTIFUL DESIGN
+• Elegant floating interface with perfect rounded corners
+• Smooth animations and transitions
+• Thoughtful spacing and layout
+• Customizable viewing experience
+
+📱 POWERFUL FEATURES
+• Integrated Google Lens for instant visual search
+• Toggle between grid and date-grouped views
+• Intuitive photo selection and management
+• Secure folder with strong encryption
+• Advanced search by name, date, or content
+• Full editing capabilities without internet
+• Trash bin for recovering deleted photos
+• Detailed photo information and metadata
+
+🗂️ SMART ORGANIZATION
+• Create and customize albums your way
+• Intelligent screenshot management
+• Favorites system for quick access
+• Intuitive navigation with optimized tab order
+
+⚡ PERFORMANCE FOCUSED
+• Fast loading and smooth scrolling
+• Optimized for battery efficiency
+• Works on a wide range of devices
+
+Tulsi Gallery is a fork of LavenderPhotos, enhanced with additional features and UI improvements. This app is open source software licensed under the GNU General Public License v3.0.
+
+The complete source code is available at: https://github.com/AKS-Labs/Tulsi

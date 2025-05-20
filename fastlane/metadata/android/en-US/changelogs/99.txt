@@ -1,0 +1,1 @@
+Initial F-Droid release with Google Lens integration, UI enhancements including floating bottom app bar, improved navigation with reordered tabs (Search, Screenshots, Albums, Secure), and fixed selection issues in grid view mode.

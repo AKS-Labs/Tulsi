@@ -16,7 +16,7 @@ android {
         applicationId = "com.aks_labs.tulsi"
         minSdk = 30
         targetSdk = 35
-        versionCode = 98
+        versionCode = 99
         versionName = "v0.9.7-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -27,6 +27,11 @@ android {
         ksp {
        		arg("room.schemaLocation", "$projectDir/schemas")
         }
+    }
+
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
     }
 
     buildTypes {
