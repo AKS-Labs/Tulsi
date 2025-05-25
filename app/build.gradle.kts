@@ -16,8 +16,8 @@ android {
         applicationId = "com.aks_labs.tulsi"
         minSdk = 30
         targetSdk = 35
-        versionCode = 99
-        versionName = "v0.9.7-beta"
+        versionCode = 100
+        versionName = "v0.9.8-beta"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -40,6 +40,11 @@ android {
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
+    }
+
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

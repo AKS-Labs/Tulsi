@@ -1,0 +1,23 @@
+Categories:
+  - Multimedia
+License: GPL-3.0-or-later
+AuthorName: AKS Labs
+AuthorEmail: akslabs.tech@gmail.com
+SourceCode: https://github.com/AKS-Labs/Tulsi
+IssueTracker: https://github.com/AKS-Labs/Tulsi/issues
+
+RepoType: git
+Repo: https://github.com/AKS-Labs/Tulsi.git
+
+Builds:
+  - versionName: v0.9.8-beta
+    versionCode: 100
+    commit: v0.9.8-beta
+    subdir: app
+    gradle:
+      - yes
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags
+CurrentVersion: v0.9.8-beta
+CurrentVersionCode: 100
