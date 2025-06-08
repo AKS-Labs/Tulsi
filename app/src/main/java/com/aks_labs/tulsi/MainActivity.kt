@@ -19,6 +19,7 @@
 package com.aks_labs.tulsi
 
 import android.annotation.SuppressLint
+import android.content.res.Resources
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -29,6 +30,9 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.tween
@@ -158,6 +162,30 @@ val LocalNavController = compositionLocalOf<NavHostController> {
     throw IllegalStateException("CompositionLocal LocalNavController not present")
 }
 
+/**
+ * Detects if the device is using gesture-based navigation or traditional button navigation
+ */
+fun isGestureNavigationEnabled(resources: Resources): Boolean {
+    return try {
+        val resourceId = resources.getIdentifier(
+            "config_navBarInteractionMode",
+            "integer",
+            "android"
+        )
+        if (resourceId > 0) {
+            // 0 = 3-button navigation, 1 = 2-button navigation, 2 = gesture navigation
+            val navBarInteractionMode = resources.getInteger(resourceId)
+            navBarInteractionMode == 2
+        } else {
+            // Fallback: assume gesture navigation for Android 10+ if we can't detect
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+        }
+    } catch (e: Exception) {
+        // Fallback: assume gesture navigation for Android 10+
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+    }
+}
+
 class MainActivity : ComponentActivity() {
     companion object {
         lateinit var applicationDatabase: MediaDatabase
@@ -168,6 +196,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         installSplashScreen()
+
+        // Configure window for better navigation bar handling
+        configureSystemUI()
 
         val mediaDatabase = Room.databaseBuilder(
             applicationContext,
@@ -1056,6 +1087,33 @@ class MainActivity : ComponentActivity() {
                 )
             } else {
                 MainAppSelectingBottomBar(selectedItemsList)
+            }
+        }
+    }
+
+    /**
+     * Configures system UI for better navigation bar handling
+     */
+    private fun configureSystemUI() {
+        // Enable edge-to-edge display
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        // Configure window insets controller
+        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
+        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+
+        // For devices with traditional navigation buttons, make navigation bar translucent
+        if (!isGestureNavigationEnabled(resources)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                window.isNavigationBarContrastEnforced = false
+            }
+
+            // Make navigation bar translucent
+            window.navigationBarColor = android.graphics.Color.TRANSPARENT
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                window.attributes.layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
         }
     }

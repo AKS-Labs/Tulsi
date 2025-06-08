@@ -66,6 +66,7 @@ import com.aks_labs.tulsi.BuildConfig
 import com.aks_labs.tulsi.MainActivity.Companion.mainViewModel
 import com.aks_labs.tulsi.R
 import com.aks_labs.tulsi.compose.app_bars.BottomAppBarItem
+import com.aks_labs.tulsi.compose.app_bars.FloatingBottomAppBar
 import com.aks_labs.tulsi.compose.app_bars.setBarVisibility
 import com.aks_labs.tulsi.compose.rememberDeviceOrientation
 import com.aks_labs.tulsi.compose.dialogs.ConfirmationDialog
@@ -427,43 +428,20 @@ private fun BottomBar(
     ) {
         val context = LocalContext.current
 
-        // Outer Box container with transparent background
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 16.dp)
-                .background(Color.Transparent),
-            contentAlignment = Alignment.Center
-        ) {
-            // Floating bottom bar container
-            Box(
+        FloatingBottomAppBar {
+            Row(
                 modifier = Modifier
-                    .height(76.dp)
-                    .fillMaxWidth(0.95f)
-                    .shadow(
-                        elevation = 8.dp,
-                        shape = RoundedCornerShape(percent = 35),
-                        spotColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    .fillMaxWidth(1f)
+                    .padding(12.dp, 0.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement =
+                if (isLandscape)
+                    Arrangement.spacedBy(
+                        space = 48.dp,
+                        alignment = Alignment.CenterHorizontally
                     )
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
-                        shape = RoundedCornerShape(percent = 35)
-                    ),
-                contentAlignment = Alignment.Center
+                else Arrangement.SpaceEvenly
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(1f)
-                        .padding(12.dp, 0.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement =
-                    if (isLandscape)
-                        Arrangement.spacedBy(
-                            space = 48.dp,
-                            alignment = Alignment.CenterHorizontally
-                        )
-                    else Arrangement.SpaceEvenly
-                ) {
                     BottomAppBarItem(
                         text = "Share",
                         iconResId = R.drawable.share,
@@ -609,7 +587,6 @@ private fun BottomBar(
                             }
                         }
                     )
-                }
             }
         }
     }

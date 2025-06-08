@@ -1,5 +1,7 @@
 package com.aks_labs.tulsi.compose.app_bars
 
+import android.content.res.Resources
+import android.os.Build
 import android.view.Window
 import android.view.WindowInsetsController
 import androidx.compose.animation.AnimatedContent
@@ -20,8 +22,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -41,12 +46,37 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowInsetsCompat
+
+/**
+ * Detects if the device is using gesture-based navigation or traditional button navigation
+ */
+fun isGestureNavigationEnabled(resources: Resources): Boolean {
+    return try {
+        val resourceId = resources.getIdentifier(
+            "config_navBarInteractionMode",
+            "integer",
+            "android"
+        )
+        if (resourceId > 0) {
+            // 0 = 3-button navigation, 1 = 2-button navigation, 2 = gesture navigation
+            val navBarInteractionMode = resources.getInteger(resourceId)
+            navBarInteractionMode == 2
+        } else {
+            // Fallback: assume gesture navigation for Android 10+ if we can't detect
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+        }
+    } catch (e: Exception) {
+        // Fallback: assume gesture navigation for Android 10+
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+    }
+}
 
 /**
  * Creates a floating bottom app bar with consistent styling across the app
@@ -56,11 +86,28 @@ import androidx.core.view.WindowInsetsCompat
 fun FloatingBottomAppBar(
     content: @Composable () -> Unit
 ) {
+    val context = LocalContext.current
+    val isGestureNav = remember { isGestureNavigationEnabled(context.resources) }
+    val navigationBarPadding = WindowInsets.navigationBars.asPaddingValues()
+
+    // Calculate additional bottom padding for devices with traditional navigation buttons
+    val additionalBottomPadding = if (!isGestureNav) {
+        // Add extra padding to ensure the floating bottom app bar appears above the navigation bar
+        navigationBarPadding.calculateBottomPadding() + 8.dp
+    } else {
+        16.dp // Default padding for gesture navigation
+    }
+
     // Outer Box container with transparent background
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 16.dp)
+            .padding(
+                start = 12.dp,
+                end = 12.dp,
+                top = 16.dp,
+                bottom = additionalBottomPadding
+            )
             .background(Color.Transparent),
         contentAlignment = Alignment.Center
     ) {

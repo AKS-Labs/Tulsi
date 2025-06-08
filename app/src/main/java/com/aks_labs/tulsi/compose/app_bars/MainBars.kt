@@ -208,52 +208,29 @@ fun MainAppBottomBar(
     tabs: List<BottomBarTab>,
     selectedItemsList: SnapshotStateList<MediaStoreData>
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 30.dp)                                      //
-            .background(Color.Transparent),
-        contentAlignment = Alignment.Center
-    ) {
-        // Floating bottom bar container
-        Box(
+    FloatingBottomAppBar {
+        Row(
             modifier = Modifier
-                .height(80.dp)
-                .fillMaxWidth(0.95f)
-                .shadow(
-                    elevation = 8.dp,
-                    shape = RoundedCornerShape(percent = 30),
-                    spotColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-                )
+                .fillMaxSize()
+                .padding(vertical = 7.dp)
                 .background(
                     color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
-                    shape = RoundedCornerShape(percent = 30)
+                    shape = RoundedCornerShape(percent = 35)
                 ),
-            contentAlignment = Alignment.Center
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(vertical = 7.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
-                        shape = RoundedCornerShape(percent = 30)
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                tabs.forEach { tab ->
-                    FloatingBottomBarItem(
-                        tab = tab,
-                        isSelected = currentView.value == tab,
-                        onClick = {
-                            if (currentView.value != tab) {
-                                selectedItemsList.clear()
-                                currentView.value = tab
-                            }
+            tabs.forEach { tab ->
+                FloatingBottomBarItem(
+                    tab = tab,
+                    isSelected = currentView.value == tab,
+                    onClick = {
+                        if (currentView.value != tab) {
+                            selectedItemsList.clear()
+                            currentView.value = tab
                         }
-                    )
-                }
+                    }
+                )
             }
         }
     }
@@ -317,7 +294,7 @@ private fun FloatingBottomBarItem(
         }
 
         // Tab name text
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(0.dp))
         Text(
             text = tab.name,
             style = MaterialTheme.typography.labelMedium,
@@ -335,39 +312,17 @@ private fun FloatingBottomBarItem(
 fun MainAppSelectingBottomBar(
     selectedItemsList: SnapshotStateList<MediaStoreData>
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 30.dp)
-            .background(Color.Transparent),
-        contentAlignment = Alignment.Center
-    ) {
-        // Floating bottom bar container
-        Box(
+    FloatingBottomAppBar {
+        Row(
             modifier = Modifier
-                .height(80.dp)
-                .fillMaxWidth(0.95f)
-                .shadow(
-                    elevation = 8.dp,
-                    shape = RoundedCornerShape(percent = 30),
-                    spotColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-                )
+                .fillMaxSize()
                 .background(
                     color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
-                    shape = RoundedCornerShape(percent = 30)
+                    shape = RoundedCornerShape(percent = 35)
                 ),
-            contentAlignment = Alignment.Center
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
-                        shape = RoundedCornerShape(percent = 30)
-                    ),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
                 val context = LocalContext.current
                 val coroutineScope = rememberCoroutineScope()
 
@@ -472,7 +427,6 @@ fun MainAppSelectingBottomBar(
                         }
                     }
                 )
-            }
         }
     }
 }
