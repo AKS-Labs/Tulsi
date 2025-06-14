@@ -125,6 +125,15 @@ import com.aks_labs.tulsi.compose.single_photo.SingleTrashedPhotoView
 import com.aks_labs.tulsi.database.MediaDatabase
 import com.aks_labs.tulsi.database.Migration3to4
 import com.aks_labs.tulsi.database.Migration4to5
+import com.aks_labs.tulsi.database.Migration5to6
+import com.aks_labs.tulsi.database.Migration6to7
+import com.aks_labs.tulsi.ocr.SimpleOcrService
+import com.aks_labs.tulsi.ocr.OcrManager
+import com.aks_labs.tulsi.ocr.MediaContentObserver
+import android.provider.MediaStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers as CoroutineDispatchers
+import kotlinx.coroutines.launch
 import com.aks_labs.tulsi.datastore.AlbumInfo
 import com.aks_labs.tulsi.datastore.AlbumInfoNavType
 import com.aks_labs.tulsi.datastore.BottomBarTab
@@ -192,6 +201,8 @@ class MainActivity : ComponentActivity() {
         lateinit var mainViewModel: MainViewModel
     }
 
+    private lateinit var mediaContentObserver: MediaContentObserver
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -205,9 +216,17 @@ class MainActivity : ComponentActivity() {
             MediaDatabase::class.java,
             "media-database"
         ).apply {
-            addMigrations(Migration3to4(applicationContext), Migration4to5(applicationContext))
+            addMigrations(
+                Migration3to4(applicationContext),
+                Migration4to5(applicationContext),
+                Migration5to6(applicationContext),
+                Migration6to7(applicationContext)
+            )
         }.build()
         applicationDatabase = mediaDatabase
+
+        // Initialize OCR functionality
+        initializeOcrSystem()
 
         Glide.get(this).setMemoryCategory(MemoryCategory.HIGH)
 
@@ -1115,6 +1134,74 @@ class MainActivity : ComponentActivity() {
                 window.attributes.layoutInDisplayCutoutMode =
                     WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
             }
+        }
+    }
+
+    /**
+     * Initialize OCR system with content observer and progress tracking
+     */
+    private fun initializeOcrSystem() {
+        Log.d("MainActivity", "Initializing OCR system...")
+        CoroutineScope(CoroutineDispatchers.IO).launch {
+            try {
+                val ocrManager = OcrManager(applicationContext, applicationDatabase)
+
+                // Initialize progress tracking
+                val totalImages = getTotalImageCount()
+                Log.d("MainActivity", "Found $totalImages total images")
+                ocrManager.initializeProgress(totalImages)
+
+                // Set up content observer for new images
+                mediaContentObserver = MediaContentObserver(applicationContext)
+                contentResolver.registerContentObserver(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    true,
+                    mediaContentObserver
+                )
+                Log.d("MainActivity", "Content observer registered")
+
+                // Check current progress
+                val processedCount = applicationDatabase.ocrProgressDao().getProcessedCount() ?: 0
+                Log.d("MainActivity", "Already processed: $processedCount images")
+
+                // Start initial OCR processing if needed
+                if (processedCount < totalImages) {
+                    Log.d("MainActivity", "Starting OCR processing for ${totalImages - processedCount} remaining images")
+                    ocrManager.processBatch(batchSize = 5) // Start with small batch
+                } else {
+                    Log.d("MainActivity", "All images already processed")
+                }
+
+            } catch (e: Exception) {
+                Log.e("MainActivity", "Failed to initialize OCR system", e)
+            }
+        }
+    }
+
+    /**
+     * Get total number of images in MediaStore
+     */
+    private fun getTotalImageCount(): Int {
+        return try {
+            val cursor = contentResolver.query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                arrayOf(MediaStore.Images.Media._ID),
+                null,
+                null,
+                null
+            )
+            cursor?.use { it.count } ?: 0
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Failed to get total image count", e)
+            0
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Unregister content observer
+        if (::mediaContentObserver.isInitialized) {
+            contentResolver.unregisterContentObserver(mediaContentObserver)
         }
     }
 }

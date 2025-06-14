@@ -107,6 +107,18 @@ dependencies {
     implementation("com.github.kittinunf.fuel:fuel-json:2.3.1")
 	implementation("com.github.kaii-lb:Lavender-Snackbars:0.1.7")
 
+    // ML Kit for OCR text recognition
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+
+    // Coroutines support for Google Play Services (needed for ML Kit)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
+
+    // WorkManager for background processing
+    implementation("androidx.work:work-runtime-ktx:2.10.0")
+
+    // For content observer and media monitoring
+    implementation("androidx.lifecycle:lifecycle-service:2.8.7")
+
     val roomVersion = "2.7.1"
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")

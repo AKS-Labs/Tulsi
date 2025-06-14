@@ -31,6 +31,7 @@
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -94,5 +95,17 @@
             android:authorities="com.aks_labs.tulsi.content_provider"
             android:enabled="true"
             android:exported="false" />
+
+        <!-- OCR Notification Receiver -->
+        <receiver
+            android:name=".ocr.OcrNotificationReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.aks_labs.tulsi.OCR_PAUSE" />
+                <action android:name="com.aks_labs.tulsi.OCR_RESUME" />
+                <action android:name="com.aks_labs.tulsi.OCR_VIEW_PROGRESS" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
