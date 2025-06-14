@@ -11,6 +11,9 @@ import androidx.core.app.NotificationManagerCompat
 import com.aks_labs.tulsi.MainActivity
 import com.aks_labs.tulsi.R
 import com.aks_labs.tulsi.database.entities.OcrProgressEntity
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 /**
  * Manages OCR processing notifications
@@ -78,11 +81,25 @@ class OcrNotificationManager(private val context: Context) {
         
         val pauseResumeText = if (progress.isPaused) "Resume" else "Pause"
         val statusText = if (progress.isPaused) "Paused" else "Processing"
-        
+
+        // Calculate estimated time remaining
+        val timeRemainingText = if (progress.estimatedTimeRemainingMs > 0 && !progress.isPaused) {
+            val minutes = TimeUnit.MILLISECONDS.toMinutes(progress.estimatedTimeRemainingMs)
+            val seconds = TimeUnit.MILLISECONDS.toSeconds(progress.estimatedTimeRemainingMs) % 60
+            when {
+                minutes > 0 -> " • ~${minutes}m ${seconds}s remaining"
+                seconds > 0 -> " • ~${seconds}s remaining"
+                else -> " • Almost done"
+            }
+        } else ""
+
+        val progressText = "${progress.processedImages}/${progress.totalImages} (${progress.progressPercentage}%)"
+        val detailText = "$statusText: $progressText$timeRemainingText"
+
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setContentTitle("Tulsi Gallery - Text Search")
-            .setContentText("$statusText images for text search...")
-            .setSubText("${progress.processedImages} of ${progress.totalImages} images complete (${progress.progressPercentage}%)")
+            .setContentTitle("Tulsi Gallery - OCR Processing")
+            .setContentText(detailText)
+            .setSubText("Tap to view detailed progress")
             .setSmallIcon(R.drawable.ic_launcher_foreground) // You may want to create a specific OCR icon
             .setProgress(progress.totalImages, progress.processedImages, false)
             .setContentIntent(pendingIntent)
@@ -148,6 +165,13 @@ class OcrNotificationManager(private val context: Context) {
      */
     fun hideNotification() {
         notificationManager.cancel(NOTIFICATION_ID)
+    }
+
+    /**
+     * Hide progress notification (alias for hideNotification)
+     */
+    fun hideProgress() {
+        hideNotification()
     }
     
     /**

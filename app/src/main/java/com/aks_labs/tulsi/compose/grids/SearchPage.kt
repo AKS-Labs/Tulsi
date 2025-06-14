@@ -153,8 +153,18 @@ fun SearchPage(
             }.build()
         }
         val ocrManager = remember { OcrManager(context, database) }
-        val ocrProgress by ocrManager.getProgressFlow().collectAsState(initial = null)
+        val ocrProgress by ocrManager.getProgressFlow().collectAsStateWithLifecycle(initialValue = null)
         var progressBarDismissed by rememberSaveable { mutableStateOf(false) }
+
+        // Ensure progress monitoring is active when page loads
+        LaunchedEffect(Unit) {
+            ocrManager.ensureProgressMonitoring()
+        }
+
+        // Ensure progress monitoring is active when page loads
+        LaunchedEffect(Unit) {
+            ocrManager.ensureProgressMonitoring()
+        }
 
         var hideLoadingSpinner by remember { mutableStateOf(false) }
         val showLoadingSpinner by remember {
@@ -334,6 +344,14 @@ fun SearchPage(
                         }
                     ) {
                         Text("Debug: Test Search")
+                    }
+
+                    Button(
+                        onClick = {
+                            ocrManager.forceStartProgressMonitoring()
+                        }
+                    ) {
+                        Text("Debug: Start Progress Monitor")
                     }
                 }
             }

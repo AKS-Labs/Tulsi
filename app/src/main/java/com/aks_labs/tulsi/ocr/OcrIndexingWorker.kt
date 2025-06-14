@@ -33,11 +33,13 @@ class OcrIndexingWorker(
         const val KEY_MEDIA_ID = "media_id"
         const val KEY_MEDIA_URI = "media_uri"
         const val KEY_BATCH_SIZE = "batch_size"
+        const val KEY_CONTINUOUS_PROCESSING = "continuous_processing"
+        const val KEY_PROCESS_ALL = "process_all"
         const val KEY_PROGRESS = "progress"
         const val KEY_TOTAL_PROCESSED = "total_processed"
         const val KEY_ERRORS = "errors"
-        
-        const val DEFAULT_BATCH_SIZE = 10
+
+        const val DEFAULT_BATCH_SIZE = 50
     }
     
     private val database by lazy {
@@ -64,15 +66,21 @@ class OcrIndexingWorker(
             val mediaId = inputData.getLong(KEY_MEDIA_ID, -1L)
             val mediaUri = inputData.getString(KEY_MEDIA_URI)
             val batchSize = inputData.getInt(KEY_BATCH_SIZE, DEFAULT_BATCH_SIZE)
-            
+            val continuousProcessing = inputData.getBoolean(KEY_CONTINUOUS_PROCESSING, false)
+            val processAll = inputData.getBoolean(KEY_PROCESS_ALL, false)
+
             return@withContext when {
                 mediaId != -1L && mediaUri != null -> {
                     // Process single image
                     processSingleImage(mediaId, mediaUri)
                 }
+                processAll -> {
+                    // Process all unprocessed images continuously
+                    processContinuouslyUntilComplete(batchSize)
+                }
                 else -> {
                     // Process batch of unprocessed images
-                    processBatchImages(batchSize)
+                    processBatchImages(batchSize, continuousProcessing)
                 }
             }
         } catch (e: Exception) {
@@ -134,9 +142,79 @@ class OcrIndexingWorker(
     }
     
     /**
+     * Process all unprocessed images continuously until complete
+     */
+    private suspend fun processContinuouslyUntilComplete(batchSize: Int): Result {
+        Log.d(TAG, "Starting continuous processing with batch size: $batchSize")
+
+        var totalProcessed = 0
+        var totalErrors = 0
+        var iterationCount = 0
+
+        while (true) {
+            iterationCount++
+            Log.d(TAG, "Continuous processing iteration $iterationCount")
+
+            // Get current progress
+            val totalImages = getTotalImageCount()
+            val processedMediaIds = database.ocrTextDao().getAllProcessedMediaIds().toSet()
+            val remainingImages = totalImages - processedMediaIds.size
+
+            Log.d(TAG, "Progress: ${processedMediaIds.size}/$totalImages processed, $remainingImages remaining")
+
+            if (remainingImages <= 0) {
+                Log.d(TAG, "All images processed! Stopping continuous processing.")
+                updateProgressInDatabase(processedMediaIds.size, totalImages, false)
+                break
+            }
+
+            // Process next batch
+            val result = processBatchImages(minOf(batchSize, remainingImages), false)
+
+            when (result) {
+                is Result.Success -> {
+                    val batchProcessed = result.outputData.getInt(KEY_TOTAL_PROCESSED, 0)
+                    totalProcessed += batchProcessed
+                    Log.d(TAG, "Batch completed: $batchProcessed processed in iteration $iterationCount")
+
+                    // If no images were processed in this batch, we're done
+                    if (batchProcessed == 0) {
+                        Log.d(TAG, "No more images to process. Stopping.")
+                        break
+                    }
+                }
+                is Result.Failure -> {
+                    totalErrors++
+                    Log.e(TAG, "Batch failed in iteration $iterationCount")
+
+                    // Continue processing even if one batch fails
+                    if (totalErrors > 5) {
+                        Log.e(TAG, "Too many batch failures ($totalErrors). Stopping continuous processing.")
+                        break
+                    }
+                }
+                else -> {
+                    Log.w(TAG, "Unexpected result type: $result")
+                    break
+                }
+            }
+
+            // Small delay between batches to prevent overwhelming the system
+            kotlinx.coroutines.delay(1000)
+        }
+
+        Log.d(TAG, "Continuous processing completed: $totalProcessed total processed, $totalErrors errors, $iterationCount iterations")
+
+        return Result.success(workDataOf(
+            KEY_TOTAL_PROCESSED to totalProcessed,
+            KEY_PROGRESS to "Continuous processing completed: $totalProcessed images processed"
+        ))
+    }
+
+    /**
      * Process a batch of unprocessed images
      */
-    private suspend fun processBatchImages(batchSize: Int): Result {
+    private suspend fun processBatchImages(batchSize: Int, scheduleNext: Boolean = false): Result {
         return try {
             Log.d(TAG, "Processing batch of $batchSize images")
 
@@ -376,30 +454,60 @@ class OcrIndexingWorker(
     }
 
     /**
-     * Update progress in database
+     * Update progress in database with overall progress and timing information
      */
     private suspend fun updateProgressInDatabase(processed: Int, total: Int, isProcessing: Boolean) {
         try {
+            // Get overall progress instead of just batch progress
+            val totalImages = getTotalImageCount()
+            val totalProcessedImages = database.ocrTextDao().getAllProcessedMediaIds().size
+
             val currentProgress = database.ocrProgressDao().getProgress()
+            val currentTime = System.currentTimeMillis()
+
+            // Calculate average processing time and estimated completion
+            val averageProcessingTime = if (currentProgress != null && totalProcessedImages > 0) {
+                val timeElapsed = currentTime - (currentProgress.lastUpdated * 1000)
+                val imagesProcessedSinceLastUpdate = totalProcessedImages - currentProgress.processedImages
+                if (imagesProcessedSinceLastUpdate > 0) {
+                    timeElapsed / imagesProcessedSinceLastUpdate
+                } else {
+                    currentProgress.averageProcessingTimeMs
+                }
+            } else {
+                0L
+            }
+
+            val estimatedCompletionTime = if (averageProcessingTime > 0 && totalProcessedImages < totalImages) {
+                val remainingImages = totalImages - totalProcessedImages
+                currentTime + (remainingImages * averageProcessingTime)
+            } else {
+                0L
+            }
+
             if (currentProgress != null) {
                 val updatedProgress = currentProgress.copy(
-                    processedImages = processed,
-                    totalImages = total,
+                    processedImages = totalProcessedImages,
+                    totalImages = totalImages,
                     isProcessing = isProcessing,
-                    lastUpdated = System.currentTimeMillis() / 1000
+                    lastUpdated = currentTime / 1000,
+                    averageProcessingTimeMs = averageProcessingTime,
+                    estimatedCompletionTime = estimatedCompletionTime
                 )
                 database.ocrProgressDao().updateProgress(updatedProgress)
             } else {
                 // Initialize progress if it doesn't exist
                 val initialProgress = com.aks_labs.tulsi.database.entities.OcrProgressEntity(
-                    totalImages = total,
-                    processedImages = processed,
+                    totalImages = totalImages,
+                    processedImages = totalProcessedImages,
                     isProcessing = isProcessing,
-                    lastUpdated = System.currentTimeMillis() / 1000
+                    lastUpdated = currentTime / 1000,
+                    averageProcessingTimeMs = averageProcessingTime,
+                    estimatedCompletionTime = estimatedCompletionTime
                 )
                 database.ocrProgressDao().insertProgress(initialProgress)
             }
-            Log.d(TAG, "Updated progress: $processed/$total")
+            Log.d(TAG, "Updated overall progress: $totalProcessedImages/$totalImages (avg: ${averageProcessingTime}ms/image)")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to update progress in database", e)
         }

@@ -18,6 +18,8 @@ import com.aks_labs.tulsi.mediastore.MediaType
 import com.aks_labs.tulsi.ocr.MediaContentObserver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -39,6 +41,7 @@ class OcrManager(
 
     private val workManager = WorkManager.getInstance(context)
     private val notificationManager = OcrNotificationManager(context)
+    private var progressMonitorJob: Job? = null
     
     /**
      * Start OCR processing for a single image
@@ -117,7 +120,8 @@ class OcrManager(
         }
 
         val inputData = workDataOf(
-            OcrIndexingWorker.KEY_BATCH_SIZE to batchSize
+            OcrIndexingWorker.KEY_BATCH_SIZE to batchSize,
+            OcrIndexingWorker.KEY_CONTINUOUS_PROCESSING to true
         )
 
         val constraints = Constraints.Builder()
@@ -139,8 +143,165 @@ class OcrManager(
             workRequest
         )
 
+        // Start real-time progress monitoring for batch processing too
+        startProgressMonitoring()
+
         Log.d(TAG, "Enqueued OCR batch work with ID: ${workRequest.id}")
         return workRequest.id
+    }
+
+    /**
+     * Start continuous OCR processing for all images
+     */
+    fun startContinuousProcessing(batchSize: Int = 50): UUID {
+        Log.d(TAG, "Starting continuous OCR processing with batch size: $batchSize")
+
+        // Update processing status
+        CoroutineScope(Dispatchers.IO).launch {
+            database.ocrProgressDao().updateProcessingStatus(true)
+            Log.d(TAG, "Updated processing status to true")
+        }
+
+        val inputData = workDataOf(
+            OcrIndexingWorker.KEY_BATCH_SIZE to batchSize,
+            OcrIndexingWorker.KEY_CONTINUOUS_PROCESSING to true,
+            OcrIndexingWorker.KEY_PROCESS_ALL to true
+        )
+
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
+            .setRequiresBatteryNotLow(true)
+            .setRequiresCharging(false)
+            .setRequiresDeviceIdle(false)
+            .build()
+
+        val workRequest = OneTimeWorkRequestBuilder<OcrIndexingWorker>()
+            .setInputData(inputData)
+            .setConstraints(constraints)
+            .addTag("ocr_continuous")
+            .addTag("ocr_batch")
+            .build()
+
+        workManager.enqueueUniqueWork(
+            "${WORK_NAME_BATCH_OCR}_continuous",
+            ExistingWorkPolicy.REPLACE,
+            workRequest
+        )
+
+        Log.d(TAG, "Enqueued continuous OCR work with ID: ${workRequest.id}")
+
+        // Start real-time progress monitoring
+        startProgressMonitoring()
+
+        return workRequest.id
+    }
+
+    /**
+     * Start real-time progress monitoring
+     */
+    private fun startProgressMonitoring() {
+        // Cancel existing monitoring
+        progressMonitorJob?.cancel()
+
+        progressMonitorJob = CoroutineScope(Dispatchers.IO).launch {
+            Log.d(TAG, "Progress monitoring started")
+            while (true) {
+                try {
+                    val progress = database.ocrProgressDao().getProgress()
+                    if (progress != null) {
+                        // Refresh progress with current database state
+                        val totalImages = getTotalImageCount()
+                        val totalProcessedImages = database.ocrTextDao().getAllProcessedMediaIds().size
+
+                        Log.d(TAG, "Progress monitoring check: $totalProcessedImages/$totalImages (current: ${progress.processedImages}/${progress.totalImages})")
+
+                        // Always update progress to ensure Flow emission and real-time updates
+                        val currentTime = System.currentTimeMillis()
+                        val updatedProgress = progress.copy(
+                            processedImages = totalProcessedImages,
+                            totalImages = totalImages,
+                            lastUpdated = currentTime / 1000
+                        )
+
+                        // Update database to trigger Flow emission
+                        database.ocrProgressDao().updateProgress(updatedProgress)
+                        Log.d(TAG, "Real-time progress update: ${updatedProgress.processedImages}/${updatedProgress.totalImages} (${updatedProgress.progressPercentage}%)")
+
+                        // Update notification if progress bar is dismissed or if processing
+                        if (updatedProgress.progressDismissed || updatedProgress.isProcessing) {
+                            notificationManager.updateProgress(updatedProgress)
+                        }
+
+                        // Stop monitoring if processing is complete
+                        if (updatedProgress.isComplete || (!updatedProgress.isProcessing && !updatedProgress.isPaused)) {
+                            Log.d(TAG, "Progress monitoring stopped - processing complete or inactive")
+                            break
+                        }
+                    } else {
+                        Log.w(TAG, "No progress entity found in database")
+                    }
+
+                    // Update every 2 seconds for real-time feedback
+                    delay(2000)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error in progress monitoring", e)
+                    delay(5000) // Wait longer on error
+                }
+            }
+            Log.d(TAG, "Progress monitoring ended")
+        }
+    }
+
+    /**
+     * Stop real-time progress monitoring
+     */
+    private fun stopProgressMonitoring() {
+        progressMonitorJob?.cancel()
+        progressMonitorJob = null
+    }
+
+    /**
+     * Check if monitoring should be active and start if needed
+     */
+    suspend fun ensureProgressMonitoring() {
+        val progress = database.ocrProgressDao().getProgress()
+        Log.d(TAG, "Checking progress monitoring: progress=$progress, job=${progressMonitorJob != null}")
+        if (progress != null && (progress.isProcessing || progress.isPaused) && progressMonitorJob == null) {
+            Log.d(TAG, "Starting progress monitoring for active OCR processing")
+            startProgressMonitoring()
+        } else if (progress != null && (progress.isProcessing || progress.isPaused) && progressMonitorJob != null) {
+            Log.d(TAG, "Progress monitoring already active")
+        }
+    }
+
+    /**
+     * Force start progress monitoring (for debugging)
+     */
+    fun forceStartProgressMonitoring() {
+        Log.d(TAG, "Force starting progress monitoring")
+        startProgressMonitoring()
+    }
+
+    /**
+     * Mark progress bar as dismissed and show notification
+     */
+    suspend fun dismissProgressBar() {
+        Log.d(TAG, "Progress bar dismissed - showing notification")
+        database.ocrProgressDao().updateDismissedStatus(true)
+
+        val progress = database.ocrProgressDao().getProgress()
+        if (progress != null && (progress.isProcessing || progress.isPaused)) {
+            notificationManager.updateProgress(progress.copy(progressDismissed = true))
+        }
+    }
+
+    /**
+     * Mark progress bar as shown and hide notification
+     */
+    suspend fun showProgressBar() {
+        Log.d(TAG, "Progress bar shown - hiding notification")
+        database.ocrProgressDao().updateDismissedStatus(false)
+        notificationManager.hideProgress()
     }
     
     /**
@@ -280,6 +441,8 @@ class OcrManager(
         if (progress != null) {
             notificationManager.updateProgress(progress.copy(isPaused = true, isProcessing = false))
         }
+
+        Log.d(TAG, "OCR processing paused")
     }
 
     /**
@@ -288,12 +451,14 @@ class OcrManager(
     suspend fun resumeProcessing() {
         database.ocrProgressDao().updatePausedStatus(false)
         database.ocrProgressDao().updateProcessingStatus(true)
-        processBatch()
+        startContinuousProcessing(batchSize = 50)
 
         val progress = database.ocrProgressDao().getProgress()
         if (progress != null) {
             notificationManager.updateProgress(progress.copy(isPaused = false, isProcessing = true))
         }
+
+        Log.d(TAG, "OCR processing resumed")
     }
 
     /**
@@ -316,6 +481,9 @@ class OcrManager(
     suspend fun forceRestartOcr() {
         Log.d(TAG, "Force restarting OCR processing...")
 
+        // Cancel any existing work
+        cancelAllOcr()
+
         // Clear progress
         database.ocrProgressDao().clearProgress()
 
@@ -323,8 +491,8 @@ class OcrManager(
         val totalImages = getTotalImageCount()
         initializeProgress(totalImages)
 
-        // Start processing
-        processBatch(batchSize = 3)
+        // Start continuous processing with larger batch size
+        startContinuousProcessing(batchSize = 50)
 
         Log.d(TAG, "Force restart completed")
     }
