@@ -96,7 +96,7 @@ fun MoveCopyAlbumListView(
     selectedItemsList: SnapshotStateList<MediaStoreData>,
     isMoving: Boolean,
     groupedMedia: MutableState<List<MediaStoreData>>? = null,
-    insetsPadding: WindowInsets
+    insetsPadding: WindowInsets? = null
 ) {
     val context = LocalContext.current
     val originalAlbumsList by mainViewModel.settings.AlbumsList.getAlbumsList()
@@ -145,10 +145,11 @@ fun MoveCopyAlbumListView(
             ),
             containerColor = MaterialTheme.colorScheme.background,
             onDismissRequest = { show.value = false },
-            modifier = Modifier
-                .windowInsetsPadding(
-                    insetsPadding
-                ),
+            modifier = if (insetsPadding != null) {
+                Modifier.windowInsetsPadding(insetsPadding)
+            } else {
+                Modifier
+            },
         ) {
             BackHandler(
                 enabled = show.value && !WindowInsets.isImeVisible

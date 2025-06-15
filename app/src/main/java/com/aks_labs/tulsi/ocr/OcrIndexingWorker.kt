@@ -132,7 +132,24 @@ class OcrIndexingWorker(
                 }
                 is OcrResult.Error -> {
                     Log.e(TAG, "OCR failed for image $mediaId: ${ocrResult.message}")
-                    Result.failure(workDataOf(KEY_ERRORS to ocrResult.message))
+
+                    // Mark failed image as processed with empty text to avoid infinite retry
+                    val failedOcrEntity = OcrTextEntity(
+                        mediaId = mediaId,
+                        extractedText = "", // Empty text for failed OCR
+                        extractionTimestamp = System.currentTimeMillis() / 1000,
+                        confidenceScore = 0.0f,
+                        textBlocksCount = 0,
+                        processingTimeMs = 0L
+                    )
+                    database.ocrTextDao().insertOcrText(failedOcrEntity)
+
+                    Log.d(TAG, "Marked failed image $mediaId as processed with empty text")
+
+                    Result.success(workDataOf(
+                        KEY_TOTAL_PROCESSED to 1,
+                        KEY_PROGRESS to "Processed (failed) image $mediaId"
+                    ))
                 }
             }
         } catch (e: Exception) {
@@ -297,6 +314,18 @@ class OcrIndexingWorker(
                         is OcrResult.Error -> {
                             Log.e(TAG, "OCR failed for image ${imageInfo.id}: ${ocrResult.message}")
                             errorCount++
+
+                            // Mark failed image as processed with empty text to avoid infinite retry
+                            val failedOcrEntity = OcrTextEntity(
+                                mediaId = imageInfo.id,
+                                extractedText = "", // Empty text for failed OCR
+                                extractionTimestamp = System.currentTimeMillis() / 1000,
+                                confidenceScore = 0.0f,
+                                textBlocksCount = 0,
+                                processingTimeMs = 0L
+                            )
+                            database.ocrTextDao().insertOcrText(failedOcrEntity)
+                            processedCount++ // Count failed images as processed
                         }
                     }
 
@@ -417,6 +446,18 @@ class OcrIndexingWorker(
                     }
                     is OcrResult.Error -> {
                         Log.e(TAG, "OCR failed for fallback image ${imageInfo.id}: ${ocrResult.message}")
+
+                        // Mark failed image as processed with empty text to avoid infinite retry
+                        val failedOcrEntity = OcrTextEntity(
+                            mediaId = imageInfo.id,
+                            extractedText = "", // Empty text for failed OCR
+                            extractionTimestamp = System.currentTimeMillis() / 1000,
+                            confidenceScore = 0.0f,
+                            textBlocksCount = 0,
+                            processingTimeMs = 0L
+                        )
+                        database.ocrTextDao().insertOcrText(failedOcrEntity)
+                        processedCount++ // Count failed images as processed
                     }
                 }
 

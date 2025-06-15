@@ -234,8 +234,7 @@ fun SingleTrashedPhotoView(
             currentMediaItem = currentMediaItem,
             groupedMedia = groupedMedia,
             loadsFromMainViewModel = true,
-            showMoveCopyOptions = false,
-            moveCopyInsetsPadding = null
+            showMoveCopyOptions = false
         )
     }
 }

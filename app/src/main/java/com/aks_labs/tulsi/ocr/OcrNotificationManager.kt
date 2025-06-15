@@ -118,6 +118,8 @@ class OcrNotificationManager(private val context: Context) {
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setSilent(true) // Make notification completely silent
+            .setOnlyAlertOnce(true) // Only alert once, not on every update
             .build()
         
         try {

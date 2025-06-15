@@ -3,11 +3,14 @@ package com.aks_labs.tulsi.compose.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -38,6 +41,7 @@ fun SearchBar(
     onQueryChange: (String) -> Unit = { query.value = it },
     onSearch: () -> Unit = {},
     onClear: () -> Unit = { query.value = "" },
+    onFilterClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -72,20 +76,34 @@ fun SearchBar(
                 )
             },
             trailingIcon = {
-                AnimatedVisibility(
-                    visible = query.value.isNotEmpty(),
-                    enter = fadeIn(),
-                    exit = fadeOut()
+                Row(
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    IconButton(onClick = { 
-                        onClear()
-                        keyboardController?.hide()
-                    }) {
+                    // Filter button - always visible
+                    IconButton(onClick = onFilterClick) {
                         Icon(
-                            imageVector = Icons.Default.Clear,
-                            contentDescription = "Clear search",
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Search filters",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )
+                    }
+
+                    // Clear button - only visible when there's text
+                    AnimatedVisibility(
+                        visible = query.value.isNotEmpty(),
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        IconButton(onClick = {
+                            onClear()
+                            keyboardController?.hide()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Clear search",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+                        }
                     }
                 }
             },

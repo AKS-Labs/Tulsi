@@ -1,6 +1,16 @@
 package com.aks_labs.tulsi.compose.grids
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,11 +27,18 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -80,7 +97,8 @@ import java.util.Locale
 @Composable
 fun SearchPage(
     selectedItemsList: SnapshotStateList<MediaStoreData>,
-    currentView: MutableState<BottomBarTab>
+    currentView: MutableState<BottomBarTab>,
+    onTopBarVisibilityChange: (Boolean) -> Unit = {}
 ) {
     val searchViewModel: SearchViewModel = viewModel(
         factory = SearchViewModelFactory(LocalContext.current, MediaItemSortMode.DateTaken)
@@ -98,6 +116,45 @@ fun SearchPage(
 
     val gridState = rememberLazyGridState()
     val navController = LocalNavController.current
+
+    // Auto-hide search bar on scroll
+    var isSearchBarVisible by remember { mutableStateOf(true) }
+    var lastScrollIndex by remember { mutableStateOf(0) }
+    var showFilterDropdown by remember { mutableStateOf(false) }
+
+    // Track immersive mode for proper window insets handling
+    val isImmersiveMode = !isSearchBarVisible
+
+    // Auto-collapse filter chips after 10 seconds of inactivity
+    LaunchedEffect(showFilterDropdown) {
+        if (showFilterDropdown) {
+            delay(10000) // 10 seconds
+            showFilterDropdown = false
+        }
+    }
+
+    // Monitor scroll state for auto-hide functionality
+    LaunchedEffect(gridState.firstVisibleItemIndex) {
+        val currentIndex = gridState.firstVisibleItemIndex
+
+        // Show search bar when at top or scrolling up
+        if (currentIndex == 0) {
+            isSearchBarVisible = true
+            onTopBarVisibilityChange(true) // Show top app bar
+        } else if (currentIndex < lastScrollIndex) {
+            // Scrolling up - show search bar but hide filter chips
+            isSearchBarVisible = true
+            onTopBarVisibilityChange(true) // Show top app bar
+            showFilterDropdown = false // Hide filter chips when search bar reappears
+        } else if (currentIndex > lastScrollIndex + 2) {
+            // Scrolling down significantly
+            isSearchBarVisible = false
+            onTopBarVisibilityChange(false) // Hide top app bar
+            showFilterDropdown = false // Hide filter chips when scrolling down
+        }
+
+        lastScrollIndex = currentIndex
+    }
 
     // Observe grid view mode changes to update the UI immediately
     val isGridView by mainViewModel.isGridViewMode.collectAsStateWithLifecycle(initialValue = true)
@@ -133,8 +190,8 @@ fun SearchPage(
         val searchedForText = rememberSaveable { mutableStateOf("") }
         var searchNow by rememberSaveable { mutableStateOf(false) }
 
-        // Search type state: "metadata", "ocr", "combined"
-        var searchType by rememberSaveable { mutableStateOf("metadata") }
+        // Search type state: "metadata", "ocr", "combined" - Default to OCR for text search
+        var searchType by rememberSaveable { mutableStateOf("ocr") }
 
         // OCR progress tracking
         val context = LocalContext.current
@@ -161,11 +218,6 @@ fun SearchPage(
             ocrManager.ensureProgressMonitoring()
         }
 
-        // Ensure progress monitoring is active when page loads
-        LaunchedEffect(Unit) {
-            ocrManager.ensureProgressMonitoring()
-        }
-
         var hideLoadingSpinner by remember { mutableStateOf(false) }
         val showLoadingSpinner by remember {
             derivedStateOf {
@@ -180,14 +232,27 @@ fun SearchPage(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Search bar container
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(1f)
-                    .height(56.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+            // Animated search bar container - smooth fade animations
+            AnimatedVisibility(
+                visible = isSearchBarVisible,
+                enter = fadeIn(animationSpec = tween(400)),
+                exit = fadeOut(animationSpec = tween(400))
             ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth(1f)
+                        .background(MaterialTheme.colorScheme.background),
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Search bar container
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth(1f)
+                            .height(56.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
             val placeholdersList = remember {
                 val month = months.random().replaceFirstChar {
                     it.uppercase()
@@ -226,71 +291,116 @@ fun SearchPage(
                         searchedForText.value = ""
                         searchNow = true
                         scrollBackToTop()
+                    },
+                    onFilterClick = {
+                        showFilterDropdown = !showFilterDropdown
                     }
                 )
             }
 
-            // Search type filter chips
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    // Compact filter chips - show when filter button is clicked
+                    AnimatedVisibility(
+                visible = showFilterDropdown,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
             ) {
-                FilterChip(
-                    onClick = {
-                        searchType = "metadata"
-                        if (searchedForText.value.isNotEmpty()) {
-                            searchNow = true
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FilterChip(
+                        onClick = {
+                            searchType = "metadata"
+                            showFilterDropdown = false // Auto-hide after selection
+                            if (searchedForText.value.isNotEmpty()) {
+                                searchNow = true
+                            }
+                        },
+                        label = {
+                            Text(
+                                "Filename & Date",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        },
+                        selected = searchType == "metadata",
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Metadata search",
+                                modifier = Modifier.size(14.dp)
+                            )
                         }
-                    },
-                    label = { Text("Filename & Date") },
-                    selected = searchType == "metadata",
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Metadata search",
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                )
+                    )
 
-                FilterChip(
-                    onClick = {
-                        searchType = "ocr"
-                        if (searchedForText.value.isNotEmpty()) {
-                            searchNow = true
+                    FilterChip(
+                        onClick = {
+                            searchType = "ocr"
+                            showFilterDropdown = false // Auto-hide after selection
+                            if (searchedForText.value.isNotEmpty()) {
+                                searchNow = true
+                            }
+                        },
+                        label = {
+                            Text(
+                                "Text in Images",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        },
+                        selected = searchType == "ocr",
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "OCR search",
+                                modifier = Modifier.size(14.dp)
+                            )
                         }
-                    },
-                    label = { Text("Text in Images") },
-                    selected = searchType == "ocr"
-                )
+                    )
 
-                FilterChip(
-                    onClick = {
-                        searchType = "combined"
-                        if (searchedForText.value.isNotEmpty()) {
-                            searchNow = true
+                    FilterChip(
+                        onClick = {
+                            searchType = "combined"
+                            showFilterDropdown = false // Auto-hide after selection
+                            if (searchedForText.value.isNotEmpty()) {
+                                searchNow = true
+                            }
+                        },
+                        label = {
+                            Text(
+                                "Both",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        },
+                        selected = searchType == "combined",
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.List,
+                                contentDescription = "Combined search",
+                                modifier = Modifier.size(14.dp)
+                            )
                         }
-                    },
-                    label = { Text("Both") },
-                    selected = searchType == "combined"
-                )
+                    )
+                }
             }
 
-            // OCR Progress Bar - show only when OCR or combined search is selected
+                    // Add spacing between filter chips and progress bar
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // OCR Progress Bar - show by default when OCR processing is active
             val currentProgress = ocrProgress
             OcrProgressBar(
                 progress = currentProgress,
-                isVisible = (searchType == "ocr" || searchType == "combined") &&
-                           !progressBarDismissed &&
+                isVisible = !progressBarDismissed &&
                            currentProgress != null &&
-                           !currentProgress.isComplete,
+                           !currentProgress.isComplete &&
+                           (currentProgress.isProcessing || currentProgress.isPaused ||
+                            (currentProgress.processedImages < currentProgress.totalImages && currentProgress.totalImages > 0)),
                 onDismiss = {
                     progressBarDismissed = true
                     coroutineScope.launch {
-                        ocrManager.dismissProgress()
+                        ocrManager.dismissProgressBar()
                     }
                 },
                 onPauseResume = {
@@ -305,59 +415,19 @@ fun SearchPage(
                 }
             )
 
-            // Reset dismissed state when new images are added and processing resumes
-            LaunchedEffect(currentProgress?.totalImages) {
-                val progressState = ocrProgress
-                if (progressState != null && progressBarDismissed && !progressState.isComplete) {
-                    progressBarDismissed = false
-                    ocrManager.showProgress()
-                }
-            }
-
-            // Debug buttons (remove these in production)
-            if (searchType == "ocr" || searchType == "combined") {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Button(
-                        onClick = {
-                            coroutineScope.launch {
-                                ocrManager.forceRestartOcr()
-                            }
+                    // Reset dismissed state when new images are added and processing resumes
+                    LaunchedEffect(currentProgress?.totalImages) {
+                        val progressState = ocrProgress
+                        if (progressState != null && progressBarDismissed && !progressState.isComplete) {
+                            progressBarDismissed = false
+                            ocrManager.showProgressBar()
                         }
-                    ) {
-                        Text("Debug: Force Restart OCR")
-                    }
-
-                    Button(
-                        onClick = {
-                            coroutineScope.launch {
-                                // Test OCR search with a simple query
-                                val testResults = searchViewModel.searchByOcrText("test")
-                                println("DEBUG: OCR search for 'test' found ${testResults.size} results")
-
-                                // Also test the database directly
-                                val allOcrTexts = database.ocrTextDao().getOcrTextCount()
-                                println("DEBUG: Total OCR texts in database: $allOcrTexts")
-                            }
-                        }
-                    ) {
-                        Text("Debug: Test Search")
-                    }
-
-                    Button(
-                        onClick = {
-                            ocrManager.forceStartProgressMonitoring()
-                        }
-                    ) {
-                        Text("Debug: Start Progress Monitor")
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         LaunchedEffect(hideLoadingSpinner) {
             if (!hideLoadingSpinner) {
@@ -396,8 +466,7 @@ fun SearchPage(
 
 
         Box(
-            modifier = Modifier
-                .fillMaxHeight(1f)
+            modifier = Modifier.fillMaxHeight(1f)
         ) {
             PhotoGrid(
                 groupedMedia = groupedMedia,
@@ -405,8 +474,7 @@ fun SearchPage(
                 selectedItemsList = selectedItemsList,
                 viewProperties = if (searchedForText.value == "") ViewProperties.SearchLoading else ViewProperties.SearchNotFound,
                 state = gridState,
-                modifier = Modifier
-                    .align(Alignment.Center)
+                modifier = Modifier.align(Alignment.Center)
             )
 
             if (showLoadingSpinner) {

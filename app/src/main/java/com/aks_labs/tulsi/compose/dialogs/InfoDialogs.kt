@@ -13,12 +13,10 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -319,15 +317,13 @@ fun SingleAlbumDialog(
     }
 }
 
-/** @param moveCopyInsetsPadding should only be used when showMoveCopyOptions is enabled */
 @Composable
 fun SinglePhotoInfoDialog(
     showDialog: MutableState<Boolean>,
     currentMediaItem: MediaStoreData,
     groupedMedia: MutableState<List<MediaStoreData>>,
     loadsFromMainViewModel: Boolean,
-    showMoveCopyOptions: Boolean = true,
-    moveCopyInsetsPadding: WindowInsets? = WindowInsets.statusBars
+    showMoveCopyOptions: Boolean = true
 ) {
     val context = LocalContext.current
     val isEditingFileName = remember { mutableStateOf(false) }
@@ -462,7 +458,7 @@ fun SinglePhotoInfoDialog(
                         .height(height)
                         .fillMaxWidth(1f)
                 ) {
-                    if (showMoveCopyOptions && moveCopyInsetsPadding != null) {
+                    if (showMoveCopyOptions) {
                         val show = remember { mutableStateOf(false) }
                         var isMoving by remember { mutableStateOf(false) }
 
@@ -473,8 +469,7 @@ fun SinglePhotoInfoDialog(
                             show = show,
                             selectedItemsList = stateList,
                             isMoving = isMoving,
-                            groupedMedia = null,
-                            insetsPadding = moveCopyInsetsPadding
+                            groupedMedia = null
                         )
 
                         DialogClickableItem(

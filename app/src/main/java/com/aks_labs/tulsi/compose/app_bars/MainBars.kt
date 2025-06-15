@@ -366,8 +366,7 @@ fun MainAppSelectingBottomBar(
                     show = show,
                     selectedItemsList = selectedItemsList,
                     isMoving = isMoving,
-                    groupedMedia = null,
-                    insetsPadding = WindowInsets.statusBars
+                    groupedMedia = null
                 )
 
                 BottomAppBarItem(

@@ -60,16 +60,16 @@ fun OcrProgressBar(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = 16.dp, vertical = 2.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     // Header row with title and close button
                     Row(
@@ -94,7 +94,7 @@ fun OcrProgressBar(
                                 modifier = Modifier.size(32.dp)
                             ) {
                                 Icon(
-                                    imageVector = if (progressData.isPaused) Icons.Default.PlayArrow else Icons.Default.PlayArrow, // Using PlayArrow for both states for now
+                                    imageVector = Icons.Default.PlayArrow, // Use PlayArrow for both states for now
                                     contentDescription = if (progressData.isPaused) "Resume processing" else "Pause processing",
                                     tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(18.dp)
@@ -116,14 +116,14 @@ fun OcrProgressBar(
                         }
                     }
                     
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    // Progress bar
+                    Spacer(modifier = Modifier.height(3.dp))
+
+                    // Progress bar - ultra-thin design
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(8.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .height(3.dp)
+                            .clip(RoundedCornerShape(1.5.dp))
                             .background(MaterialTheme.colorScheme.surfaceVariant)
                     ) {
                         LinearProgressIndicator(
@@ -132,8 +132,8 @@ fun OcrProgressBar(
                             } else 0f,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(8.dp)
-                                .clip(RoundedCornerShape(4.dp)),
+                                .height(3.dp)
+                                .clip(RoundedCornerShape(1.5.dp)),
                             color = if (progressData.isPaused) {
                                 MaterialTheme.colorScheme.outline
                             } else {
@@ -142,8 +142,8 @@ fun OcrProgressBar(
                             trackColor = MaterialTheme.colorScheme.surfaceVariant
                         )
                     }
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Spacer(modifier = Modifier.height(3.dp))
                     
                     // Status and time information
                     Row(

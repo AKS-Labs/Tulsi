@@ -268,6 +268,7 @@ fun AlbumsGridView(
         )
 
         val coroutineScope = rememberCoroutineScope()
+
         LazyVerticalGrid(
             state = lazyGridState,
             columns = GridCells.Fixed(
@@ -277,7 +278,9 @@ fun AlbumsGridView(
                     4
                 }
             ),
-            contentPadding = PaddingValues(bottom = 120.dp), // Add bottom padding to ensure content is visible above the floating bottom bar
+            contentPadding = PaddingValues(
+                bottom = 120.dp
+            ),
             modifier = Modifier
                 .fillMaxSize(1f)
                 .pullToRefresh(

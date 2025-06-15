@@ -34,6 +34,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -65,6 +66,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateList
@@ -886,9 +888,27 @@ class MainActivity : ComponentActivity() {
         val mediaStoreData =
             multiAlbumViewModel.mediaFlow.collectAsStateWithLifecycle(context = Dispatchers.IO)
         val groupedMedia = remember { mutableStateOf(mediaStoreData.value) }
+        var isTopBarVisible by remember { mutableStateOf(true) }
 
         val tabList by mainViewModel.settings.DefaultTabs.getTabList()
             .collectAsStateWithLifecycle(initialValue = DefaultTabs.defaultList)
+
+        // Extract theme colors outside LaunchedEffect to avoid Composable context issues
+        val surfaceContainerColor = MaterialTheme.colorScheme.surfaceContainer.toArgb()
+        val backgroundColor = MaterialTheme.colorScheme.background.toArgb()
+        val isDarkTheme = isSystemInDarkTheme()
+
+        // Set normal status bar style based on theme
+        LaunchedEffect(Unit) {
+            enableEdgeToEdge(
+                navigationBarStyle = SystemBarStyle.dark(surfaceContainerColor),
+                statusBarStyle = if (!isDarkTheme) {
+                    SystemBarStyle.light(backgroundColor, backgroundColor)
+                } else {
+                    SystemBarStyle.dark(backgroundColor)
+                }
+            )
+        }
 
         // faster loading if no custom tabs are present
         LaunchedEffect(tabList) {
@@ -913,7 +933,8 @@ class MainActivity : ComponentActivity() {
                 TopBar(
                     showDialog = showDialog,
                     selectedItemsList = selectedItemsList,
-                    currentView = currentView
+                    currentView = currentView,
+                    isVisible = isTopBarVisible
                 )
             },
             bottomBar = {
@@ -1043,7 +1064,13 @@ class MainActivity : ComponentActivity() {
                             stateValue == DefaultTabs.TabTypes.search -> {
                                 selectedItemsList.clear()
 
-                                SearchPage(selectedItemsList, currentView)
+                                SearchPage(
+                                    selectedItemsList = selectedItemsList,
+                                    currentView = currentView,
+                                    onTopBarVisibilityChange = { visible ->
+                                        isTopBarVisible = visible
+                                    }
+                                )
                             }
                         }
                     } else {
@@ -1061,7 +1088,8 @@ class MainActivity : ComponentActivity() {
     private fun TopBar(
         showDialog: MutableState<Boolean>,
         selectedItemsList: SnapshotStateList<MediaStoreData>,
-        currentView: MutableState<BottomBarTab>
+        currentView: MutableState<BottomBarTab>,
+        isVisible: Boolean = true
     ) {
         val show by remember {
             derivedStateOf {
@@ -1069,12 +1097,18 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        MainAppTopBar(
-            alternate = show,
-            showDialog = showDialog,
-            selectedItemsList = selectedItemsList,
-            currentView = currentView
-        )
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = fadeIn(animationSpec = tween(400)),
+            exit = fadeOut(animationSpec = tween(400))
+        ) {
+            MainAppTopBar(
+                alternate = show,
+                showDialog = showDialog,
+                selectedItemsList = selectedItemsList,
+                currentView = currentView
+            )
+        }
     }
 
     @Composable
@@ -1164,13 +1198,23 @@ class MainActivity : ComponentActivity() {
                 val processedCount = applicationDatabase.ocrProgressDao().getProcessedCount() ?: 0
                 Log.d("MainActivity", "Already processed: $processedCount images")
 
-                // Start initial OCR processing if needed
+                // Start automatic OCR processing if needed
                 if (processedCount < totalImages) {
-                    Log.d("MainActivity", "Starting OCR processing for ${totalImages - processedCount} remaining images")
-                    ocrManager.processBatch(batchSize = 5) // Start with small batch
+                    Log.d("MainActivity", "Starting automatic OCR processing for ${totalImages - processedCount} remaining images")
+
+                    // Ensure progress status is properly set before starting
+                    applicationDatabase.ocrProgressDao().updateProcessingStatus(true)
+                    applicationDatabase.ocrProgressDao().updatePausedStatus(false)
+
+                    ocrManager.startContinuousProcessing(batchSize = 50) // Use continuous processing for background operation
                 } else {
                     Log.d("MainActivity", "All images already processed")
+                    // Mark as complete if all images are processed
+                    applicationDatabase.ocrProgressDao().updateProcessingStatus(false)
                 }
+
+                // Ensure progress monitoring is active
+                ocrManager.ensureProgressMonitoring()
 
             } catch (e: Exception) {
                 Log.e("MainActivity", "Failed to initialize OCR system", e)

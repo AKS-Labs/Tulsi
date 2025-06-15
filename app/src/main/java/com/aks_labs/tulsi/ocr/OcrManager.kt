@@ -156,10 +156,11 @@ class OcrManager(
     fun startContinuousProcessing(batchSize: Int = 50): UUID {
         Log.d(TAG, "Starting continuous OCR processing with batch size: $batchSize")
 
-        // Update processing status
+        // Update processing status and ensure not paused
         CoroutineScope(Dispatchers.IO).launch {
             database.ocrProgressDao().updateProcessingStatus(true)
-            Log.d(TAG, "Updated processing status to true")
+            database.ocrProgressDao().updatePausedStatus(false)
+            Log.d(TAG, "Updated processing status to true and paused status to false")
         }
 
         val inputData = workDataOf(
@@ -221,6 +222,7 @@ class OcrManager(
                             processedImages = totalProcessedImages,
                             totalImages = totalImages,
                             lastUpdated = currentTime / 1000
+                            // Preserve isPaused and isProcessing states
                         )
 
                         // Update database to trigger Flow emission
@@ -397,6 +399,7 @@ class OcrManager(
                 totalImages = totalImages,
                 processedImages = 0,
                 isProcessing = false,
+                isPaused = false,
                 lastUpdated = System.currentTimeMillis() / 1000
             )
             database.ocrProgressDao().insertProgress(initialProgress)
