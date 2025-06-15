@@ -24,6 +24,13 @@ android {
             useSupportLibrary = true
         }
 
+        // Optimize ML Kit for size - exclude unused architectures
+        ndk {
+            // Only include ARM architectures (most common on mobile devices)
+            // Exclude x86 and x86_64 to reduce size significantly (~10-15MB reduction)
+            abiFilters += setOf("armeabi-v7a", "arm64-v8a")
+        }
+
         ksp {
        		arg("room.schemaLocation", "$projectDir/schemas")
         }
@@ -39,6 +46,18 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+
+            // Additional size optimizations
+            isDebuggable = false
+            isJniDebuggable = false
+            isRenderscriptDebuggable = false
+            renderscriptOptimLevel = 3
+        }
+
+        debug {
+            // Apply some optimizations to debug builds too for testing
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 
@@ -64,6 +83,34 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            // Exclude additional unnecessary files to reduce APK size
+            excludes += "/META-INF/DEPENDENCIES"
+            excludes += "/META-INF/LICENSE"
+            excludes += "/META-INF/LICENSE.txt"
+            excludes += "/META-INF/NOTICE"
+            excludes += "/META-INF/NOTICE.txt"
+            excludes += "/META-INF/*.kotlin_module"
+            excludes += "**/kotlin/**"
+            excludes += "**/*.txt"
+            excludes += "**/*.xml"
+        }
+
+        // JNI libraries optimization
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
+
+    // Enable App Bundle optimizations for size reduction
+    bundle {
+        language {
+            enableSplit = true
+        }
+        density {
+            enableSplit = true
+        }
+        abi {
+            enableSplit = true
         }
     }
 }
@@ -107,8 +154,19 @@ dependencies {
     implementation("com.github.kittinunf.fuel:fuel-json:2.3.1")
 	implementation("com.github.kaii-lb:Lavender-Snackbars:0.1.7")
 
-    // ML Kit for OCR text recognition
+    // ML Kit for OCR text recognition (CURRENT - 40MB impact)
     implementation("com.google.mlkit:text-recognition:16.0.1")
+
+    // ALTERNATIVE 1: Unbundled ML Kit (15MB impact - downloads model on demand)
+    // implementation("com.google.mlkit:text-recognition-common:16.0.1")
+    // implementation("com.google.mlkit:text-recognition-latin:16.0.1")
+
+    // ALTERNATIVE 2: Tesseract4Android (8MB impact - recommended for size)
+    // implementation("cz.adaptech.tesseract4android:tesseract4android:4.7.0")
+
+    // ALTERNATIVE 3: TensorFlow Lite (5MB impact - custom model)
+    // implementation("org.tensorflow:tensorflow-lite:2.13.0")
+    // implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
 
     // Coroutines support for Google Play Services (needed for ML Kit)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
