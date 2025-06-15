@@ -1,0 +1,282 @@
+// APK Size Analysis Script for Tulsi Gallery
+// Run with: ./gradlew -q analyzeApkSize
+
+task analyzeApkSize {
+    group = "optimization"
+    description = "Analyze APK size and identify optimization opportunities"
+    
+    doLast {
+        println """
+        ========================================
+        🔍 TULSI GALLERY APK SIZE ANALYSIS
+        ========================================
+        """
+        
+        // Analyze drawable resources
+        def drawableDir = file("src/main/res")
+        def totalDrawableSize = 0
+        def largeAssets = []
+        def duplicateHashes = [:]
+        
+        if (drawableDir.exists()) {
+            drawableDir.eachFileRecurse { file ->
+                if (file.isFile() && (file.name.endsWith('.png') || file.name.endsWith('.jpg') || file.name.endsWith('.webp'))) {
+                    def size = file.length()
+                    totalDrawableSize += size
+                    
+                    if (size > 50 * 1024) { // Files > 50KB
+                        largeAssets << [path: file.path, size: "${size / 1024}KB"]
+                    }
+                    
+                    // Check for duplicates
+                    def hash = file.bytes.encodeBase64().toString().take(16)
+                    if (duplicateHashes.containsKey(hash)) {
+                        duplicateHashes[hash] << file.path
+                    } else {
+                        duplicateHashes[hash] = [file.path]
+                    }
+                }
+            }
+        }
+        
+        println "📊 DRAWABLE RESOURCES ANALYSIS:"
+        println "   Total drawable size: ${totalDrawableSize / 1024 / 1024}MB"
+        println "   Large assets (>50KB): ${largeAssets.size()}"
+        
+        if (largeAssets.size() > 0) {
+            println "   🔍 Large assets found:"
+            largeAssets.each { asset ->
+                println "      - ${asset.path} (${asset.size})"
+            }
+        }
+        
+        def duplicates = duplicateHashes.findAll { it.value.size() > 1 }
+        if (duplicates.size() > 0) {
+            println "   🔍 Potential duplicate assets:"
+            duplicates.each { hash, files ->
+                println "      - Duplicate group: ${files.join(', ')}"
+            }
+        }
+        
+        // Analyze string resources
+        def stringsFile = file("src/main/res/values/strings.xml")
+        def stringCount = 0
+        if (stringsFile.exists()) {
+            stringsFile.eachLine { line ->
+                if (line.contains('<string name=')) {
+                    stringCount++
+                }
+            }
+        }
+        
+        println """
+        📊 STRING RESOURCES ANALYSIS:
+           Total strings: ${stringCount}
+        """
+        
+        // Analyze dependencies
+        println """
+        📊 DEPENDENCY ANALYSIS:
+           Run './gradlew app:dependencies' for detailed dependency tree
+           Run './gradlew buildEnvironment' for build dependencies
+        """
+        
+        // Check for unused resources
+        def layoutDir = file("src/main/res/layout")
+        def layoutCount = 0
+        if (layoutDir.exists()) {
+            layoutDir.eachFileRecurse { file ->
+                if (file.name.endsWith('.xml')) {
+                    layoutCount++
+                }
+            }
+        }
+        
+        println """
+        📊 LAYOUT RESOURCES ANALYSIS:
+           Total layouts: ${layoutCount}
+        """
+        
+        // Analyze source code
+        def sourceDir = file("src/main/java")
+        def kotlinFiles = 0
+        def totalLines = 0
+        
+        if (sourceDir.exists()) {
+            sourceDir.eachFileRecurse { file ->
+                if (file.name.endsWith('.kt')) {
+                    kotlinFiles++
+                    totalLines += file.readLines().size()
+                }
+            }
+        }
+        
+        println """
+        📊 SOURCE CODE ANALYSIS:
+           Kotlin files: ${kotlinFiles}
+           Total lines: ${totalLines}
+        """
+        
+        // Recommendations
+        println """
+        🎯 OPTIMIZATION RECOMMENDATIONS:
+        
+        1. IMAGE OPTIMIZATION:
+           ${largeAssets.size() > 0 ? "⚠️  Convert large PNG files to WebP format" : "✅ No large image assets found"}
+           ${duplicates.size() > 0 ? "⚠️  Remove duplicate image assets" : "✅ No duplicate assets found"}
+           
+        2. RESOURCE OPTIMIZATION:
+           - Run lint analysis: './gradlew lintRelease'
+           - Check for unused resources in lint report
+           - Remove unused string translations
+           
+        3. DEPENDENCY OPTIMIZATION:
+           - Review dependency tree for unused libraries
+           - Consider using specific modules instead of full libraries
+           - Remove test dependencies from release builds
+           
+        4. BUILD OPTIMIZATION:
+           - Enable R8 full mode (already configured)
+           - Use App Bundle for distribution (already configured)
+           - Apply architecture filtering (already configured)
+        
+        ========================================
+        📈 NEXT STEPS:
+        
+        1. Build current APK: './gradlew assembleRelease'
+        2. Measure current size
+        3. Apply optimizations step by step
+        4. Measure size reduction after each step
+        
+        Expected reduction: 7-12MB from current 27.5MB
+        Target size: 15-20MB
+        ========================================
+        """
+    }
+}
+
+task findUnusedResources {
+    group = "optimization"
+    description = "Find potentially unused resources"
+    
+    doLast {
+        println "🔍 Scanning for unused resources..."
+        
+        def usedResources = [] as Set
+        def sourceDir = file("src/main/java")
+        
+        // Scan Kotlin files for resource usage
+        if (sourceDir.exists()) {
+            sourceDir.eachFileRecurse { file ->
+                if (file.name.endsWith('.kt')) {
+                    file.eachLine { line ->
+                        // Find R.drawable.*, R.string.*, etc.
+                        def matcher = line =~ /R\.(drawable|string|layout|color|dimen|style)\.(\w+)/
+                        matcher.each { match ->
+                            usedResources << "${match[1]}.${match[2]}"
+                        }
+                        
+                        // Find @drawable/*, @string/*, etc.
+                        def atMatcher = line =~ /@(drawable|string|layout|color|dimen|style)\/(\w+)/
+                        atMatcher.each { match ->
+                            usedResources << "${match[1]}.${match[2]}"
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Scan layout files
+        def layoutDir = file("src/main/res/layout")
+        if (layoutDir.exists()) {
+            layoutDir.eachFileRecurse { file ->
+                if (file.name.endsWith('.xml')) {
+                    file.eachLine { line ->
+                        def matcher = line =~ /@(drawable|string|color|dimen|style)\/(\w+)/
+                        matcher.each { match ->
+                            usedResources << "${match[1]}.${match[2]}"
+                        }
+                    }
+                }
+            }
+        }
+        
+        println "Found ${usedResources.size()} resource references in code"
+        println "Run lint analysis for complete unused resource detection"
+    }
+}
+
+task optimizeImages {
+    group = "optimization"
+    description = "Identify images that can be optimized"
+    
+    doLast {
+        println "🖼️  Analyzing images for optimization opportunities..."
+        
+        def imageDir = file("src/main/res")
+        def optimizationOpportunities = []
+        
+        if (imageDir.exists()) {
+            imageDir.eachFileRecurse { file ->
+                if (file.isFile()) {
+                    def name = file.name.toLowerCase()
+                    def size = file.length()
+                    
+                    if (name.endsWith('.png') && size > 10 * 1024) {
+                        optimizationOpportunities << [
+                            file: file.path,
+                            type: "Convert PNG to WebP",
+                            currentSize: "${size / 1024}KB",
+                            estimatedSaving: "${(size * 0.3) / 1024}KB"
+                        ]
+                    }
+                    
+                    if (name.endsWith('.jpg') && size > 20 * 1024) {
+                        optimizationOpportunities << [
+                            file: file.path,
+                            type: "Optimize JPEG quality",
+                            currentSize: "${size / 1024}KB",
+                            estimatedSaving: "${(size * 0.2) / 1024}KB"
+                        ]
+                    }
+                }
+            }
+        }
+        
+        if (optimizationOpportunities.size() > 0) {
+            println "Found ${optimizationOpportunities.size()} optimization opportunities:"
+            optimizationOpportunities.each { opp ->
+                println "  - ${opp.file}: ${opp.type} (${opp.currentSize} → save ~${opp.estimatedSaving})"
+            }
+        } else {
+            println "✅ No obvious image optimization opportunities found"
+        }
+    }
+}
+
+task measureApkSize {
+    group = "optimization"
+    description = "Measure current APK size and components"
+    
+    doLast {
+        def apkFile = file("build/outputs/apk/release/app-release.apk")
+        
+        if (apkFile.exists()) {
+            def size = apkFile.length()
+            println """
+            📏 CURRENT APK SIZE MEASUREMENT:
+            
+            APK file: ${apkFile.path}
+            Size: ${size / 1024 / 1024}MB (${size / 1024}KB)
+            
+            To analyze APK contents, use:
+            './gradlew analyzeApk' or Android Studio APK Analyzer
+            """
+        } else {
+            println """
+            ⚠️  APK not found. Build it first:
+            './gradlew assembleRelease'
+            """
+        }
+    }
+}

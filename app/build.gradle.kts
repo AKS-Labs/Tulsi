@@ -52,6 +52,10 @@ android {
             isJniDebuggable = false
             isRenderscriptDebuggable = false
             renderscriptOptimLevel = 3
+
+            // Enable automatic image optimization
+            isCrunchPngs = true
+            isPseudoLocalesEnabled = false
         }
 
         debug {
