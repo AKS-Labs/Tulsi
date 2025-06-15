@@ -9,17 +9,17 @@
 </p>
 
 <p align="center">
-  🔍 <strong>AI-Powered Text Search</strong> • 🎨 <strong>Beautiful Design</strong> • 🔒 <strong>Privacy-First</strong> • 📱 <strong>Google Lens Integration</strong>
+  🔍 <strong>Offline AI-Powered Text Search</strong> • 🎨 <strong>Beautiful Design</strong> • 🔒 <strong>Privacy-First</strong> • 📱 <strong>Google Lens Integration</strong>
 </p>
 
 ---
 
 ## ✨ What Makes Tulsi Special
 
-**Tulsi Gallery** transforms your photo collection into a smart, searchable library. Built on the excellent [LavenderGallery](https://github.com/kaii-lb/LavenderPhotos) foundation, Tulsi adds powerful AI features and a premium UI experience.
+**Tulsi Gallery** transforms your photo collection into a smart, searchable library. Built on the excellent [LavenderGallery](https://github.com/kaii-lb/LavenderPhotos) foundation, Tulsi adds powerful offline AI-powered features and a premium UI experience.
 
 ### 🧠 **Smart Photo Search**
-Find any photo instantly by searching for text within it. Screenshots, documents, memes, signs - if it has text, Tulsi can find it.
+Find any photo instantly by searching for text within it using offline AI-powered recognition. Screenshots, documents, memes, signs - if it has text, Tulsi can find it without sending data anywhere.
 
 ### 🎨 **Premium Design**
 Floating bottom bar, smooth animations, and thoughtful spacing make every interaction delightful.
@@ -33,11 +33,11 @@ Identify objects, translate text, or get info about anything in your photos with
 <tr>
 <td width="50%">
 
-### 🔍 **AI-Powered Search**
-- **Text Recognition** - Find photos by text content
+### 🔍 **Offline AI-Powered Search**
+- **Text Recognition** - Find photos by text content using offline AI
 - **Smart Filters** - Search by name, date, or content
 - **Instant Results** - Lightning-fast search experience
-- **100+ Languages** - Multilingual text recognition
+- **100+ Languages** - Multilingual text recognition on-device
 
 ### 🎨 **Beautiful Interface**
 - **Floating Navigation** - Elegant bottom app bar
@@ -80,13 +80,13 @@ Identify objects, translate text, or get info about anything in your photos with
 
 ## 🧠 Smart Text Recognition
 
-**Turn every photo into searchable content.** Tulsi's AI automatically reads text in your photos, making your entire collection instantly searchable.
+**Turn every photo into searchable content.** Tulsi's offline AI-powered engine automatically reads text in your photos, making your entire collection instantly searchable without sending any data to the cloud.
 
 ### ⚡ **How It Works**
 1. **📸 Take Photos** - Screenshots, documents, signs, anything with text
-2. **🤖 AI Processing** - Automatic text recognition in the background
+2. **🤖 Offline AI-Powered Processing** - Automatic text recognition in the background on your device
 3. **🔍 Instant Search** - Type any word to find relevant photos
-4. **🔒 Stay Private** - Everything happens on your device
+4. **🔒 Stay Private** - Everything happens locally on your device
 
 ### 🎯 **Use Cases**
 - **📱 Screenshots** - Find important info from social media, apps, or websites
@@ -109,7 +109,7 @@ Identify objects, translate text, or get info about anything in your photos with
   </a>
   <a href="https://github.com/AKS-Labs/Tulsi/releases/latest">
     <img alt='Get it on GitHub'
-         src='https://img.shields.io/badge/GitHub-Download%20APK-181717?style=for-the-badge&logo=github&logoColor=white'
+         src='https://img.shields.io/badge/GitHub-Download%20APK-181717?style=flat-square&logo=github&logoColor=white'
          height="80" />
   </a>
 </p>
@@ -117,7 +117,7 @@ Identify objects, translate text, or get info about anything in your photos with
 <div align="center">
 
 **Requirements:** Android 7.0+ • ~30MB • ARM devices
-**Features:** Offline AI • Privacy-focused • Open source
+**Features:** 100% Offline AI-Powered • Privacy-focused • Open source
 
 </div>
 
