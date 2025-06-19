@@ -36,6 +36,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.painterResource
+import com.aks_labs.tulsi.R
 import com.aks_labs.tulsi.database.entities.OcrProgressEntity
 import java.util.concurrent.TimeUnit
 
@@ -93,12 +95,23 @@ fun OcrProgressBar(
                                 onClick = onPauseResume,
                                 modifier = Modifier.size(32.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.PlayArrow, // Use PlayArrow for both states for now
-                                    contentDescription = if (progressData.isPaused) "Resume processing" else "Pause processing",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                if (progressData.isPaused) {
+                                    // Show play icon when paused (to resume)
+                                    Icon(
+                                        imageVector = Icons.Default.PlayArrow,
+                                        contentDescription = "Resume processing",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                } else {
+                                    // Show pause icon when processing (to pause)
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.pause),
+                                        contentDescription = "Pause processing",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
                             
                             // Close button

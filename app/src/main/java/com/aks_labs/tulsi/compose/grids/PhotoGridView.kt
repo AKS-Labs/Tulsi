@@ -66,6 +66,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TransformOrigin
@@ -87,10 +88,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.toIntRect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bumptech.glide.Glide
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.integration.compose.placeholder
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import com.aks_labs.tulsi.LocalNavController
 import com.aks_labs.tulsi.MainActivity.Companion.mainViewModel
 import com.aks_labs.tulsi.R
@@ -99,6 +105,7 @@ import com.aks_labs.tulsi.compose.ShowSelectedState
 import com.aks_labs.tulsi.compose.ViewProperties
 import com.aks_labs.tulsi.datastore.AlbumInfo
 import com.aks_labs.tulsi.datastore.Storage
+import com.aks_labs.tulsi.helpers.ColorExtractor
 import com.aks_labs.tulsi.helpers.EncryptionManager
 import com.aks_labs.tulsi.helpers.ImageFunctions
 import com.aks_labs.tulsi.helpers.Screens
@@ -293,7 +300,7 @@ fun DeviceMedia(
                 userScrollEnabled = !isDragSelecting.value,
                 modifier = Modifier
                     .fillMaxSize(1f)
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 2.dp)
                     .align(Alignment.TopCenter)
                     .dragSelectionHandler(
                         state = gridState,
@@ -732,12 +739,35 @@ fun MediaStoreItem(
             }
         }
 
+        // State for dominant color extraction - using different colors for testing
+        val testColors = listOf(
+            Color(0xFFE91E63), // Pink
+            Color(0xFF9C27B0), // Purple
+            Color(0xFF3F51B5), // Indigo
+            Color(0xFF2196F3), // Blue
+            Color(0xFF00BCD4), // Cyan
+            Color(0xFF4CAF50), // Green
+            Color(0xFFFF9800), // Orange
+            Color(0xFFF44336)  // Red
+        )
+        var dominantColor by remember { mutableStateOf(testColors.random()) }
+        val coroutineScope = rememberCoroutineScope()
+
         Box(
             modifier = Modifier
                 .aspectRatio(1f)
-                .padding(4.dp)
-                .clip(RoundedCornerShape(17.dp))
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+                .padding(6.dp) // Increased padding to make gradient more visible
+                .clip(RoundedCornerShape(12.dp))
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            dominantColor.copy(alpha = 0.9f),
+                            dominantColor.copy(alpha = 0.5f),
+                            dominantColor.copy(alpha = 0.2f)
+                        ),
+                        radius = 150f
+                    )
+                )
                 .then(
                     if (selectedItemsList.isNotEmpty()) {
                         Modifier.clickable {
@@ -775,12 +805,21 @@ fun MediaStoreItem(
                                 iv = thumbnailIv
                             )
                         } catch (e: Throwable) {
-                            Log.d(TAG, e.toString())
+                            android.util.Log.d(TAG, e.toString())
                             e.printStackTrace()
 
                             item.uri.path
                         }
                     }
+            }
+
+            // Temporarily disabled complex color extraction for testing
+            // Each grid item will have a random color to test if gradients are visible
+            LaunchedEffect(item.uri) {
+                // Assign a color based on item ID for consistency
+                val colorIndex = (item.id % testColors.size).toInt()
+                dominantColor = testColors[colorIndex]
+                android.util.Log.d(TAG, "Assigned test color for ${item.displayName}: $dominantColor")
             }
 
             GlideImage(
@@ -789,10 +828,10 @@ fun MediaStoreItem(
                 contentScale = ContentScale.Crop,
                 failure = placeholder(R.drawable.broken_image),
                 modifier = Modifier
-                    .fillMaxSize(1f)
+                    .fillMaxSize(0.85f) // Reduced size to show gradient background around edges
                     .align(Alignment.Center)
                     .scale(animatedItemScale)
-                    .clip(RoundedCornerShape(animatedItemCornerRadius))
+                    .clip(RoundedCornerShape(8.dp)) // Smaller corner radius for the image
             ) {
                 if (isSecureMedia) {
                     it.signature(item.signature())
@@ -952,7 +991,7 @@ fun Modifier.dragSelectionHandler(
 
     val numberOfHorizontalItems = itemWidth?.let { state.layoutInfo.viewportSize.width / it } ?: 1
 
-    Log.d(TAG, "grid displays $numberOfHorizontalItems horizontal items")
+    android.util.Log.d(TAG, "grid displays $numberOfHorizontalItems horizontal items")
 
     detectDragGestures(
         onDragStart = { offset ->

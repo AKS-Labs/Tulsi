@@ -249,6 +249,53 @@ fun PermissionHandler(
                                 }
                             }
                         }
+
+                        item {
+                            val postNotificationsLauncher = rememberLauncherForActivityResult(
+                                contract = ActivityResultContracts.RequestPermission()
+                            ) { granted ->
+                                mainViewModel.onPermissionResult(
+                                    permission = Manifest.permission.POST_NOTIFICATIONS,
+                                    isGranted = granted
+                                )
+
+                                showPermDeniedDialog.value = !granted
+                            }
+
+                            val appDetailsLauncher = rememberLauncherForActivityResult(
+                                contract = ActivityResultContracts.StartActivityForResult()
+                            ) { _ ->
+                                val granted =
+                                    context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+
+                                mainViewModel.onPermissionResult(
+                                    permission = Manifest.permission.POST_NOTIFICATIONS,
+                                    isGranted = granted
+                                )
+
+                                showPermDeniedDialog.value = !granted
+                            }
+
+                            PermissionButton(
+                                name = "Post Notifications",
+                                description = "Allow Tulsi Gallery to show OCR processing progress notifications",
+                                position = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) RowPosition.Middle else RowPosition.Bottom,
+                                granted = !mainViewModel.permissionQueue.contains(Manifest.permission.POST_NOTIFICATIONS)
+                            ) {
+                                postNotificationsLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+
+                                whyButtonExplanation = Explanations.POST_NOTIFICATIONS
+
+                                onGrantPermissionClicked = {
+                                    val intent = Intent(
+                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                        Uri.fromParts("package", context.packageName, null)
+                                    )
+
+                                    appDetailsLauncher.launch(intent)
+                                }
+                            }
+                        }
                     } else {
                         item {
                             val readExternalStorageLauncher = rememberLauncherForActivityResult(
@@ -589,6 +636,8 @@ private object Explanations {
         "This permission is needed to find Gallery and videos on the device. Tulsi Gallery is very strict with what files it reads, and never shares or exploits this info."
     const val MANAGE_MEDIA =
         "This permission is optional, but is highly recommended. Manage Media permission allows Tulsi Gallery to use Android's Content Resolver API to trash/delete/move/copy media, which makes the process much smoother and more interoperable with other apps."
+    const val POST_NOTIFICATIONS =
+        "This permission allows Tulsi Gallery to show notifications for OCR text processing progress. You can track the progress of text extraction from your images and control the processing through notifications."
 }
 
 

@@ -113,6 +113,7 @@ class MainViewModel(context: Context) : ViewModel() {
                 listOf(
                     Manifest.permission.READ_MEDIA_IMAGES,
                     Manifest.permission.READ_MEDIA_VIDEO,
+                    Manifest.permission.POST_NOTIFICATIONS,
                     Manifest.permission.MANAGE_MEDIA
                 )
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -172,11 +173,16 @@ class MainViewModel(context: Context) : ViewModel() {
             false
         }
 
+        // Allow app to continue if only optional permissions (MANAGE_MEDIA, POST_NOTIFICATIONS) are denied
+        val onlyOptionalPermissionsDenied = permissionQueue.all {
+            it == Manifest.permission.MANAGE_MEDIA || it == Manifest.permission.POST_NOTIFICATIONS
+        }
+
         permissionQueue.forEach {
             Log.d(TAG, "Can pass permission queue has item $it")
         }
 
-        return permissionQueue.isEmpty() || manageMedia
+        return permissionQueue.isEmpty() || manageMedia || onlyOptionalPermissionsDenied
     }
 
     /** launch tasks on the mainViewModel scope */

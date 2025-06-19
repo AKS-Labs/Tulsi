@@ -141,6 +141,7 @@ dependencies {
     implementation("androidx.test.ext:junit-ktx:1.2.1")
 	implementation("com.github.bumptech.glide:glide:4.16.0")
 	implementation("com.github.bumptech.glide:compose:1.0.0-beta01")
+    implementation("androidx.palette:palette-ktx:1.0.0")
     implementation("com.github.bumptech.glide:ktx:1.0.0-beta01")
     implementation("androidx.activity:activity-ktx:1.10.1")
     implementation("androidx.fragment:fragment-ktx:1.8.6")
