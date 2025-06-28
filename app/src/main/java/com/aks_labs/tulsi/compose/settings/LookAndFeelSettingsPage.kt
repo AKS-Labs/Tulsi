@@ -2,22 +2,36 @@ package com.aks_labs.tulsi.compose.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
@@ -28,7 +42,9 @@ import com.aks_labs.tulsi.R
 import com.aks_labs.tulsi.compose.PreferencesSeparatorText
 import com.aks_labs.tulsi.compose.PreferencesThreeStateSwitchRow
 import com.aks_labs.tulsi.datastore.LookAndFeel
+import com.aks_labs.tulsi.datastore.PhotoGrid
 import com.aks_labs.tulsi.helpers.RowPosition
+import kotlin.math.roundToInt
 
 @Composable
 fun LookAndFeelSettingsPage() {
@@ -67,6 +83,123 @@ fun LookAndFeelSettingsPage() {
 					mainViewModel.settings.LookAndFeel.setFollowDarkMode(it)
                 }
         	}
+
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            item {
+                PreferencesSeparatorText("Grid Layout")
+            }
+
+            item {
+                // Grid Column Count Settings
+                val portraitColumns by mainViewModel.settings.PhotoGrid.getGridColumnCountPortrait()
+                    .collectAsStateWithLifecycle(initialValue = 4)
+                val landscapeColumns by mainViewModel.settings.PhotoGrid.getGridColumnCountLandscape()
+                    .collectAsStateWithLifecycle(initialValue = 6)
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.grid_view),
+                                contentDescription = "Grid columns",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "Column Count",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Portrait columns slider
+                        var portraitSliderValue by remember { mutableFloatStateOf(portraitColumns.toFloat()) }
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Portrait Mode",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "${portraitSliderValue.roundToInt()} columns",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Slider(
+                                value = portraitSliderValue,
+                                onValueChange = { portraitSliderValue = it },
+                                onValueChangeFinished = {
+                                    mainViewModel.settings.PhotoGrid.setGridColumnCountPortrait(portraitSliderValue.roundToInt())
+                                },
+                                valueRange = 2f..8f,
+                                steps = 5, // 2, 3, 4, 5, 6, 7, 8
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Landscape columns slider
+                        var landscapeSliderValue by remember { mutableFloatStateOf(landscapeColumns.toFloat()) }
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Landscape Mode",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "${landscapeSliderValue.roundToInt()} columns",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Slider(
+                                value = landscapeSliderValue,
+                                onValueChange = { landscapeSliderValue = it },
+                                onValueChangeFinished = {
+                                    mainViewModel.settings.PhotoGrid.setGridColumnCountLandscape(landscapeSliderValue.roundToInt())
+                                },
+                                valueRange = 3f..12f,
+                                steps = 8, // 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                }
+            }
         }
 	}
 }

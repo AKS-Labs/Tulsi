@@ -796,10 +796,22 @@ fun MainAppDialog(
                     }
                 }
 
+                // Show Column Count option only for Gallery and Search tabs (where grid view is available)
+                if (currentView.value == DefaultTabs.TabTypes.Gallery || currentView.value == DefaultTabs.TabTypes.search) {
+                    DialogClickableItem(
+                        text = "Column Count",
+                        iconResId = R.drawable.grid_view,
+                        position = if (currentView.value == DefaultTabs.TabTypes.secure) RowPosition.Top else RowPosition.Middle,
+                    ) {
+                        showDialog.value = false
+                        navController.navigate(MultiScreenViewType.SettingsLookAndFeelView.name)
+                    }
+                }
+
                 DialogClickableItem(
                     text = "Data & Backup",
                     iconResId = R.drawable.data,
-                    position = if (currentView.value == DefaultTabs.TabTypes.secure) RowPosition.Top else RowPosition.Middle,
+                    position = if (currentView.value == DefaultTabs.TabTypes.secure) RowPosition.Middle else RowPosition.Middle,
                 ) {
                     showDialog.value = false
                     navController.navigate(MultiScreenViewType.DataAndBackup.name)

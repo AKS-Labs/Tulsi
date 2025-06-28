@@ -665,6 +665,8 @@ class SettingsPhotoGridImpl(
 ) {
     private val mediaSortModeKey = stringPreferencesKey("media_sort_mode")
     private val gridViewModeKey = booleanPreferencesKey("grid_view_mode")
+    private val gridColumnCountPortraitKey = intPreferencesKey("grid_column_count_portrait")
+    private val gridColumnCountLandscapeKey = intPreferencesKey("grid_column_count_landscape")
 
     fun getSortMode() = context.datastore.data.map {
         val name = it[mediaSortModeKey] ?: MediaItemSortMode.DateTaken.name
@@ -690,6 +692,30 @@ class SettingsPhotoGridImpl(
     fun setGridViewMode(isGridView: Boolean) = viewModelScope.launch {
         context.datastore.edit {
             it[gridViewModeKey] = isGridView
+        }
+    }
+
+    // Get the column count for portrait mode (default: 4)
+    fun getGridColumnCountPortrait() = context.datastore.data.map {
+        it[gridColumnCountPortraitKey] ?: 4
+    }
+
+    // Set the column count for portrait mode
+    fun setGridColumnCountPortrait(count: Int) = viewModelScope.launch {
+        context.datastore.edit {
+            it[gridColumnCountPortraitKey] = count.coerceIn(2, 8) // Limit between 2-8 columns
+        }
+    }
+
+    // Get the column count for landscape mode (default: 6)
+    fun getGridColumnCountLandscape() = context.datastore.data.map {
+        it[gridColumnCountLandscapeKey] ?: 6
+    }
+
+    // Set the column count for landscape mode
+    fun setGridColumnCountLandscape(count: Int) = viewModelScope.launch {
+        context.datastore.edit {
+            it[gridColumnCountLandscapeKey] = count.coerceIn(3, 12) // Limit between 3-12 columns
         }
     }
 }

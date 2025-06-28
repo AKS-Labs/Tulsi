@@ -280,7 +280,7 @@ fun SearchPage(
                     placeholder = placeholder,
                     modifier = Modifier
                         .fillMaxWidth(1f)
-                        .padding(horizontal = 8.dp),
+                        .padding(horizontal = 6.dp),
                     onSearch = {
                         if (!showLoadingSpinner) {
                             searchNow = true

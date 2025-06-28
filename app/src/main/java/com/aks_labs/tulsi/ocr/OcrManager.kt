@@ -268,11 +268,32 @@ class OcrManager(
     suspend fun ensureProgressMonitoring() {
         val progress = database.ocrProgressDao().getProgress()
         Log.d(TAG, "Checking progress monitoring: progress=$progress, job=${progressMonitorJob != null}")
-        if (progress != null && (progress.isProcessing || progress.isPaused) && progressMonitorJob == null) {
-            Log.d(TAG, "Starting progress monitoring for active OCR processing")
-            startProgressMonitoring()
-        } else if (progress != null && (progress.isProcessing || progress.isPaused) && progressMonitorJob != null) {
-            Log.d(TAG, "Progress monitoring already active")
+
+        if (progress != null && (progress.isProcessing || progress.isPaused)) {
+            // Force refresh the progress data to ensure accurate display
+            val totalImages = getTotalImageCount()
+            val totalProcessedImages = database.ocrTextDao().getAllProcessedMediaIds().size
+
+            Log.d(TAG, "Refreshing progress data: $totalProcessedImages/$totalImages (stored: ${progress.processedImages}/${progress.totalImages})")
+
+            // Update progress with current database state to fix display issues
+            val currentTime = System.currentTimeMillis()
+            val refreshedProgress = progress.copy(
+                processedImages = totalProcessedImages,
+                totalImages = totalImages,
+                lastUpdated = currentTime / 1000
+            )
+
+            // Update database to trigger Flow emission and refresh UI
+            database.ocrProgressDao().updateProgress(refreshedProgress)
+            Log.d(TAG, "Progress data refreshed: ${refreshedProgress.processedImages}/${refreshedProgress.totalImages} (${refreshedProgress.progressPercentage}%)")
+
+            if (progressMonitorJob == null) {
+                Log.d(TAG, "Starting progress monitoring for active OCR processing")
+                startProgressMonitoring()
+            } else {
+                Log.d(TAG, "Progress monitoring already active, data refreshed")
+            }
         }
     }
 

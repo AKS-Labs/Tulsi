@@ -18,7 +18,9 @@
 
 package com.aks_labs.tulsi
 
+import android.Manifest
 import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.os.Build
 import android.os.Bundle
@@ -313,6 +315,18 @@ class MainActivity : ComponentActivity() {
 
         val context = LocalContext.current
         val showDialog = remember { mutableStateOf(false) }
+
+        // Initialize OCR system when entering main app after permissions are granted
+        LaunchedEffect(Unit) {
+            Log.d(TAG, "Main app content loaded - ensuring OCR system is initialized")
+            ensureOcrSystemInitialized()
+        }
+
+        // Initialize OCR system when entering main app after permissions are granted
+        LaunchedEffect(Unit) {
+            Log.d(TAG, "Main app content loaded - ensuring OCR system is initialized")
+            ensureOcrSystemInitialized()
+        }
 
         val selectedItemsList = remember { SnapshotStateList<MediaStoreData>() }
 
@@ -1175,32 +1189,40 @@ class MainActivity : ComponentActivity() {
      * Initialize OCR system with content observer and progress tracking
      */
     private fun initializeOcrSystem() {
-        Log.d("MainActivity", "Initializing OCR system...")
+        Log.d(TAG, "Initializing OCR system...")
         CoroutineScope(CoroutineDispatchers.IO).launch {
             try {
+                // Check if we have necessary permissions before initializing
+                if (!hasRequiredPermissions()) {
+                    Log.d(TAG, "Required permissions not granted, skipping OCR initialization")
+                    return@launch
+                }
+
                 val ocrManager = OcrManager(applicationContext, applicationDatabase)
 
                 // Initialize progress tracking
                 val totalImages = getTotalImageCount()
-                Log.d("MainActivity", "Found $totalImages total images")
+                Log.d(TAG, "Found $totalImages total images")
                 ocrManager.initializeProgress(totalImages)
 
-                // Set up content observer for new images
-                mediaContentObserver = MediaContentObserver(applicationContext)
-                contentResolver.registerContentObserver(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    true,
-                    mediaContentObserver
-                )
-                Log.d("MainActivity", "Content observer registered")
+                // Set up content observer for new images if not already registered
+                if (!::mediaContentObserver.isInitialized) {
+                    mediaContentObserver = MediaContentObserver(applicationContext)
+                    contentResolver.registerContentObserver(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        true,
+                        mediaContentObserver
+                    )
+                    Log.d(TAG, "Content observer registered")
+                }
 
                 // Check current progress
                 val processedCount = applicationDatabase.ocrProgressDao().getProcessedCount() ?: 0
-                Log.d("MainActivity", "Already processed: $processedCount images")
+                Log.d(TAG, "Already processed: $processedCount images")
 
                 // Start automatic OCR processing if needed
                 if (processedCount < totalImages) {
-                    Log.d("MainActivity", "Starting automatic OCR processing for ${totalImages - processedCount} remaining images")
+                    Log.d(TAG, "Starting automatic OCR processing for ${totalImages - processedCount} remaining images")
 
                     // Ensure progress status is properly set before starting
                     applicationDatabase.ocrProgressDao().updateProcessingStatus(true)
@@ -1208,7 +1230,7 @@ class MainActivity : ComponentActivity() {
 
                     ocrManager.startContinuousProcessing(batchSize = 50) // Use continuous processing for background operation
                 } else {
-                    Log.d("MainActivity", "All images already processed")
+                    Log.d(TAG, "All images already processed")
                     // Mark as complete if all images are processed
                     applicationDatabase.ocrProgressDao().updateProcessingStatus(false)
                 }
@@ -1217,8 +1239,58 @@ class MainActivity : ComponentActivity() {
                 ocrManager.ensureProgressMonitoring()
 
             } catch (e: Exception) {
-                Log.e("MainActivity", "Failed to initialize OCR system", e)
+                Log.e(TAG, "Failed to initialize OCR system", e)
             }
+        }
+    }
+
+    /**
+     * Ensure OCR system is initialized after permissions are granted
+     */
+    private fun ensureOcrSystemInitialized() {
+        Log.d(TAG, "Ensuring OCR system is initialized...")
+        CoroutineScope(CoroutineDispatchers.IO).launch {
+            try {
+                // Check if we have necessary permissions
+                if (!hasRequiredPermissions()) {
+                    Log.d(TAG, "Required permissions not granted, cannot initialize OCR")
+                    return@launch
+                }
+
+                // Check if OCR system needs initialization
+                val progress = applicationDatabase.ocrProgressDao().getProgress()
+                val totalImages = getTotalImageCount()
+
+                if (progress == null && totalImages > 0) {
+                    Log.d(TAG, "OCR system not initialized, initializing now...")
+                    initializeOcrSystem()
+                } else if (progress != null) {
+                    Log.d(TAG, "OCR system already initialized, ensuring monitoring is active")
+                    val ocrManager = OcrManager(applicationContext, applicationDatabase)
+                    ocrManager.ensureProgressMonitoring()
+
+                    // Check if we need to resume processing
+                    val processedCount = applicationDatabase.ocrProgressDao().getProcessedCount() ?: 0
+                    if (processedCount < totalImages && !progress.isProcessing && !progress.isPaused) {
+                        Log.d(TAG, "Resuming OCR processing for remaining images")
+                        applicationDatabase.ocrProgressDao().updateProcessingStatus(true)
+                        ocrManager.startContinuousProcessing(batchSize = 50)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to ensure OCR system initialization", e)
+            }
+        }
+    }
+
+    /**
+     * Check if required permissions are granted
+     */
+    private fun hasRequiredPermissions(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED
+        } else {
+            checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
         }
     }
 

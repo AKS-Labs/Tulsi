@@ -98,6 +98,7 @@ import com.aks_labs.tulsi.compose.FolderIsEmpty
 import com.aks_labs.tulsi.compose.ShowSelectedState
 import com.aks_labs.tulsi.compose.ViewProperties
 import com.aks_labs.tulsi.datastore.AlbumInfo
+import com.aks_labs.tulsi.datastore.PhotoGrid
 import com.aks_labs.tulsi.datastore.Storage
 
 import com.aks_labs.tulsi.helpers.EncryptionManager
@@ -282,19 +283,25 @@ fun DeviceMedia(
                 }
             }
 
+            // Get column count from preferences
+            val portraitColumns by mainViewModel.settings.PhotoGrid.getGridColumnCountPortrait()
+                .collectAsStateWithLifecycle(initialValue = 4)
+            val landscapeColumns by mainViewModel.settings.PhotoGrid.getGridColumnCountLandscape()
+                .collectAsStateWithLifecycle(initialValue = 6)
+
             LazyVerticalGrid(
                 state = gridState,
                 columns = GridCells.Fixed(
                     if (!isLandscape) {
-                        4
+                        portraitColumns
                     } else {
-                        6
+                        landscapeColumns
                     }
                 ),
                 userScrollEnabled = !isDragSelecting.value,
                 modifier = Modifier
                     .fillMaxSize(1f)
-                    .padding(horizontal = 2.dp)
+                    .padding(horizontal = 6.dp)
                     .align(Alignment.TopCenter)
                     .dragSelectionHandler(
                         state = gridState,
