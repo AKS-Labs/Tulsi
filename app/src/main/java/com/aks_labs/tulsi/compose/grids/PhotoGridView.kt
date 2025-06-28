@@ -13,6 +13,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -289,6 +290,12 @@ fun DeviceMedia(
             val landscapeColumns by mainViewModel.settings.PhotoGrid.getGridColumnCountLandscape()
                 .collectAsStateWithLifecycle(initialValue = 6)
 
+            // Get grid item styling preferences
+            val gridItemCornerRadius by mainViewModel.settings.PhotoGrid.getGridItemCornerRadius()
+                .collectAsStateWithLifecycle(initialValue = 16)
+            val gridItemPadding by mainViewModel.settings.PhotoGrid.getGridItemPadding()
+                .collectAsStateWithLifecycle(initialValue = 3)
+
             LazyVerticalGrid(
                 state = gridState,
                 columns = GridCells.Fixed(
@@ -348,8 +355,8 @@ fun DeviceMedia(
                             viewProperties = viewProperties,
                             selectedItemsList = selectedItemsList,
                             thumbnailSettings = Pair(cacheThumbnails, thumbnailSize),
-                            isDragSelecting = isDragSelecting
-                        ) {
+                            isDragSelecting = isDragSelecting,
+                            onClick = {
                             when (viewProperties.operation) {
                                 ImageFunctions.LoadNormalImage -> {
                                     // mainViewModel.setGroupedMedia(groupedMedia.value)
@@ -382,9 +389,12 @@ fun DeviceMedia(
                                     )
                                 }
                             }
-                        }
-                    }
+                        },
+                        cornerRadius = gridItemCornerRadius,
+                        itemPadding = gridItemPadding
+                    )
                 }
+            }
             }
 
             if (showLoadingSpinner) {
@@ -636,7 +646,9 @@ fun MediaStoreItem(
     selectedItemsList: SnapshotStateList<MediaStoreData>,
     thumbnailSettings: Pair<Boolean, Int>,
     isDragSelecting: MutableState<Boolean>,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    cornerRadius: Int = 16,
+    itemPadding: Int = 3
 ) {
     val vibratorManager = rememberVibratorManager()
 
@@ -697,13 +709,7 @@ fun MediaStoreItem(
             }
         }
 
-        val animatedItemCornerRadius by animateDpAsState(
-            targetValue = if (isSelected) 16.dp else 0.dp,
-            animationSpec = tween(
-                durationMillis = 150,
-            ),
-            label = "animate corner radius of selected item"
-        )
+
         val animatedItemScale by animateFloatAsState(
             targetValue = if (isSelected) 0.8f else 1f,
             animationSpec = tween(
@@ -743,8 +749,19 @@ fun MediaStoreItem(
         Box(
             modifier = Modifier
                 .aspectRatio(1f)
-                .padding(3.dp) // Minimal padding for clean appearance
-                .clip(RoundedCornerShape(16.dp))
+                .padding(itemPadding.dp) // Customizable padding between grid items
+                .clip(RoundedCornerShape(cornerRadius.dp))
+                .then(
+                    if (isSelected) {
+                        Modifier.border(
+                            width = 3.dp,
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = RoundedCornerShape(cornerRadius.dp)
+                        )
+                    } else {
+                        Modifier
+                    }
+                )
                 .then(
                     if (selectedItemsList.isNotEmpty()) {
                         Modifier.clickable {
@@ -799,7 +816,7 @@ fun MediaStoreItem(
                     .fillMaxSize(1f) // Full size for clean, borderless appearance
                     .align(Alignment.Center)
                     .scale(animatedItemScale)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(cornerRadius.dp))
             ) {
                 if (isSecureMedia) {
                     it.signature(item.signature())

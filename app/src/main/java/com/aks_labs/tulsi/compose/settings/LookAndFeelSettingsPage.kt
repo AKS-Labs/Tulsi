@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -134,6 +135,11 @@ fun LookAndFeelSettingsPage() {
 
                         // Portrait columns slider
                         var portraitSliderValue by remember { mutableFloatStateOf(portraitColumns.toFloat()) }
+
+                        // Update slider value when preference changes
+                        LaunchedEffect(portraitColumns) {
+                            portraitSliderValue = portraitColumns.toFloat()
+                        }
                         Column {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -168,6 +174,11 @@ fun LookAndFeelSettingsPage() {
 
                         // Landscape columns slider
                         var landscapeSliderValue by remember { mutableFloatStateOf(landscapeColumns.toFloat()) }
+
+                        // Update slider value when preference changes
+                        LaunchedEffect(landscapeColumns) {
+                            landscapeSliderValue = landscapeColumns.toFloat()
+                        }
                         Column {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -194,6 +205,148 @@ fun LookAndFeelSettingsPage() {
                                 },
                                 valueRange = 3f..12f,
                                 steps = 8, // 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Corner roundness slider
+                        val cornerRadius by mainViewModel.settings.PhotoGrid.getGridItemCornerRadius()
+                            .collectAsStateWithLifecycle(initialValue = 16)
+                        var cornerRadiusSliderValue by remember { mutableFloatStateOf(cornerRadius.toFloat()) }
+
+                        // Update slider value when preference changes
+                        LaunchedEffect(cornerRadius) {
+                            cornerRadiusSliderValue = cornerRadius.toFloat()
+                        }
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.style),
+                                        contentDescription = "Corner roundness",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Corner Roundness",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "${cornerRadiusSliderValue.roundToInt()}dp",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    IconButton(
+                                        onClick = {
+                                            cornerRadiusSliderValue = 16f
+                                            mainViewModel.settings.PhotoGrid.setGridItemCornerRadius(16)
+                                        },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.reset),
+                                            contentDescription = "Reset to default",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            Slider(
+                                value = cornerRadiusSliderValue,
+                                onValueChange = { cornerRadiusSliderValue = it },
+                                onValueChangeFinished = {
+                                    mainViewModel.settings.PhotoGrid.setGridItemCornerRadius(cornerRadiusSliderValue.roundToInt())
+                                },
+                                valueRange = 0f..24f,
+                                steps = 23, // 0, 1, 2, ..., 24
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Item padding slider
+                        val itemPadding by mainViewModel.settings.PhotoGrid.getGridItemPadding()
+                            .collectAsStateWithLifecycle(initialValue = 3)
+                        var itemPaddingSliderValue by remember { mutableFloatStateOf(itemPadding.toFloat()) }
+
+                        // Update slider value when preference changes
+                        LaunchedEffect(itemPadding) {
+                            itemPaddingSliderValue = itemPadding.toFloat()
+                        }
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.reorderable),
+                                        contentDescription = "Item spacing",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Item Spacing",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "${itemPaddingSliderValue.roundToInt()}dp",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    IconButton(
+                                        onClick = {
+                                            itemPaddingSliderValue = 3f
+                                            mainViewModel.settings.PhotoGrid.setGridItemPadding(3)
+                                        },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.reset),
+                                            contentDescription = "Reset to default",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            Slider(
+                                value = itemPaddingSliderValue,
+                                onValueChange = { itemPaddingSliderValue = it },
+                                onValueChangeFinished = {
+                                    mainViewModel.settings.PhotoGrid.setGridItemPadding(itemPaddingSliderValue.roundToInt())
+                                },
+                                valueRange = 1f..8f,
+                                steps = 6, // 1, 2, 3, 4, 5, 6, 7, 8
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }

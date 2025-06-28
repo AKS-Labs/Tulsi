@@ -667,6 +667,8 @@ class SettingsPhotoGridImpl(
     private val gridViewModeKey = booleanPreferencesKey("grid_view_mode")
     private val gridColumnCountPortraitKey = intPreferencesKey("grid_column_count_portrait")
     private val gridColumnCountLandscapeKey = intPreferencesKey("grid_column_count_landscape")
+    private val gridItemCornerRadiusKey = intPreferencesKey("grid_item_corner_radius")
+    private val gridItemPaddingKey = intPreferencesKey("grid_item_padding")
 
     fun getSortMode() = context.datastore.data.map {
         val name = it[mediaSortModeKey] ?: MediaItemSortMode.DateTaken.name
@@ -716,6 +718,30 @@ class SettingsPhotoGridImpl(
     fun setGridColumnCountLandscape(count: Int) = viewModelScope.launch {
         context.datastore.edit {
             it[gridColumnCountLandscapeKey] = count.coerceIn(3, 12) // Limit between 3-12 columns
+        }
+    }
+
+    // Get the corner radius for grid items (default: 16dp)
+    fun getGridItemCornerRadius() = context.datastore.data.map {
+        it[gridItemCornerRadiusKey] ?: 16
+    }
+
+    // Set the corner radius for grid items
+    fun setGridItemCornerRadius(radius: Int) = viewModelScope.launch {
+        context.datastore.edit {
+            it[gridItemCornerRadiusKey] = radius.coerceIn(0, 24) // Limit between 0-24dp
+        }
+    }
+
+    // Get the padding between grid items (default: 3dp)
+    fun getGridItemPadding() = context.datastore.data.map {
+        it[gridItemPaddingKey] ?: 3
+    }
+
+    // Set the padding between grid items
+    fun setGridItemPadding(padding: Int) = viewModelScope.launch {
+        context.datastore.edit {
+            it[gridItemPaddingKey] = padding.coerceIn(1, 8) // Limit between 1-8dp
         }
     }
 }
