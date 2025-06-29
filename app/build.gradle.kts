@@ -41,6 +41,20 @@ android {
         includeInBundle = false
     }
 
+    flavorDimensions += "distribution"
+    productFlavors {
+        create("gplay") {
+            dimension = "distribution"
+            applicationIdSuffix = ""
+            versionNameSuffix = ""
+        }
+        create("fdroid") {
+            dimension = "distribution"
+            applicationIdSuffix = ""
+            versionNameSuffix = "-fdroid"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -159,22 +173,12 @@ dependencies {
     implementation("com.github.kittinunf.fuel:fuel-json:2.3.1")
 	implementation("com.github.kaii-lb:Lavender-Snackbars:0.1.7")
 
-    // ML Kit for OCR text recognition (CURRENT - 40MB impact)
-    implementation("com.google.mlkit:text-recognition:16.0.1")
+    // OCR dependencies based on build flavor
+    "gplayImplementation"("com.google.mlkit:text-recognition:16.0.1")
+    "gplayImplementation"("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
 
-    // ALTERNATIVE 1: Unbundled ML Kit (15MB impact - downloads model on demand)
-    // implementation("com.google.mlkit:text-recognition-common:16.0.1")
-    // implementation("com.google.mlkit:text-recognition-latin:16.0.1")
-
-    // ALTERNATIVE 2: Tesseract4Android (8MB impact - recommended for size)
-    // implementation("cz.adaptech.tesseract4android:tesseract4android:4.7.0")
-
-    // ALTERNATIVE 3: TensorFlow Lite (5MB impact - custom model)
-    // implementation("org.tensorflow:tensorflow-lite:2.13.0")
-    // implementation("org.tensorflow:tensorflow-lite-support:0.4.4")
-
-    // Coroutines support for Google Play Services (needed for ML Kit)
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
+    // F-Droid build uses open-source Tesseract4Android
+    "fdroidImplementation"("cz.adaptech.tesseract4android:tesseract4android:4.7.0")
 
     // WorkManager for background processing
     implementation("androidx.work:work-runtime-ktx:2.10.0")

@@ -5,20 +5,13 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.TextRecognition
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 /**
- * Service class for extracting text from images using ML Kit OCR
+ * Service class for extracting text from images using pluggable OCR engines
  */
 class OcrTextExtractor(private val context: Context) {
-    
-    private val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+
+    private val ocrEngine: OcrEngine = OcrEngineFactory.createEngine(context)
     
     companion object {
         private const val TAG = "OcrTextExtractor"
@@ -50,40 +43,22 @@ class OcrTextExtractor(private val context: Context) {
                 return OcrResult.Error("Invalid bitmap dimensions: ${bitmap.width}x${bitmap.height}")
             }
 
-            // Create InputImage for ML Kit with error handling
-            val inputImage = try {
-                InputImage.fromBitmap(bitmap, 0)
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to create InputImage from bitmap", e)
-                if (!bitmap.isRecycled) bitmap.recycle()
-                return OcrResult.Error("Failed to create input image: ${e.message}")
-            }
-
-            // Perform OCR with timeout and enhanced error handling
+            // Perform OCR using the pluggable engine
             val result = try {
-                performOcrWithTimeout(inputImage)
+                ocrEngine.extractTextFromBitmap(bitmap)
             } catch (e: Exception) {
                 Log.e(TAG, "OCR processing failed", e)
                 if (!bitmap.isRecycled) bitmap.recycle()
                 return OcrResult.Error("OCR processing failed: ${e.message}")
+            } finally {
+                // Clean up bitmap
+                if (!bitmap.isRecycled) {
+                    bitmap.recycle()
+                }
             }
 
-            val processingTime = System.currentTimeMillis() - startTime
-
-            // Clean up bitmap
-            if (!bitmap.isRecycled) {
-                bitmap.recycle()
-            }
-
-            Log.d(TAG, "OCR completed successfully in ${processingTime}ms for image: $imageUri")
-            Log.d(TAG, "Extracted text length: ${result.text.length}, blocks: ${result.textBlocks.size}")
-
-            OcrResult.Success(
-                extractedText = result.text,
-                confidence = calculateAverageConfidence(result.textBlocks.map { 1.0f }), // ML Kit doesn't provide confidence per block
-                textBlocksCount = result.textBlocks.size,
-                processingTimeMs = processingTime
-            )
+            Log.d(TAG, "OCR completed for image: $imageUri")
+            result
 
         } catch (e: Exception) {
             Log.e(TAG, "OCR failed for image: $imageUri", e)
@@ -96,8 +71,6 @@ class OcrTextExtractor(private val context: Context) {
      */
     suspend fun extractTextFromBitmap(bitmap: Bitmap): OcrResult {
         return try {
-            val startTime = System.currentTimeMillis()
-
             Log.d(TAG, "Starting OCR processing for bitmap: ${bitmap.width}x${bitmap.height}")
 
             // Validate input bitmap
@@ -117,71 +90,37 @@ class OcrTextExtractor(private val context: Context) {
                 return OcrResult.Error("Failed to optimize bitmap: ${e.message}")
             }
 
-            // Create InputImage for ML Kit with error handling
-            val inputImage = try {
-                InputImage.fromBitmap(optimizedBitmap, 0)
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to create InputImage from bitmap", e)
-                if (optimizedBitmap != bitmap && !optimizedBitmap.isRecycled) {
-                    optimizedBitmap.recycle()
-                }
-                return OcrResult.Error("Failed to create input image: ${e.message}")
-            }
-
-            // Perform OCR with timeout and enhanced error handling
+            // Perform OCR using the pluggable engine
             val result = try {
-                performOcrWithTimeout(inputImage)
+                ocrEngine.extractTextFromBitmap(optimizedBitmap)
             } catch (e: Exception) {
                 Log.e(TAG, "OCR processing failed for bitmap", e)
+                OcrResult.Error("OCR processing failed: ${e.message}")
+            } finally {
+                // Clean up optimized bitmap if it's different from original
                 if (optimizedBitmap != bitmap && !optimizedBitmap.isRecycled) {
                     optimizedBitmap.recycle()
                 }
-                return OcrResult.Error("OCR processing failed: ${e.message}")
             }
 
-            val processingTime = System.currentTimeMillis() - startTime
-
-            // Clean up optimized bitmap if it's different from original
-            if (optimizedBitmap != bitmap && !optimizedBitmap.isRecycled) {
-                optimizedBitmap.recycle()
-            }
-
-            Log.d(TAG, "OCR completed successfully in ${processingTime}ms for bitmap")
-            Log.d(TAG, "Extracted text length: ${result.text.length}, blocks: ${result.textBlocks.size}")
-
-            OcrResult.Success(
-                extractedText = result.text,
-                confidence = calculateAverageConfidence(result.textBlocks.map { 1.0f }), // ML Kit doesn't provide confidence per block
-                textBlocksCount = result.textBlocks.size,
-                processingTimeMs = processingTime
-            )
+            Log.d(TAG, "OCR completed for bitmap")
+            result
 
         } catch (e: Exception) {
             Log.e(TAG, "OCR failed for bitmap", e)
             OcrResult.Error("OCR processing failed: ${e.message}")
         }
     }
-    
-    /**
-     * Perform OCR using ML Kit Text Recognition with timeout
-     */
-    private suspend fun performOcrWithTimeout(inputImage: InputImage) = withTimeoutOrNull(OCR_TIMEOUT_MS) {
-        performOcr(inputImage)
-    } ?: throw Exception("OCR processing timed out after ${OCR_TIMEOUT_MS}ms")
 
     /**
-     * Perform OCR using ML Kit Text Recognition
+     * Clean up OCR engine resources
      */
-    private suspend fun performOcr(inputImage: InputImage) = suspendCancellableCoroutine { continuation ->
-        textRecognizer.process(inputImage)
-            .addOnSuccessListener { visionText ->
-                continuation.resume(visionText)
-            }
-            .addOnFailureListener { exception ->
-                continuation.resumeWithException(exception)
-            }
+    fun cleanup() {
+        ocrEngine.cleanup()
     }
-    
+
+
+
     /**
      * Load and optimize bitmap from URI for OCR processing with enhanced compatibility
      */
