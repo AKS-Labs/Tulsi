@@ -16,8 +16,8 @@ android {
         applicationId = "com.aks_labs.tulsi"
         minSdk = 30
         targetSdk = 35
-        versionCode = 101
-        versionName = "v0.9.9-beta"
+        versionCode = 102
+        versionName = "v1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

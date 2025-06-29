@@ -62,7 +62,7 @@ fun OcrProgressBar(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                    .padding(horizontal = 12.dp, vertical = 2.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant
                 ),
@@ -80,7 +80,7 @@ fun OcrProgressBar(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "OCR Processing: ${progressData.processedImages}/${progressData.totalImages} images",
+                            text = "Getting Search-Ready...   ${progressData.processedImages}/${progressData.totalImages} images",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,

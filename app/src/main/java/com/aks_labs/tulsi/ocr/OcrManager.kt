@@ -56,7 +56,7 @@ class OcrManager(
 
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
-            .setRequiresBatteryNotLow(true)
+            .setRequiresBatteryNotLow(false) // Allow processing even with low battery for better compatibility
             .build()
 
         val workRequest = OneTimeWorkRequestBuilder<OcrIndexingWorker>()
@@ -88,7 +88,7 @@ class OcrManager(
 
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
-            .setRequiresBatteryNotLow(true)
+            .setRequiresBatteryNotLow(false) // Allow processing even with low battery for better compatibility
             .build()
 
         val workRequest = OneTimeWorkRequestBuilder<OcrIndexingWorker>()
@@ -126,7 +126,7 @@ class OcrManager(
 
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
-            .setRequiresBatteryNotLow(true)
+            .setRequiresBatteryNotLow(false) // Allow processing even with low battery for better compatibility
             .setRequiresCharging(false)
             .setRequiresDeviceIdle(false)
             .build()
@@ -171,7 +171,7 @@ class OcrManager(
 
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
-            .setRequiresBatteryNotLow(true)
+            .setRequiresBatteryNotLow(false) // Allow processing even with low battery for better compatibility
             .setRequiresCharging(false)
             .setRequiresDeviceIdle(false)
             .build()
@@ -206,6 +206,10 @@ class OcrManager(
 
         progressMonitorJob = CoroutineScope(Dispatchers.IO).launch {
             Log.d(TAG, "Progress monitoring started")
+            var lastProgressCount = -1
+            var stuckProgressCounter = 0
+            val maxStuckIterations = 30 // 30 iterations * 2 seconds = 60 seconds timeout
+
             while (true) {
                 try {
                     val progress = database.ocrProgressDao().getProgress()
@@ -215,6 +219,25 @@ class OcrManager(
                         val totalProcessedImages = database.ocrTextDao().getAllProcessedMediaIds().size
 
                         Log.d(TAG, "Progress monitoring check: $totalProcessedImages/$totalImages (current: ${progress.processedImages}/${progress.totalImages})")
+
+                        // Check for stuck progress (no change in processed count while processing)
+                        if (progress.isProcessing && !progress.isPaused) {
+                            if (lastProgressCount == totalProcessedImages) {
+                                stuckProgressCounter++
+                                Log.d(TAG, "Progress appears stuck: $stuckProgressCounter/$maxStuckIterations iterations")
+
+                                if (stuckProgressCounter >= maxStuckIterations) {
+                                    Log.w(TAG, "Progress stuck for too long, marking as not processing")
+                                    database.ocrProgressDao().updateProcessingStatus(false)
+                                    stuckProgressCounter = 0
+                                }
+                            } else {
+                                stuckProgressCounter = 0 // Reset counter if progress is made
+                            }
+                            lastProgressCount = totalProcessedImages
+                        } else {
+                            stuckProgressCounter = 0 // Reset counter if not processing
+                        }
 
                         // Always update progress to ensure Flow emission and real-time updates
                         val currentTime = System.currentTimeMillis()
@@ -298,11 +321,35 @@ class OcrManager(
     }
 
     /**
-     * Force start progress monitoring (for debugging)
+     * Force start progress monitoring and refresh UI
      */
     fun forceStartProgressMonitoring() {
-        Log.d(TAG, "Force starting progress monitoring")
-        startProgressMonitoring()
+        Log.d(TAG, "Force starting progress monitoring and refreshing UI")
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // Force refresh progress data first
+                val progress = database.ocrProgressDao().getProgress()
+                if (progress != null) {
+                    val totalImages = getTotalImageCount()
+                    val totalProcessedImages = database.ocrTextDao().getAllProcessedMediaIds().size
+
+                    val refreshedProgress = progress.copy(
+                        processedImages = totalProcessedImages,
+                        totalImages = totalImages,
+                        lastUpdated = System.currentTimeMillis() / 1000
+                    )
+
+                    // Force update to trigger Flow emission
+                    database.ocrProgressDao().updateProgress(refreshedProgress)
+                    Log.d(TAG, "Force refreshed progress: ${refreshedProgress.processedImages}/${refreshedProgress.totalImages}")
+                }
+
+                // Start monitoring
+                startProgressMonitoring()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error in force start progress monitoring", e)
+            }
+        }
     }
 
     /**

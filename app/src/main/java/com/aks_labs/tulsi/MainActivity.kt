@@ -298,6 +298,7 @@ class MainActivity : ComponentActivity() {
 
                         PermissionHandler(continueToApp)
                     } else {
+                        Log.d(TAG, "Transitioning to main app content")
                         SetContentForActivity()
                     }
                 }
@@ -324,13 +325,9 @@ class MainActivity : ComponentActivity() {
 
         // Initialize OCR system when entering main app after permissions are granted
         LaunchedEffect(Unit) {
-            Log.d(TAG, "Main app content loaded - ensuring OCR system is initialized")
-            ensureOcrSystemInitialized()
-        }
-
-        // Initialize OCR system when entering main app after permissions are granted
-        LaunchedEffect(Unit) {
-            Log.d(TAG, "Main app content loaded - ensuring OCR system is initialized")
+            Log.d(TAG, "Main app content loaded - initializing OCR system")
+            // Small delay to ensure permission state is updated after user grants permissions
+            kotlinx.coroutines.delay(500)
             ensureOcrSystemInitialized()
         }
 
@@ -1265,25 +1262,73 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
+     * Public method to trigger OCR initialization from external components
+     */
+    fun triggerOcrInitialization() {
+        Log.d(TAG, "External trigger for OCR initialization received")
+        CoroutineScope(CoroutineDispatchers.Main).launch {
+            // Small delay to ensure the UI transition is complete
+            kotlinx.coroutines.delay(1000)
+            ensureOcrSystemInitialized()
+
+            // Also force start progress monitoring to ensure UI updates
+            kotlinx.coroutines.delay(500)
+            val ocrManager = OcrManager(applicationContext, applicationDatabase)
+            ocrManager.forceStartProgressMonitoring()
+            Log.d(TAG, "Triggered progress monitoring from external call")
+        }
+    }
+
+    /**
      * Ensure OCR system is initialized after permissions are granted
      */
     private fun ensureOcrSystemInitialized() {
         Log.d(TAG, "Ensuring OCR system is initialized...")
         CoroutineScope(CoroutineDispatchers.IO).launch {
             try {
-                // Check if we have necessary permissions
-                if (!hasRequiredPermissions()) {
-                    Log.d(TAG, "Required permissions not granted, cannot initialize OCR")
-                    return@launch
+                // More aggressive permission checking with longer retry period
+                var permissionCheckAttempts = 0
+                val maxAttempts = 5
+                while (!hasRequiredPermissions() && permissionCheckAttempts < maxAttempts) {
+                    Log.d(TAG, "Required permissions not yet available, waiting... (attempt ${permissionCheckAttempts + 1}/$maxAttempts)")
+                    kotlinx.coroutines.delay(2000) // Wait 2 seconds before retry
+                    permissionCheckAttempts++
                 }
+
+                if (!hasRequiredPermissions()) {
+                    Log.w(TAG, "Required permissions not granted after $maxAttempts retries, cannot initialize OCR")
+                    // Try one more time with direct system check
+                    val hasPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        applicationContext.checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED
+                    } else {
+                        applicationContext.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                    }
+
+                    if (!hasPermission) {
+                        Log.e(TAG, "Direct permission check also failed, aborting OCR initialization")
+                        return@launch
+                    } else {
+                        Log.d(TAG, "Direct permission check succeeded, continuing with OCR initialization")
+                    }
+                }
+
+                Log.d(TAG, "Permissions confirmed, proceeding with OCR initialization")
 
                 // Check if OCR system needs initialization
                 val progress = applicationDatabase.ocrProgressDao().getProgress()
                 val totalImages = getTotalImageCount()
 
+                Log.d(TAG, "OCR status check: progress=$progress, totalImages=$totalImages")
+
                 if (progress == null && totalImages > 0) {
                     Log.d(TAG, "OCR system not initialized, initializing now...")
                     initializeOcrSystem()
+
+                    // Force start progress monitoring to ensure UI updates on first launch
+                    kotlinx.coroutines.delay(1000) // Wait for initialization to complete
+                    val ocrManager = OcrManager(applicationContext, applicationDatabase)
+                    ocrManager.forceStartProgressMonitoring()
+                    Log.d(TAG, "Forced progress monitoring start for first launch")
                 } else if (progress != null) {
                     Log.d(TAG, "OCR system already initialized, ensuring monitoring is active")
                     val ocrManager = OcrManager(applicationContext, applicationDatabase)
@@ -1291,11 +1336,23 @@ class MainActivity : ComponentActivity() {
 
                     // Check if we need to resume processing
                     val processedCount = applicationDatabase.ocrProgressDao().getProcessedCount() ?: 0
+                    Log.d(TAG, "OCR progress: $processedCount/$totalImages processed")
+
                     if (processedCount < totalImages && !progress.isProcessing && !progress.isPaused) {
                         Log.d(TAG, "Resuming OCR processing for remaining images")
                         applicationDatabase.ocrProgressDao().updateProcessingStatus(true)
                         ocrManager.startContinuousProcessing(batchSize = 50)
+                    } else if (progress.isProcessing) {
+                        Log.d(TAG, "OCR processing already in progress")
+                    } else if (progress.isPaused) {
+                        Log.d(TAG, "OCR processing is paused")
+                    } else {
+                        Log.d(TAG, "OCR processing appears to be complete")
                     }
+                } else if (totalImages == 0) {
+                    Log.d(TAG, "No images found to process")
+                } else {
+                    Log.d(TAG, "OCR system already fully processed")
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to ensure OCR system initialization", e)

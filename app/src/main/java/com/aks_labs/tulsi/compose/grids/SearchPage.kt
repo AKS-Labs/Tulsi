@@ -87,6 +87,7 @@ import com.aks_labs.tulsi.models.search_page.SearchViewModelFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.plus
 import java.text.SimpleDateFormat
@@ -215,7 +216,39 @@ fun SearchPage(
 
         // Ensure progress monitoring is active when page loads
         LaunchedEffect(Unit) {
+            Log.d("SearchPage", "Initializing OCR progress monitoring")
             ocrManager.ensureProgressMonitoring()
+        }
+
+        // Additional monitoring to handle first launch scenario
+        LaunchedEffect(ocrProgress) {
+            if (ocrProgress?.isProcessing == true) {
+                Log.d("SearchPage", "OCR processing detected, ensuring monitoring is active")
+                ocrManager.ensureProgressMonitoring()
+
+                // Reset progress bar dismissed state when OCR starts processing
+                if (progressBarDismissed) {
+                    Log.d("SearchPage", "OCR processing started, showing progress bar")
+                    progressBarDismissed = false
+                    ocrManager.showProgressBar()
+                }
+            }
+        }
+
+        // Periodic check to ensure progress monitoring is active during first launch
+        LaunchedEffect(Unit) {
+            var checkCount = 0
+            while (checkCount < 10) { // Check for up to 20 seconds
+                kotlinx.coroutines.delay(2000) // Check every 2 seconds
+                checkCount++
+
+                val currentProgress = ocrManager.getProgressFlow().first()
+                if (currentProgress?.isProcessing == true) {
+                    Log.d("SearchPage", "Periodic check: OCR processing active, ensuring monitoring")
+                    ocrManager.forceStartProgressMonitoring()
+                    break // Stop checking once we've ensured monitoring is active
+                }
+            }
         }
 
         var hideLoadingSpinner by remember { mutableStateOf(false) }

@@ -8,7 +8,9 @@ import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
+import com.aks_labs.tulsi.MainActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -399,7 +401,11 @@ fun PermissionHandler(
 
                         Button(
                             onClick = {
+                                Log.d("PermissionHandler", "Continue button clicked - transitioning to main app")
                                 continueToApp.value = true
+
+                                // Trigger OCR initialization directly as a backup
+                                (context as? MainActivity)?.triggerOcrInitialization()
                             },
                             enabled = mainViewModel.checkCanPass(),
                             modifier = Modifier
@@ -421,7 +427,11 @@ fun PermissionHandler(
                 ) {
                     Button(
                         onClick = {
+                            Log.d("PermissionHandler", "Continue button clicked (landscape) - transitioning to main app")
                             continueToApp.value = true
+
+                            // Trigger OCR initialization directly as a backup
+                            (context as? MainActivity)?.triggerOcrInitialization()
                         },
                         enabled = mainViewModel.checkCanPass()
                     ) {

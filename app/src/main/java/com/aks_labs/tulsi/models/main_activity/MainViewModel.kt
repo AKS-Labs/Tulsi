@@ -160,9 +160,12 @@ class MainViewModel(context: Context) : ViewModel() {
         permission: String,
         isGranted: Boolean
     ) {
+        Log.d(TAG, "Permission result: $permission = $isGranted")
+
         if (!isGranted && !permissionQueue.contains(permission)) permissionQueue.add(permission)
         else if (isGranted) permissionQueue.remove(permission)
 
+        Log.d(TAG, "Permission queue updated: ${permissionQueue.toList()}")
         permissionQueue.forEach { Log.d(TAG, "PERMISSION DENIED $it") }
     }
 
