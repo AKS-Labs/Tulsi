@@ -20,6 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -348,6 +349,39 @@ fun LookAndFeelSettingsPage() {
                                 valueRange = 1f..8f,
                                 steps = 6, // 1, 2, 3, 4, 5, 6, 7, 8
                                 modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Drag selection toggle
+                        val dragSelectionEnabled by mainViewModel.settings.PhotoGrid.getDragSelectionEnabled()
+                            .collectAsStateWithLifecycle(initialValue = true)
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = "Enable Drag Selection",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = "Allow dragging across grid to select multiple items",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                )
+                            }
+                            Switch(
+                                checked = dragSelectionEnabled,
+                                onCheckedChange = { enabled ->
+                                    mainViewModel.settings.PhotoGrid.setDragSelectionEnabled(enabled)
+                                }
                             )
                         }
                     }

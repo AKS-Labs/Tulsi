@@ -296,6 +296,10 @@ fun DeviceMedia(
             val gridItemPadding by mainViewModel.settings.PhotoGrid.getGridItemPadding()
                 .collectAsStateWithLifecycle(initialValue = 3)
 
+            // Get drag selection preference
+            val dragSelectionEnabled by mainViewModel.settings.PhotoGrid.getDragSelectionEnabled()
+                .collectAsStateWithLifecycle(initialValue = true)
+
             LazyVerticalGrid(
                 state = gridState,
                 columns = GridCells.Fixed(
@@ -310,15 +314,22 @@ fun DeviceMedia(
                     .fillMaxSize(1f)
                     .padding(horizontal = 6.dp)
                     .align(Alignment.TopCenter)
-                    .dragSelectionHandler(
-                        state = gridState,
-                        selectedItemsList = selectedItemsList,
-                        groupedMedia = groupedMedia.value,
-                        scrollSpeed = scrollSpeed,
-                        scrollThreshold = with(localDensity) {
-                            40.dp.toPx()
-                        },
-                        isDragSelecting = isDragSelecting
+                    .then(
+                        // Apply drag selection if enabled OR already in selection mode
+                        if (dragSelectionEnabled || selectedItemsList.isNotEmpty()) {
+                            Modifier.dragSelectionHandler(
+                                state = gridState,
+                                selectedItemsList = selectedItemsList,
+                                groupedMedia = groupedMedia.value,
+                                scrollSpeed = scrollSpeed,
+                                scrollThreshold = with(localDensity) {
+                                    40.dp.toPx()
+                                },
+                                isDragSelecting = isDragSelecting
+                            )
+                        } else {
+                            Modifier
+                        }
                     )
             ) {
                 items(

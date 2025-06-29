@@ -11,6 +11,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -166,6 +167,7 @@ fun SinglePhotoView(
     }
 
     val showInfoDialog = remember { mutableStateOf(false) }
+    val showRenameDialog = remember { mutableStateOf(false) }
 
     BackHandler(
         enabled = !showInfoDialog.value
@@ -181,6 +183,7 @@ fun SinglePhotoView(
                 mediaItem = currentMediaItem.value,
                 visible = appBarsVisible.value,
                 showInfoDialog = showInfoDialog,
+                showRenameDialog = showRenameDialog,
                 removeIfInFavGrid = {
                     if (navController.previousBackStackEntry?.destination?.route == MultiScreenViewType.FavouritesGridView.name) {
                         sortOutMediaMods(
@@ -237,6 +240,16 @@ fun SinglePhotoView(
             showMoveCopyOptions = true
         )
 
+        // Rename dialog triggered by clicking filename
+        SinglePhotoInfoDialog(
+            showDialog = showRenameDialog,
+            currentMediaItem = currentMediaItem.value,
+            groupedMedia = groupedMedia,
+            loadsFromMainViewModel = loadsFromMainViewModel,
+            showMoveCopyOptions = false,
+            startInRenameMode = true
+        )
+
         Column(
             modifier = Modifier
                 .padding(0.dp)
@@ -262,6 +275,7 @@ private fun TopBar(
     mediaItem: MediaStoreData,
     visible: Boolean,
     showInfoDialog: MutableState<Boolean>,
+    showRenameDialog: MutableState<Boolean>,
     removeIfInFavGrid: () -> Unit,
     onBackClick: () -> Unit
 ) {
@@ -327,6 +341,9 @@ private fun TopBar(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
                         .width(if (isLandscape) 300.dp else 160.dp)
+                        .clickable {
+                            showRenameDialog.value = true
+                        }
                 )
             },
             actions = {

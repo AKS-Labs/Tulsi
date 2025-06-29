@@ -669,6 +669,7 @@ class SettingsPhotoGridImpl(
     private val gridColumnCountLandscapeKey = intPreferencesKey("grid_column_count_landscape")
     private val gridItemCornerRadiusKey = intPreferencesKey("grid_item_corner_radius")
     private val gridItemPaddingKey = intPreferencesKey("grid_item_padding")
+    private val dragSelectionEnabledKey = booleanPreferencesKey("drag_selection_enabled")
 
     fun getSortMode() = context.datastore.data.map {
         val name = it[mediaSortModeKey] ?: MediaItemSortMode.DateTaken.name
@@ -742,6 +743,18 @@ class SettingsPhotoGridImpl(
     fun setGridItemPadding(padding: Int) = viewModelScope.launch {
         context.datastore.edit {
             it[gridItemPaddingKey] = padding.coerceIn(1, 8) // Limit between 1-8dp
+        }
+    }
+
+    // Get the drag selection enabled state (default: true)
+    fun getDragSelectionEnabled() = context.datastore.data.map {
+        it[dragSelectionEnabledKey] ?: true
+    }
+
+    // Set the drag selection enabled state
+    fun setDragSelectionEnabled(enabled: Boolean) = viewModelScope.launch {
+        context.datastore.edit {
+            it[dragSelectionEnabledKey] = enabled
         }
     }
 }

@@ -323,10 +323,11 @@ fun SinglePhotoInfoDialog(
     currentMediaItem: MediaStoreData,
     groupedMedia: MutableState<List<MediaStoreData>>,
     loadsFromMainViewModel: Boolean,
-    showMoveCopyOptions: Boolean = true
+    showMoveCopyOptions: Boolean = true,
+    startInRenameMode: Boolean = false
 ) {
     val context = LocalContext.current
-    val isEditingFileName = remember { mutableStateOf(false) }
+    val isEditingFileName = remember { mutableStateOf(startInRenameMode) }
 
     val isLandscape by rememberDeviceOrientation()
 
