@@ -356,7 +356,7 @@ fun LookAndFeelSettingsPage() {
 
                         // Drag selection toggle
                         val dragSelectionEnabled by mainViewModel.settings.PhotoGrid.getDragSelectionEnabled()
-                            .collectAsStateWithLifecycle(initialValue = true)
+                            .collectAsStateWithLifecycle(initialValue = false)
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),

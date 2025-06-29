@@ -746,9 +746,9 @@ class SettingsPhotoGridImpl(
         }
     }
 
-    // Get the drag selection enabled state (default: true)
+    // Get the drag selection enabled state (default: false)
     fun getDragSelectionEnabled() = context.datastore.data.map {
-        it[dragSelectionEnabledKey] ?: true
+        it[dragSelectionEnabledKey] ?: false
     }
 
     // Set the drag selection enabled state

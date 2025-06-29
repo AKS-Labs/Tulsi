@@ -286,7 +286,7 @@ fun DeviceMedia(
 
             // Get column count from preferences
             val portraitColumns by mainViewModel.settings.PhotoGrid.getGridColumnCountPortrait()
-                .collectAsStateWithLifecycle(initialValue = 4)
+                .collectAsStateWithLifecycle(initialValue = 3)
             val landscapeColumns by mainViewModel.settings.PhotoGrid.getGridColumnCountLandscape()
                 .collectAsStateWithLifecycle(initialValue = 6)
 
@@ -298,7 +298,7 @@ fun DeviceMedia(
 
             // Get drag selection preference
             val dragSelectionEnabled by mainViewModel.settings.PhotoGrid.getDragSelectionEnabled()
-                .collectAsStateWithLifecycle(initialValue = true)
+                .collectAsStateWithLifecycle(initialValue = false)
 
             LazyVerticalGrid(
                 state = gridState,
@@ -978,6 +978,7 @@ fun Modifier.dragSelectionHandler(
 ) = pointerInput(Unit) {
     var initialKey: Int? = null
     var currentKey: Int? = null
+    var isSelectingMode: Boolean = true // Track whether we're selecting or deselecting
 
     if (groupedMedia.isEmpty()) return@pointerInput
 
@@ -993,25 +994,26 @@ fun Modifier.dragSelectionHandler(
         onDragStart = { offset ->
             isDragSelecting.value = true
 
-            if (selectedItemsList.size == 1 && selectedItemsList[0] != MediaStoreData()) {
-                initialKey = groupedMedia.indexOf(selectedItemsList[0])
-                currentKey = initialKey
-            } else {
-                state.getGridItemAtOffset(
-                    offset,
-                    groupedMedia.map { it.uri.toString() },
-                    numberOfHorizontalItems
-                )?.let { key ->
-                    if (key < groupedMedia.size) {  // Add bounds check
-                        val item = groupedMedia[key]
+            state.getGridItemAtOffset(
+                offset,
+                groupedMedia.map { it.uri.toString() },
+                numberOfHorizontalItems
+            )?.let { key ->
+                if (key < groupedMedia.size) {  // Add bounds check
+                    val item = groupedMedia[key]
 
-                        if (item.type != MediaType.Section) {
-                            initialKey = key
-                            currentKey = key
-                            if (!selectedItemsList.contains(item)) selectedItemsList.selectItem(
-                                item,
-                                groupedMedia
-                            )
+                    if (item.type != MediaType.Section) {
+                        initialKey = key
+                        currentKey = key
+
+                        // Determine selection mode based on initial item's state
+                        isSelectingMode = !selectedItemsList.contains(item)
+
+                        // Toggle the initial item
+                        if (isSelectingMode) {
+                            selectedItemsList.selectItem(item, groupedMedia)
+                        } else {
+                            selectedItemsList.unselectItem(item, groupedMedia)
                         }
                     }
                 }
@@ -1054,30 +1056,36 @@ fun Modifier.dragSelectionHandler(
                         val safeKey = key.coerceIn(0, groupedMedia.size - 1)
 
                         selectedItemsList.apply {
-                            val toBeRemoved =
+                            // First, undo the previous selection range
+                            val previousRange =
                                 if (safeInitialKey <= safeCurrentKey) groupedMedia.subList(
                                     safeInitialKey,
                                     safeCurrentKey + 1
                                 )
                                 else groupedMedia.subList(safeCurrentKey, safeInitialKey + 1)
 
-                            unselectAll(
-                                toBeRemoved.filter {
-                                    it.type != MediaType.Section
-                                },
-                                groupedMedia
-                            )
+                            val previousItems = previousRange.filter { it.type != MediaType.Section }
 
-                            val toBeAdded =
+                            // Undo previous action
+                            if (isSelectingMode) {
+                                unselectAll(previousItems, groupedMedia)
+                            } else {
+                                selectAll(previousItems, groupedMedia)
+                            }
+
+                            // Apply the new selection range with consistent toggle behavior
+                            val newRange =
                                 if (safeInitialKey <= safeKey) groupedMedia.subList(safeInitialKey, safeKey + 1)
                                 else groupedMedia.subList(safeKey, safeInitialKey + 1)
 
-                            selectAll(
-                                toBeAdded.filter {
-                                    it.type != MediaType.Section
-                                },
-                                groupedMedia
-                            )
+                            val newItems = newRange.filter { it.type != MediaType.Section }
+
+                            // Apply consistent action based on initial selection mode
+                            if (isSelectingMode) {
+                                selectAll(newItems, groupedMedia)
+                            } else {
+                                unselectAll(newItems, groupedMedia)
+                            }
                         }
 
                         currentKey = key
