@@ -97,7 +97,7 @@ fun LookAndFeelSettingsPage() {
             item {
                 // Grid Column Count Settings
                 val portraitColumns by mainViewModel.settings.PhotoGrid.getGridColumnCountPortrait()
-                    .collectAsStateWithLifecycle(initialValue = 4)
+                    .collectAsStateWithLifecycle(initialValue = 3)
                 val landscapeColumns by mainViewModel.settings.PhotoGrid.getGridColumnCountLandscape()
                     .collectAsStateWithLifecycle(initialValue = 6)
 

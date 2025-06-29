@@ -184,7 +184,7 @@ fun PermissionHandler(
 
                             PermissionButton(
                                 name = "Read Images",
-                                description = "Allow Tulsi Gallery to discover Gallery on the device",
+                                description = "Allow Tulsi Gallery to discover Photos on the device",
                                 position = RowPosition.Top,
                                 granted = !mainViewModel.permissionQueue.contains(Manifest.permission.READ_MEDIA_IMAGES)
                             ) {
@@ -325,7 +325,7 @@ fun PermissionHandler(
 
                             PermissionButton(
                                 name = "Read External Storage",
-                                description = "Allow Tulsi Gallery to discover Gallery and videos on the device",
+                                description = "Allow Tulsi Gallery to discover Photos and videos on the device",
                                 position = RowPosition.Top,
                                 granted = !mainViewModel.permissionQueue.contains(Manifest.permission.READ_EXTERNAL_STORAGE)
                             ) {

@@ -36,7 +36,7 @@ class MainViewModel(context: Context) : ViewModel() {
     val updater = Updater(context = context, coroutineScope = viewModelScope)
 
     // Grid view mode state
-    private val _isGridViewMode = MutableStateFlow(true) // Default to grid view
+    private val _isGridViewMode = MutableStateFlow(false) // Default to date-grouped view
     val isGridViewMode = _isGridViewMode
 
     // Initialize grid view mode from preferences

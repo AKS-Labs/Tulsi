@@ -688,7 +688,7 @@ class SettingsPhotoGridImpl(
 
     // Get the current view mode (true = grid view, false = date-grouped view)
     fun getGridViewMode() = context.datastore.data.map {
-        it[gridViewModeKey] ?: true // Default to grid view
+        it[gridViewModeKey] ?: false // Default to date-grouped view
     }
 
     // Set the view mode (true = grid view, false = date-grouped view)
@@ -698,9 +698,9 @@ class SettingsPhotoGridImpl(
         }
     }
 
-    // Get the column count for portrait mode (default: 4)
+    // Get the column count for portrait mode (default: 3)
     fun getGridColumnCountPortrait() = context.datastore.data.map {
-        it[gridColumnCountPortraitKey] ?: 4
+        it[gridColumnCountPortraitKey] ?: 3
     }
 
     // Set the column count for portrait mode
