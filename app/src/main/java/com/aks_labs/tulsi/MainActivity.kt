@@ -56,9 +56,15 @@ import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -889,6 +895,7 @@ class MainActivity : ComponentActivity() {
         val coroutineScope = rememberCoroutineScope()
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun Content(
         currentView: MutableState<BottomBarTab>,
@@ -903,6 +910,12 @@ class MainActivity : ComponentActivity() {
             multiAlbumViewModel.mediaFlow.collectAsStateWithLifecycle(context = Dispatchers.IO)
         val groupedMedia = remember { mutableStateOf(mediaStoreData.value) }
         var isTopBarVisible by remember { mutableStateOf(true) }
+
+        // Create scroll behavior for smooth top app bar animations
+        val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
+        // Create shared grid state for photo grids
+        val sharedGridState = rememberLazyGridState()
 
         val tabList by mainViewModel.settings.DefaultTabs.getTabList()
             .collectAsStateWithLifecycle(initialValue = DefaultTabs.defaultList)
@@ -948,7 +961,8 @@ class MainActivity : ComponentActivity() {
                     showDialog = showDialog,
                     selectedItemsList = selectedItemsList,
                     currentView = currentView,
-                    isVisible = isTopBarVisible
+                    isVisible = isTopBarVisible,
+                    scrollBehavior = scrollBehavior
                 )
             },
             bottomBar = {
@@ -962,6 +976,7 @@ class MainActivity : ComponentActivity() {
             contentColor = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier
                 .fillMaxSize(1f)
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
         ) { padding ->
             val isLandscape by rememberDeviceOrientation()
 
@@ -1036,6 +1051,7 @@ class MainActivity : ComponentActivity() {
                                     ),
                                     viewProperties = ViewProperties.Album,
                                     selectedItemsList = selectedItemsList,
+                                    state = sharedGridState
                                 )
                             }
 
@@ -1064,6 +1080,7 @@ class MainActivity : ComponentActivity() {
                                     albumInfo = multiAlbumViewModel.albumInfo,
                                     viewProperties = ViewProperties.Album,
                                     selectedItemsList = selectedItemsList,
+                                    state = sharedGridState
                                 )
                             }
 
@@ -1098,12 +1115,14 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun TopBar(
         showDialog: MutableState<Boolean>,
         selectedItemsList: SnapshotStateList<MediaStoreData>,
         currentView: MutableState<BottomBarTab>,
-        isVisible: Boolean = true
+        isVisible: Boolean = true,
+        scrollBehavior: TopAppBarScrollBehavior? = null
     ) {
         val show by remember {
             derivedStateOf {
@@ -1120,7 +1139,8 @@ class MainActivity : ComponentActivity() {
                 alternate = show,
                 showDialog = showDialog,
                 selectedItemsList = selectedItemsList,
-                currentView = currentView
+                currentView = currentView,
+                scrollBehavior = scrollBehavior
             )
         }
     }

@@ -26,10 +26,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -74,12 +76,14 @@ import com.aks_labs.tulsi.ui.theme.PacificoFont
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainAppTopBar(
     alternate: Boolean,
     showDialog: MutableState<Boolean>,
     selectedItemsList: SnapshotStateList<MediaStoreData>,
-    currentView: MutableState<BottomBarTab>
+    currentView: MutableState<BottomBarTab>,
+    scrollBehavior: TopAppBarScrollBehavior? = null
 ) {
     DualFunctionTopAppBar(
         alternated = alternate,
@@ -199,6 +203,7 @@ fun MainAppTopBar(
                 currentView = currentView
             )
         },
+        scrollBehavior = scrollBehavior
     )
 }
 
