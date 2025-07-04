@@ -159,12 +159,14 @@ dependencies {
     implementation("com.github.kittinunf.fuel:fuel-json:2.3.1")
 	implementation("com.github.kaii-lb:Lavender-Snackbars:0.1.7")
 
-    // ML Kit for OCR text recognition (CURRENT - 40MB impact)
-    implementation("com.google.mlkit:text-recognition:16.0.1")
+    // ML Kit for multi-language OCR text recognition
+    implementation("com.google.mlkit:text-recognition:16.0.1") // Latin script (existing)
+    implementation("com.google.mlkit:text-recognition-devanagari:16.0.1") // Hindi/Devanagari support
 
-    // ALTERNATIVE 1: Unbundled ML Kit (15MB impact - downloads model on demand)
-    // implementation("com.google.mlkit:text-recognition-common:16.0.1")
-    // implementation("com.google.mlkit:text-recognition-latin:16.0.1")
+    // Additional language support (can be added later if needed)
+    // implementation("com.google.mlkit:text-recognition-chinese:16.0.1") // Chinese support
+    // implementation("com.google.mlkit:text-recognition-japanese:16.0.1") // Japanese support
+    // implementation("com.google.mlkit:text-recognition-korean:16.0.1") // Korean support
 
     // ALTERNATIVE 2: Tesseract4Android (8MB impact - recommended for size)
     // implementation("cz.adaptech.tesseract4android:tesseract4android:4.7.0")

@@ -85,7 +85,7 @@ fun NativeTextSelectionOverlay(
             }
         }
 
-        // Join with appropriate spacing for readability
+        // Join with appropriate spacing for readability and multi-script support
         val selectedText = sortedElements.joinToString(" ") { element ->
             element.text
         }.let { text ->
@@ -97,11 +97,18 @@ fun NativeTextSelectionOverlay(
                 sortedElements.forEach { element ->
                     if (previousElement != null) {
                         val verticalDistance = element.boundingBox.top - previousElement!!.boundingBox.bottom
-                        // If elements are far apart vertically (likely different lines/paragraphs)
-                        if (verticalDistance > 20f) {
-                            result.append("\n")
-                        } else {
-                            result.append(" ")
+                        val horizontalDistance = kotlin.math.abs(element.boundingBox.left - previousElement!!.boundingBox.right)
+
+                        // Handle different script layouts
+                        when {
+                            // If elements are far apart vertically (likely different lines/paragraphs)
+                            verticalDistance > 20f -> result.append("\n")
+                            // For RTL scripts, check if we're moving right-to-left
+                            isRtlText(element.text) && horizontalDistance > 50f -> result.append(" ")
+                            // For complex scripts (Devanagari, etc.), use appropriate spacing
+                            isComplexScript(element.text) -> result.append(" ")
+                            // Default spacing for Latin and other scripts
+                            else -> result.append(" ")
                         }
                     }
                     result.append(element.text)
@@ -308,3 +315,37 @@ private fun DrawScope.drawSelectionHandles(start: Offset, end: Offset) {
 }
 
 // All text action helper functions removed - actions now handled through bottom panel only
+
+/**
+ * Check if text contains RTL (Right-to-Left) characters
+ */
+private fun isRtlText(text: String): Boolean {
+    val arabicPattern = Regex("[\u0600-\u06FF\u0750-\u077F]+") // Arabic
+    val hebrewPattern = Regex("[\u0590-\u05FF]+") // Hebrew
+    return arabicPattern.containsMatchIn(text) || hebrewPattern.containsMatchIn(text)
+}
+
+/**
+ * Check if text contains complex script characters (Devanagari, Tamil, etc.)
+ */
+private fun isComplexScript(text: String): Boolean {
+    val devanagariPattern = Regex("[\u0900-\u097F]+") // Hindi/Devanagari
+    val tamilPattern = Regex("[\u0B80-\u0BFF]+") // Tamil
+    val bengaliPattern = Regex("[\u0980-\u09FF]+") // Bengali
+    val gujaratiPattern = Regex("[\u0A80-\u0AFF]+") // Gujarati
+    val kannadaPattern = Regex("[\u0C80-\u0CFF]+") // Kannada
+    val malayalamPattern = Regex("[\u0D00-\u0D7F]+") // Malayalam
+    val oriyaPattern = Regex("[\u0B00-\u0B7F]+") // Oriya
+    val punjabiPattern = Regex("[\u0A00-\u0A7F]+") // Punjabi
+    val teluguPattern = Regex("[\u0C00-\u0C7F]+") // Telugu
+
+    return devanagariPattern.containsMatchIn(text) ||
+           tamilPattern.containsMatchIn(text) ||
+           bengaliPattern.containsMatchIn(text) ||
+           gujaratiPattern.containsMatchIn(text) ||
+           kannadaPattern.containsMatchIn(text) ||
+           malayalamPattern.containsMatchIn(text) ||
+           oriyaPattern.containsMatchIn(text) ||
+           punjabiPattern.containsMatchIn(text) ||
+           teluguPattern.containsMatchIn(text)
+}

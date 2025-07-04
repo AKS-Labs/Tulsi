@@ -21,19 +21,16 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Enhanced OCR text extractor that provides detailed text block information
- * for text selection functionality
+ * Enhanced OCR text extractor with multi-language support
+ * Provides detailed text block information for text selection functionality
  */
 object EnhancedOcrExtractor {
-    
+
     private const val TAG = "EnhancedOcrExtractor"
     private const val OCR_TIMEOUT_MS = 30000L // 30 seconds timeout
 
-    // Enhanced text recognizer with optimized options
-    private val textRecognizer = TextRecognition.getClient(
-        TextRecognizerOptions.Builder()
-            .build()
-    )
+    // Use multi-language OCR extractor for better language support
+    private val multiLanguageExtractor = MultiLanguageOcrExtractor
 
     // Image preprocessing constants
     private const val MIN_IMAGE_SIZE = 100
@@ -41,54 +38,39 @@ object EnhancedOcrExtractor {
     private const val OPTIMAL_IMAGE_SIZE = 1024
     
     /**
-     * Extract detailed text information from image URI
+     * Extract detailed text information from image URI with multi-language support
      * @param context Android context
      * @param imageUri URI of the image to process
+     * @param preferredLanguage Preferred language for OCR (auto-detect by default)
      * @return SelectableOcrResult with detailed text blocks or null if failed
      */
     suspend fun extractSelectableTextFromImage(
-        context: Context, 
-        imageUri: Uri
+        context: Context,
+        imageUri: Uri,
+        preferredLanguage: MultiLanguageOcrExtractor.Language = MultiLanguageOcrExtractor.Language.AUTO_DETECT
     ): SelectableOcrResult? {
         return try {
-            Log.d(TAG, "Starting enhanced OCR for image: $imageUri")
-            
-            // Load bitmap from URI
-            val originalBitmap = loadBitmapFromUri(context, imageUri)
-            if (originalBitmap == null) {
-                Log.e(TAG, "Failed to load bitmap from URI: $imageUri")
-                return null
-            }
+            Log.d(TAG, "Starting enhanced multi-language OCR for image: $imageUri with language: $preferredLanguage")
 
-            // Preprocess bitmap for better OCR accuracy
-            val preprocessedBitmap = preprocessImageForOCR(originalBitmap)
+            // Use multi-language extractor with auto-detection
+            multiLanguageExtractor.extractSelectableTextFromImage(context, imageUri, preferredLanguage)
 
-            val result = extractSelectableTextFromBitmap(preprocessedBitmap)
-
-            // Clean up bitmaps
-            if (!originalBitmap.isRecycled && originalBitmap != preprocessedBitmap) {
-                originalBitmap.recycle()
-            }
-            
-            // Clean up preprocessed bitmap
-            if (!preprocessedBitmap.isRecycled) {
-                preprocessedBitmap.recycle()
-            }
-            
-            result
-            
         } catch (e: Exception) {
-            Log.e(TAG, "Enhanced OCR failed for image: $imageUri", e)
+            Log.e(TAG, "Enhanced multi-language OCR failed for image: $imageUri", e)
             null
         }
     }
     
     /**
-     * Extract detailed text information from bitmap
+     * Extract detailed text information from bitmap with multi-language support
      * @param bitmap Bitmap to process
+     * @param preferredLanguage Preferred language for OCR (auto-detect by default)
      * @return SelectableOcrResult with detailed text blocks or null if failed
      */
-    suspend fun extractSelectableTextFromBitmap(bitmap: Bitmap): SelectableOcrResult? {
+    suspend fun extractSelectableTextFromBitmap(
+        bitmap: Bitmap,
+        preferredLanguage: MultiLanguageOcrExtractor.Language = MultiLanguageOcrExtractor.Language.AUTO_DETECT
+    ): SelectableOcrResult? {
         return try {
             Log.d(TAG, "Starting enhanced OCR for bitmap: ${bitmap.width}x${bitmap.height}")
             
@@ -101,33 +83,8 @@ object EnhancedOcrExtractor {
                 )
             }
             
-            val startTime = System.currentTimeMillis()
-            
-            // Create InputImage from bitmap
-            val inputImage = InputImage.fromBitmap(bitmap, 0)
-            
-            // Process image with ML Kit with timeout
-            val visionText = withTimeoutOrNull(OCR_TIMEOUT_MS) {
-                textRecognizer.process(inputImage).await()
-            }
-            
-            if (visionText == null) {
-                Log.e(TAG, "OCR processing timed out after ${OCR_TIMEOUT_MS}ms")
-                return null
-            }
-            
-            val processingTime = System.currentTimeMillis() - startTime
-            val imageSize = Size(bitmap.width.toFloat(), bitmap.height.toFloat())
-            
-            // Convert to selectable OCR result
-            val selectableResult = visionText.toSelectableOcrResult(imageSize)
-                .copy(processingTimeMs = processingTime)
-            
-            Log.d(TAG, "Enhanced OCR completed successfully in ${processingTime}ms")
-            Log.d(TAG, "Extracted ${selectableResult.textBlocks.size} text blocks, " +
-                    "${selectableResult.fullText.length} characters total")
-            
-            selectableResult
+            // Use multi-language extractor for better language support
+            multiLanguageExtractor.extractSelectableTextFromBitmap(bitmap, preferredLanguage)
             
         } catch (e: Exception) {
             Log.e(TAG, "Enhanced OCR failed for bitmap", e)

@@ -40,6 +40,7 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.aks_labs.tulsi.ocr.SelectableOcrResult
 import com.aks_labs.tulsi.ocr.SelectableTextBlock
+import com.aks_labs.tulsi.ocr.EnhancedOcrExtractor
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
@@ -57,6 +58,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import android.app.SearchManager
 import android.net.Uri
+import com.aks_labs.tulsi.ocr.MultiLanguageOcrExtractor
 
 /**
  * Dedicated full-screen image viewer for text selection mode
@@ -81,6 +83,11 @@ fun TextSelectionImageViewer(
     var selectedText by remember { mutableStateOf("") }
     var showViewAllTextDialog by remember { mutableStateOf(false) }
 
+    // Language selection state
+    var selectedLanguage by remember { mutableStateOf(MultiLanguageOcrExtractor.Language.AUTO_DETECT) }
+    var detectedLanguage by remember { mutableStateOf<MultiLanguageOcrExtractor.Language?>(null) }
+    var isReprocessing by remember { mutableStateOf(false) }
+
     // External selection control for Select All/Deselect All
     var selectionControl by remember { mutableStateOf<String?>(null) }
 
@@ -96,6 +103,38 @@ fun TextSelectionImageViewer(
         if (selectionControl != null) {
             kotlinx.coroutines.delay(100)
             selectionControl = null
+        }
+    }
+
+    // Reprocess OCR when language changes
+    LaunchedEffect(selectedLanguage, isReprocessing) {
+        if (isReprocessing) {
+            try {
+                println("DEBUG: Reprocessing OCR with language: $selectedLanguage")
+                val newOcrResult = EnhancedOcrExtractor.extractSelectableTextFromImage(
+                    context = context,
+                    imageUri = Uri.parse(imageUri),
+                    preferredLanguage = selectedLanguage
+                )
+
+                if (newOcrResult != null) {
+                    textSelectionState.updateOcrResult(newOcrResult)
+
+                    // Detect language from the result if auto-detect was used
+                    if (selectedLanguage == MultiLanguageOcrExtractor.Language.AUTO_DETECT) {
+                        // Simple language detection based on text content
+                        val text = newOcrResult.fullText
+                        detectedLanguage = detectLanguageFromText(text)
+                        println("DEBUG: Auto-detected language: $detectedLanguage")
+                    } else {
+                        detectedLanguage = selectedLanguage
+                    }
+                }
+            } catch (e: Exception) {
+                println("DEBUG: OCR reprocessing failed: ${e.message}")
+            } finally {
+                isReprocessing = false
+            }
         }
     }
     
@@ -145,25 +184,55 @@ fun TextSelectionImageViewer(
             }
         }
         
-        // Close button (top-right) - matches FloatingBottomAppBar color exactly
-        IconButton(
-            onClick = onBackPressed,
+        // Top controls row
+        Row(
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .statusBarsPadding()
-                .padding(16.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp), // Exact FloatingBottomAppBar color
-                    shape = CircleShape
-                )
-                .size(48.dp)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Close text selection",
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(24.dp)
+            // Language detection indicator
+            if (detectedLanguage != null) {
+                LanguageDetectionIndicator(
+                    detectedLanguage = detectedLanguage,
+                    modifier = Modifier
+                )
+            }
+
+            // Language selector
+            LanguageSelector(
+                currentLanguage = selectedLanguage,
+                onLanguageChanged = { language ->
+                    selectedLanguage = language
+                    // Trigger OCR reprocessing with new language
+                    isReprocessing = true
+                },
+                modifier = Modifier
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    )
             )
+
+            // Close button
+            IconButton(
+                onClick = onBackPressed,
+                modifier = Modifier
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp), // Exact FloatingBottomAppBar color
+                        shape = CircleShape
+                    )
+                    .size(48.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close text selection",
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
         
         // View All Text Dialog
@@ -1003,5 +1072,24 @@ private fun DraggableBottomPanel(
                 }
             }
         }
+    }
+}
+
+/**
+ * Simple language detection based on Unicode patterns
+ */
+private fun detectLanguageFromText(text: String): MultiLanguageOcrExtractor.Language {
+    val devanagariPattern = Regex("[\u0900-\u097F]+")
+    val chinesePattern = Regex("[\u4E00-\u9FFF]+")
+    val japanesePattern = Regex("[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]+")
+    val koreanPattern = Regex("[\uAC00-\uD7AF\u1100-\u11FF\u3130-\u318F]+")
+
+    return when {
+        devanagariPattern.containsMatchIn(text) -> MultiLanguageOcrExtractor.Language.DEVANAGARI
+        // Additional language detection can be added when dependencies are included
+        // chinesePattern.containsMatchIn(text) -> MultiLanguageOcrExtractor.Language.CHINESE
+        // japanesePattern.containsMatchIn(text) -> MultiLanguageOcrExtractor.Language.JAPANESE
+        // koreanPattern.containsMatchIn(text) -> MultiLanguageOcrExtractor.Language.KOREAN
+        else -> MultiLanguageOcrExtractor.Language.LATIN
     }
 }
