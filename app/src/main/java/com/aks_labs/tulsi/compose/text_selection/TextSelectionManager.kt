@@ -295,38 +295,70 @@ object TextSelectionUtils {
 
     /**
      * Transform coordinates from image space to screen space
+     * This properly handles ContentScale.Fit with different aspect ratios and letterboxing/pillarboxing
      */
     fun transformImageToScreen(
         imageCoordinate: Offset,
-        imageSize: Size,
-        screenSize: Size,
+        originalImageSize: Size,
+        containerSize: Size,
         scale: Float,
         offset: Offset
     ): Offset {
-        // Calculate the scale factor to fit image in screen
-        val scaleX = screenSize.width / imageSize.width
-        val scaleY = screenSize.height / imageSize.height
+        android.util.Log.d("TextSelectionDebug", "=== transformImageToScreen START ===")
+        android.util.Log.d("TextSelectionDebug", "Input imageCoordinate: $imageCoordinate")
+        android.util.Log.d("TextSelectionDebug", "Input originalImageSize: $originalImageSize")
+        android.util.Log.d("TextSelectionDebug", "Input containerSize: $containerSize")
+        android.util.Log.d("TextSelectionDebug", "Input scale: $scale")
+        android.util.Log.d("TextSelectionDebug", "Input offset: $offset")
+
+        // Step 1: Calculate ContentScale.Fit scale factor
+        val scaleX = containerSize.width / originalImageSize.width
+        val scaleY = containerSize.height / originalImageSize.height
         val fitScale = minOf(scaleX, scaleY)
+        android.util.Log.d("TextSelectionDebug", "ContentScale.Fit - scaleX: $scaleX, scaleY: $scaleY, fitScale: $fitScale")
 
-        // Apply fit scale and user zoom scale
-        val totalScale = fitScale * scale
+        // Step 2: Transform from original image space to displayed image space
+        val displayedX = imageCoordinate.x * fitScale
+        val displayedY = imageCoordinate.y * fitScale
+        android.util.Log.d("TextSelectionDebug", "Displayed image coordinate: ($displayedX, $displayedY)")
 
-        // Calculate centered position
-        val scaledImageWidth = imageSize.width * totalScale
-        val scaledImageHeight = imageSize.height * totalScale
+        // Step 3: Calculate displayed image dimensions and centering offsets
+        val displayedImageWidth = originalImageSize.width * fitScale
+        val displayedImageHeight = originalImageSize.height * fitScale
+        val centerOffsetX = (containerSize.width - displayedImageWidth) / 2f
+        val centerOffsetY = (containerSize.height - displayedImageHeight) / 2f
+        android.util.Log.d("TextSelectionDebug", "Displayed image size: ${displayedImageWidth}x${displayedImageHeight}")
+        android.util.Log.d("TextSelectionDebug", "Center offsets: X=$centerOffsetX, Y=$centerOffsetY")
 
-        val centerOffsetX = (screenSize.width - scaledImageWidth) / 2f
-        val centerOffsetY = (screenSize.height - scaledImageHeight) / 2f
+        // Step 4: Apply centering to get base screen coordinates
+        val baseScreenX = displayedX + centerOffsetX
+        val baseScreenY = displayedY + centerOffsetY
+        android.util.Log.d("TextSelectionDebug", "Base screen coordinate: ($baseScreenX, $baseScreenY)")
 
-        // Transform coordinate
-        val screenX = imageCoordinate.x * totalScale + centerOffsetX + offset.x
-        val screenY = imageCoordinate.y * totalScale + centerOffsetY + offset.y
+        // Step 5: Apply user zoom and pan transformations
+        // The zoom is applied around the center of the displayed image
+        val displayedCenterX = containerSize.width / 2f
+        val displayedCenterY = containerSize.height / 2f
 
-        return Offset(screenX, screenY)
+        // Apply zoom around center
+        val zoomedX = displayedCenterX + (baseScreenX - displayedCenterX) * scale
+        val zoomedY = displayedCenterY + (baseScreenY - displayedCenterY) * scale
+        android.util.Log.d("TextSelectionDebug", "After zoom: ($zoomedX, $zoomedY)")
+
+        // Apply pan offset (note: HorizontalImageList uses negative offset in graphicsLayer)
+        val finalX = zoomedX - offset.x
+        val finalY = zoomedY - offset.y
+
+        val result = Offset(finalX, finalY)
+        android.util.Log.d("TextSelectionDebug", "Final screen coordinate: $result")
+        android.util.Log.d("TextSelectionDebug", "=== transformImageToScreen END ===")
+
+        return result
     }
 
     /**
      * Transform coordinates from screen space to image space
+     * This properly handles ContentScale.Fit with different aspect ratios and letterboxing/pillarboxing
      */
     fun transformScreenToImage(
         screenCoordinate: Offset,
@@ -335,24 +367,34 @@ object TextSelectionUtils {
         scale: Float,
         offset: Offset
     ): Offset {
-        // Calculate the scale factor to fit image in screen
+        // Step 1: Reverse pan offset
+        val afterPanX = screenCoordinate.x + offset.x
+        val afterPanY = screenCoordinate.y + offset.y
+
+        // Step 2: Reverse zoom transformation
+        val screenCenterX = screenSize.width / 2f
+        val screenCenterY = screenSize.height / 2f
+        val baseScreenX = screenCenterX + (afterPanX - screenCenterX) / scale
+        val baseScreenY = screenCenterY + (afterPanY - screenCenterY) / scale
+
+        // Step 3: Calculate ContentScale.Fit parameters
         val scaleX = screenSize.width / imageSize.width
         val scaleY = screenSize.height / imageSize.height
         val fitScale = minOf(scaleX, scaleY)
 
-        // Apply fit scale and user zoom scale
-        val totalScale = fitScale * scale
+        // Step 4: Calculate centering offsets
+        val displayedImageWidth = imageSize.width * fitScale
+        val displayedImageHeight = imageSize.height * fitScale
+        val centerOffsetX = (screenSize.width - displayedImageWidth) / 2f
+        val centerOffsetY = (screenSize.height - displayedImageHeight) / 2f
 
-        // Calculate centered position
-        val scaledImageWidth = imageSize.width * totalScale
-        val scaledImageHeight = imageSize.height * totalScale
+        // Step 5: Remove centering to get displayed image coordinates
+        val displayedX = baseScreenX - centerOffsetX
+        val displayedY = baseScreenY - centerOffsetY
 
-        val centerOffsetX = (screenSize.width - scaledImageWidth) / 2f
-        val centerOffsetY = (screenSize.height - scaledImageHeight) / 2f
-
-        // Reverse transform coordinate
-        val imageX = (screenCoordinate.x - centerOffsetX - offset.x) / totalScale
-        val imageY = (screenCoordinate.y - centerOffsetY - offset.y) / totalScale
+        // Step 6: Transform from displayed image space to original image space
+        val imageX = displayedX / fitScale
+        val imageY = displayedY / fitScale
 
         return Offset(imageX, imageY)
     }
@@ -362,18 +404,18 @@ object TextSelectionUtils {
      */
     fun transformRectImageToScreen(
         imageRect: Rect,
-        imageSize: Size,
-        screenSize: Size,
+        originalImageSize: Size,
+        containerSize: Size,
         scale: Float,
         offset: Offset
     ): Rect {
         val topLeft = transformImageToScreen(
             Offset(imageRect.left.toFloat(), imageRect.top.toFloat()),
-            imageSize, screenSize, scale, offset
+            originalImageSize, containerSize, scale, offset
         )
         val bottomRight = transformImageToScreen(
             Offset(imageRect.right.toFloat(), imageRect.bottom.toFloat()),
-            imageSize, screenSize, scale, offset
+            originalImageSize, containerSize, scale, offset
         )
 
         return Rect(

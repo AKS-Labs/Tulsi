@@ -15,7 +15,9 @@ import androidx.compose.foundation.gestures.calculateRotation
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.snapping.SnapPosition
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
@@ -34,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -85,11 +88,15 @@ fun HorizontalImageList(
     window: Window,
     appBarsVisible: MutableState<Boolean>,
     isHidden: Boolean = false,
-    isOpenWithView: Boolean = false
+    isOpenWithView: Boolean = false,
+    // External scale and offset states for text selection coordinate mapping
+    externalScale: MutableFloatState? = null,
+    externalOffset: MutableState<Offset>? = null,
+    onImageSizeChanged: ((containerSize: Size, actualImageSize: Size) -> Unit)? = null
 ) {
-    val scale = rememberSaveable { mutableFloatStateOf(1f) }
+    val scale = externalScale ?: rememberSaveable { mutableFloatStateOf(1f) }
     val rotation = rememberSaveable { mutableFloatStateOf(0f) }
-    val offset = rememberSaveable(stateSaver = OffsetSaver) { mutableStateOf(Offset.Zero) }
+    val offset = externalOffset ?: rememberSaveable(stateSaver = OffsetSaver) { mutableStateOf(Offset.Zero) }
 
     LaunchedEffect(key1 = currentMediaItem) {
         scale.floatValue = 1f
@@ -204,23 +211,73 @@ fun HorizontalImageList(
                     }
                 }
 
-                GlideImage(
-                    model = if (isHidden) model else mediaStoreItem.uri,
-                    contentDescription = "selected image",
-                    contentScale = ContentScale.Fit,
-                    failure = placeholder(R.drawable.broken_image),
-                    modifier = Modifier
-                        .fillMaxSize(1f)
-                        .mediaModifier(
-                            scale = scale,
-                            rotation = rotation,
-                            offset = offset,
-                            window = window,
-                            appBarsVisible = appBarsVisible
-                        )
+                BoxWithConstraints(
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    it.signature(mediaStoreItem.signature())
-                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    // Calculate actual displayed image dimensions after ContentScale.Fit
+                    val containerSize = Size(maxWidth.value, maxHeight.value)
+                    android.util.Log.d("ImageSizeDebug", "Container size detected: $containerSize for URI: ${mediaStoreItem.uri}")
+
+                    // Get original image dimensions from file
+                    LaunchedEffect(maxWidth, maxHeight, mediaStoreItem.uri) {
+                        val originalImageSize = withContext(Dispatchers.IO) {
+                            try {
+                                val options = BitmapFactory.Options().apply {
+                                    inJustDecodeBounds = true
+                                }
+
+                                android.util.Log.d("ImageSizeDebug", "Attempting to get image dimensions for: ${mediaStoreItem.absolutePath}")
+
+                                // Try to decode from file path first
+                                if (mediaStoreItem.absolutePath.isNotEmpty()) {
+                                    BitmapFactory.decodeFile(mediaStoreItem.absolutePath, options)
+                                    android.util.Log.d("ImageSizeDebug", "Decoded from file path, dimensions: ${options.outWidth}x${options.outHeight}")
+                                } else {
+                                    // Fallback to content resolver
+                                    context.contentResolver.openInputStream(mediaStoreItem.uri)?.use { inputStream ->
+                                        BitmapFactory.decodeStream(inputStream, null, options)
+                                        android.util.Log.d("ImageSizeDebug", "Decoded from URI stream, dimensions: ${options.outWidth}x${options.outHeight}")
+                                    }
+                                }
+
+                                if (options.outWidth > 0 && options.outHeight > 0) {
+                                    val size = Size(options.outWidth.toFloat(), options.outHeight.toFloat())
+                                    android.util.Log.d("ImageSizeDebug", "Successfully detected original image size: $size")
+                                    size
+                                } else {
+                                    // Fallback to container size if we can't get image dimensions
+                                    android.util.Log.w("ImageSizeDebug", "Failed to get image dimensions, using container size: $containerSize")
+                                    containerSize
+                                }
+                            } catch (e: Exception) {
+                                // Fallback to container size on error
+                                android.util.Log.e("ImageSizeDebug", "Exception getting image dimensions: ${e.message}, using container size: $containerSize")
+                                containerSize
+                            }
+                        }
+
+                        android.util.Log.d("ImageSizeDebug", "Reporting sizes - Container: $containerSize, Original: $originalImageSize")
+                        onImageSizeChanged?.invoke(containerSize, originalImageSize)
+                    }
+
+                    GlideImage(
+                        model = if (isHidden) model else mediaStoreItem.uri,
+                        contentDescription = "selected image",
+                        contentScale = ContentScale.Fit,
+                        failure = placeholder(R.drawable.broken_image),
+                        modifier = Modifier
+                            .fillMaxSize(1f)
+                            .mediaModifier(
+                                scale = scale,
+                                rotation = rotation,
+                                offset = offset,
+                                window = window,
+                                appBarsVisible = appBarsVisible
+                            )
+                    ) {
+                        it.signature(mediaStoreItem.signature())
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    }
                 }
             }
         }

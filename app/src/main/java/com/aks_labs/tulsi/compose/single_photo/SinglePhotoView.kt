@@ -44,6 +44,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -78,8 +79,7 @@ import com.aks_labs.tulsi.compose.dialogs.LoadingDialog
 import com.aks_labs.tulsi.compose.dialogs.SinglePhotoInfoDialog
 import com.aks_labs.tulsi.compose.text_selection.TextSelectionState
 import com.aks_labs.tulsi.compose.text_selection.rememberTextSelectionState
-import com.aks_labs.tulsi.compose.text_selection.TextSelectionOverlay
-import com.aks_labs.tulsi.compose.text_selection.TextSelectionToolbar
+import com.aks_labs.tulsi.compose.text_selection.TextSelectionViewer
 import com.aks_labs.tulsi.ocr.EnhancedOcrExtractor
 import com.aks_labs.tulsi.datastore.Permissions
 import com.aks_labs.tulsi.helpers.GetDirectoryPermissionAndRun
@@ -180,6 +180,9 @@ fun SinglePhotoView(
     val textSelectionState = rememberTextSelectionState()
     val context = LocalContext.current
 
+    // Image transformation states are no longer needed for text selection
+    // as the dedicated TextSelectionViewer handles coordinate transformation internally
+
     // Load OCR data when text selection mode is activated
     LaunchedEffect(textSelectionState.isTextSelectionMode, currentMediaItem.value.uri) {
         if (textSelectionState.isTextSelectionMode && currentMediaItem.value.type == MediaType.Image) {
@@ -194,6 +197,20 @@ fun SinglePhotoView(
                 println("OCR extraction failed: ${e.message}")
             }
         }
+    }
+
+    // Use dedicated TextSelectionViewer when in text selection mode
+    if (textSelectionState.isTextSelectionMode && currentMediaItem.value.type == MediaType.Image) {
+        TextSelectionViewer(
+            imageUri = currentMediaItem.value.uri.toString(),
+            ocrResult = textSelectionState.ocrResult,
+            textSelectionState = textSelectionState,
+            onBackPressed = {
+                textSelectionState.toggleTextSelectionMode()
+            },
+            modifier = Modifier.fillMaxSize()
+        )
+        return // Exit early to avoid showing the normal photo viewer
     }
 
     BackHandler(
@@ -311,63 +328,8 @@ fun SinglePhotoView(
                 )
             }
 
-            // Text selection interface - only show when in text selection mode
-            if (textSelectionState.isTextSelectionMode && currentMediaItem.value.type == MediaType.Image) {
-                // Exit button for text selection mode
-                IconButton(
-                    onClick = {
-                        textSelectionState.toggleTextSelectionMode()
-                    },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(16.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
-                            shape = CircleShape
-                        )
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.close),
-                        contentDescription = "Exit text selection mode",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-
-                // Text selection overlay
-                TextSelectionOverlay(
-                    ocrResult = textSelectionState.ocrResult,
-                    isTextSelectionMode = textSelectionState.isTextSelectionMode,
-                    imageSize = Size(screenWidth.value, screenHeight.value), // Use screen size as approximation
-                    screenSize = Size(screenWidth.value, screenHeight.value),
-                    scale = 1f, // Default scale for now
-                    offset = Offset.Zero, // Default offset for now
-                    onTextBlockSelected = { blockId, isSelected ->
-                        textSelectionState.selectTextBlock(blockId, isSelected)
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
-
-                // Text selection toolbar - show when text is selected
-                TextSelectionToolbar(
-                    visible = textSelectionState.isTextSelectionMode && textSelectionState.hasSelectedText(),
-                    selectedTextCount = textSelectionState.getSelectedTextBlocks().size,
-                    selectedText = textSelectionState.getSelectedText(),
-                    onCopyClick = {
-                        // Copy functionality will be handled by the toolbar itself
-                        // The selected text is already available via textSelectionState.getSelectedText()
-                    },
-                    onClearSelection = {
-                        textSelectionState.clearSelection()
-                    },
-                    onSelectAll = {
-                        textSelectionState.selectAllTextBlocks()
-                    },
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(16.dp)
-                )
-            }
+            // Text selection interface is now handled by the dedicated TextSelectionViewer
+            // This code block has been removed and replaced with the TextSelectionViewer above
         }
     }
 }

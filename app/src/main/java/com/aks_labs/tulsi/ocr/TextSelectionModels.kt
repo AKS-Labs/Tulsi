@@ -21,32 +21,80 @@ data class SelectableTextBlock(
 ) {
     /**
      * Convert to screen coordinates based on image transformation
+     * This matches the coordinate system used by HorizontalImageList's graphicsLayer transformation
      */
     fun toScreenCoordinates(
-        imageSize: Size,
-        screenSize: Size,
+        originalImageSize: Size,
+        containerSize: Size,
         scale: Float,
         offset: Offset
     ): SelectableTextBlock {
-        val scaleX = screenSize.width / imageSize.width
-        val scaleY = screenSize.height / imageSize.height
-        val actualScale = minOf(scaleX, scaleY) * scale
-        
+        android.util.Log.d("TextBlockDebug", "=== SelectableTextBlock.toScreenCoordinates START ===")
+        android.util.Log.d("TextBlockDebug", "Block ID: $id, Text: ${text.take(20)}...")
+        android.util.Log.d("TextBlockDebug", "Original boundingBox: $boundingBox")
+        android.util.Log.d("TextBlockDebug", "Input originalImageSize: $originalImageSize")
+        android.util.Log.d("TextBlockDebug", "Input containerSize: $containerSize")
+        android.util.Log.d("TextBlockDebug", "Input scale: $scale")
+        android.util.Log.d("TextBlockDebug", "Input offset: $offset")
+
+        // Step 1: Calculate ContentScale.Fit scale factor
+        val scaleX = containerSize.width / originalImageSize.width
+        val scaleY = containerSize.height / originalImageSize.height
+        val fitScale = minOf(scaleX, scaleY)
+        android.util.Log.d("TextBlockDebug", "ContentScale.Fit - scaleX: $scaleX, scaleY: $scaleY, fitScale: $fitScale")
+
+        // Step 2: Transform bounding box from original image space to displayed image space
+        val displayedLeft = boundingBox.left * fitScale
+        val displayedTop = boundingBox.top * fitScale
+        val displayedRight = boundingBox.right * fitScale
+        val displayedBottom = boundingBox.bottom * fitScale
+        android.util.Log.d("TextBlockDebug", "Displayed bounding box: ($displayedLeft, $displayedTop, $displayedRight, $displayedBottom)")
+
+        // Step 3: Calculate centering offsets
+        val displayedImageWidth = originalImageSize.width * fitScale
+        val displayedImageHeight = originalImageSize.height * fitScale
+        val centerOffsetX = (containerSize.width - displayedImageWidth) / 2f
+        val centerOffsetY = (containerSize.height - displayedImageHeight) / 2f
+        android.util.Log.d("TextBlockDebug", "Center offsets: X=$centerOffsetX, Y=$centerOffsetY")
+
+        // Step 4: Apply centering to get base screen coordinates
+        val baseLeft = displayedLeft + centerOffsetX
+        val baseTop = displayedTop + centerOffsetY
+        val baseRight = displayedRight + centerOffsetX
+        val baseBottom = displayedBottom + centerOffsetY
+        android.util.Log.d("TextBlockDebug", "Base screen coordinates: ($baseLeft, $baseTop, $baseRight, $baseBottom)")
+
+        // Step 5: Apply user zoom and pan transformations
+        val containerCenterX = containerSize.width / 2f
+        val containerCenterY = containerSize.height / 2f
+
+        // Apply zoom around center
+        val zoomedLeft = containerCenterX + (baseLeft - containerCenterX) * scale
+        val zoomedTop = containerCenterY + (baseTop - containerCenterY) * scale
+        val zoomedRight = containerCenterX + (baseRight - containerCenterX) * scale
+        val zoomedBottom = containerCenterY + (baseBottom - containerCenterY) * scale
+
+        // Apply pan offset
+        val finalLeft = zoomedLeft - offset.x
+        val finalTop = zoomedTop - offset.y
+        val finalRight = zoomedRight - offset.x
+        val finalBottom = zoomedBottom - offset.y
+
         val scaledBoundingBox = Rect(
-            offset = Offset(
-                boundingBox.left * actualScale + offset.x,
-                boundingBox.top * actualScale + offset.y
-            ),
+            offset = Offset(finalLeft, finalTop),
             size = Size(
-                width = (boundingBox.right - boundingBox.left) * actualScale,
-                height = (boundingBox.bottom - boundingBox.top) * actualScale
+                width = finalRight - finalLeft,
+                height = finalBottom - finalTop
             )
         )
-        
+
+        android.util.Log.d("TextBlockDebug", "Final scaledBoundingBox: $scaledBoundingBox")
+        android.util.Log.d("TextBlockDebug", "=== SelectableTextBlock.toScreenCoordinates END ===")
+
         val scaledLines = lines.map { line ->
-            line.toScreenCoordinates(imageSize, screenSize, scale, offset)
+            line.toScreenCoordinates(originalImageSize, containerSize, scale, offset)
         }
-        
+
         return copy(
             boundingBox = scaledBoundingBox,
             lines = scaledLines
@@ -68,32 +116,65 @@ data class SelectableTextLine(
 ) {
     /**
      * Convert to screen coordinates based on image transformation
+     * This matches the coordinate system used by HorizontalImageList's graphicsLayer transformation
      */
     fun toScreenCoordinates(
-        imageSize: Size,
-        screenSize: Size,
+        originalImageSize: Size,
+        containerSize: Size,
         scale: Float,
         offset: Offset
     ): SelectableTextLine {
-        val scaleX = screenSize.width / imageSize.width
-        val scaleY = screenSize.height / imageSize.height
-        val actualScale = minOf(scaleX, scaleY) * scale
-        
+        // Step 1: Calculate ContentScale.Fit scale factor
+        val scaleX = containerSize.width / originalImageSize.width
+        val scaleY = containerSize.height / originalImageSize.height
+        val fitScale = minOf(scaleX, scaleY)
+
+        // Step 2: Transform bounding box from original image space to displayed image space
+        val displayedLeft = boundingBox.left * fitScale
+        val displayedTop = boundingBox.top * fitScale
+        val displayedRight = boundingBox.right * fitScale
+        val displayedBottom = boundingBox.bottom * fitScale
+
+        // Step 3: Calculate centering offsets
+        val displayedImageWidth = originalImageSize.width * fitScale
+        val displayedImageHeight = originalImageSize.height * fitScale
+        val centerOffsetX = (containerSize.width - displayedImageWidth) / 2f
+        val centerOffsetY = (containerSize.height - displayedImageHeight) / 2f
+
+        // Step 4: Apply centering to get base screen coordinates
+        val baseLeft = displayedLeft + centerOffsetX
+        val baseTop = displayedTop + centerOffsetY
+        val baseRight = displayedRight + centerOffsetX
+        val baseBottom = displayedBottom + centerOffsetY
+
+        // Step 5: Apply user zoom and pan transformations
+        val containerCenterX = containerSize.width / 2f
+        val containerCenterY = containerSize.height / 2f
+
+        // Apply zoom around center
+        val zoomedLeft = containerCenterX + (baseLeft - containerCenterX) * scale
+        val zoomedTop = containerCenterY + (baseTop - containerCenterY) * scale
+        val zoomedRight = containerCenterX + (baseRight - containerCenterX) * scale
+        val zoomedBottom = containerCenterY + (baseBottom - containerCenterY) * scale
+
+        // Apply pan offset
+        val finalLeft = zoomedLeft - offset.x
+        val finalTop = zoomedTop - offset.y
+        val finalRight = zoomedRight - offset.x
+        val finalBottom = zoomedBottom - offset.y
+
         val scaledBoundingBox = Rect(
-            offset = Offset(
-                boundingBox.left * actualScale + offset.x,
-                boundingBox.top * actualScale + offset.y
-            ),
+            offset = Offset(finalLeft, finalTop),
             size = Size(
-                width = (boundingBox.right - boundingBox.left) * actualScale,
-                height = (boundingBox.bottom - boundingBox.top) * actualScale
+                width = finalRight - finalLeft,
+                height = finalBottom - finalTop
             )
         )
-        
+
         val scaledElements = elements.map { element ->
-            element.toScreenCoordinates(imageSize, screenSize, scale, offset)
+            element.toScreenCoordinates(originalImageSize, containerSize, scale, offset)
         }
-        
+
         return copy(
             boundingBox = scaledBoundingBox,
             elements = scaledElements
@@ -114,28 +195,61 @@ data class SelectableTextElement(
 ) {
     /**
      * Convert to screen coordinates based on image transformation
+     * This matches the coordinate system used by HorizontalImageList's graphicsLayer transformation
      */
     fun toScreenCoordinates(
-        imageSize: Size,
-        screenSize: Size,
+        originalImageSize: Size,
+        containerSize: Size,
         scale: Float,
         offset: Offset
     ): SelectableTextElement {
-        val scaleX = screenSize.width / imageSize.width
-        val scaleY = screenSize.height / imageSize.height
-        val actualScale = minOf(scaleX, scaleY) * scale
-        
+        // Step 1: Calculate ContentScale.Fit scale factor
+        val scaleX = containerSize.width / originalImageSize.width
+        val scaleY = containerSize.height / originalImageSize.height
+        val fitScale = minOf(scaleX, scaleY)
+
+        // Step 2: Transform bounding box from original image space to displayed image space
+        val displayedLeft = boundingBox.left * fitScale
+        val displayedTop = boundingBox.top * fitScale
+        val displayedRight = boundingBox.right * fitScale
+        val displayedBottom = boundingBox.bottom * fitScale
+
+        // Step 3: Calculate centering offsets
+        val displayedImageWidth = originalImageSize.width * fitScale
+        val displayedImageHeight = originalImageSize.height * fitScale
+        val centerOffsetX = (containerSize.width - displayedImageWidth) / 2f
+        val centerOffsetY = (containerSize.height - displayedImageHeight) / 2f
+
+        // Step 4: Apply centering to get base screen coordinates
+        val baseLeft = displayedLeft + centerOffsetX
+        val baseTop = displayedTop + centerOffsetY
+        val baseRight = displayedRight + centerOffsetX
+        val baseBottom = displayedBottom + centerOffsetY
+
+        // Step 5: Apply user zoom and pan transformations
+        val containerCenterX = containerSize.width / 2f
+        val containerCenterY = containerSize.height / 2f
+
+        // Apply zoom around center
+        val zoomedLeft = containerCenterX + (baseLeft - containerCenterX) * scale
+        val zoomedTop = containerCenterY + (baseTop - containerCenterY) * scale
+        val zoomedRight = containerCenterX + (baseRight - containerCenterX) * scale
+        val zoomedBottom = containerCenterY + (baseBottom - containerCenterY) * scale
+
+        // Apply pan offset
+        val finalLeft = zoomedLeft - offset.x
+        val finalTop = zoomedTop - offset.y
+        val finalRight = zoomedRight - offset.x
+        val finalBottom = zoomedBottom - offset.y
+
         val scaledBoundingBox = Rect(
-            offset = Offset(
-                boundingBox.left * actualScale + offset.x,
-                boundingBox.top * actualScale + offset.y
-            ),
+            offset = Offset(finalLeft, finalTop),
             size = Size(
-                width = (boundingBox.right - boundingBox.left) * actualScale,
-                height = (boundingBox.bottom - boundingBox.top) * actualScale
+                width = finalRight - finalLeft,
+                height = finalBottom - finalTop
             )
         )
-        
+
         return copy(boundingBox = scaledBoundingBox)
     }
 }

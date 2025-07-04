@@ -59,7 +59,7 @@ fun TextSelectionOverlay(
     // Transform text blocks to screen coordinates
     val screenTextBlocks = remember(ocrResult, imageSize, screenSize, scale, offset) {
         ocrResult.textBlocks.map { block ->
-            block.toScreenCoordinates(imageSize, screenSize, scale, offset)
+            block.toScreenCoordinates(ocrResult.imageSize, screenSize, scale, offset)
         }
     }
     
@@ -109,8 +109,8 @@ private fun TextBlockInteractiveArea(
     // Transform bounding box from image space to screen space
     val screenBoundingBox = TextSelectionUtils.transformRectImageToScreen(
         imageRect = textBlock.boundingBox,
-        imageSize = imageSize,
-        screenSize = screenSize,
+        originalImageSize = imageSize,
+        containerSize = screenSize,
         scale = scale,
         offset = offset
     )
