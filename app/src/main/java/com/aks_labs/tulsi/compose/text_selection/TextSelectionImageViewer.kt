@@ -145,7 +145,7 @@ fun TextSelectionImageViewer(
             }
         }
         
-        // Close button (top-right) - theme-aware without 3D effects
+        // Close button (top-right) - matches FloatingBottomAppBar color exactly
         IconButton(
             onClick = onBackPressed,
             modifier = Modifier
@@ -153,12 +153,7 @@ fun TextSelectionImageViewer(
                 .statusBarsPadding()
                 .padding(16.dp)
                 .background(
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                    shape = CircleShape
-                )
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                    color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp), // Exact FloatingBottomAppBar color
                     shape = CircleShape
                 )
                 .size(48.dp)
@@ -790,7 +785,7 @@ private fun ViewAllTextDialog(
                     text = "Text extracted from this image:",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = 4.dp) // Reduced padding for more text space
                 )
 
                 Card(
@@ -804,26 +799,33 @@ private fun ViewAllTextDialog(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(12.dp)
+                            .padding(horizontal = 4.dp, vertical = 6.dp) // Minimal padding to maximize text area
                     ) {
-                        // Editable text field with scrolling
+                        // Clean, borderless editable text field for maximum readability
                         OutlinedTextField(
                             value = editableText,
                             onValueChange = { editableText = it },
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(4.dp),
+                                .padding(1.dp), // Ultra-minimal padding to maximize text display area
                             textStyle = MaterialTheme.typography.bodyMedium.copy(
                                 lineHeight = MaterialTheme.typography.bodyMedium.fontSize * 1.1 // Compact line spacing
                             ),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                                focusedBorderColor = androidx.compose.ui.graphics.Color.Transparent, // Remove border
+                                unfocusedBorderColor = androidx.compose.ui.graphics.Color.Transparent, // Remove border
+                                disabledBorderColor = androidx.compose.ui.graphics.Color.Transparent, // Remove border
+                                errorBorderColor = androidx.compose.ui.graphics.Color.Transparent, // Remove border
+                                focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent, // Clean background
+                                unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent, // Clean background
+                                disabledContainerColor = androidx.compose.ui.graphics.Color.Transparent, // Clean background
                             ),
                             placeholder = {
                                 Text(
                                     text = "Edit extracted text...",
-                                    style = MaterialTheme.typography.bodyMedium
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    )
                                 )
                             }
                         )
@@ -915,7 +917,7 @@ private fun DraggableBottomPanel(
                 containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-            shape = RoundedCornerShape(24.dp) // Increased to 24dp for more pill-shaped design
+            shape = RoundedCornerShape(32.dp) // Ultra-rounded for maximum pill-shaped modern appearance
         ) {
             Column(
                 modifier = Modifier.padding(16.dp)
