@@ -44,7 +44,17 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.layout.PaddingValues
+import android.app.SearchManager
+import android.net.Uri
 
 /**
  * Dedicated full-screen image viewer for text selection mode
@@ -65,10 +75,14 @@ fun TextSelectionImageViewer(
     val view = LocalView.current
     val window = (view.context as ComponentActivity).window
     
-    // Context menu state
-    var showContextMenu by remember { mutableStateOf(false) }
-    var contextMenuPosition by remember { mutableStateOf(Offset.Zero) }
-    
+    // Selection state
+    var selectedText by remember { mutableStateOf("") }
+    var showViewAllTextDialog by remember { mutableStateOf(false) }
+
+    // Draggable panel state
+    var panelPosition by remember { mutableStateOf(Alignment.BottomCenter) }
+    var panelOffset by remember { mutableStateOf(Offset.Zero) }
+
     // Container size for coordinate transformation
     var containerSize by remember { mutableStateOf(Size.Zero) }
     
@@ -103,15 +117,14 @@ fun TextSelectionImageViewer(
                 contentScale = ContentScale.Fit
             )
             
-            // Text selection overlay
+            // Native text selection overlay
             if (ocrResult != null && containerSize != Size.Zero) {
-                TextSelectionOverlaySimplified(
+                NativeTextSelectionOverlay(
                     ocrResult = ocrResult,
                     containerSize = containerSize,
-                    textSelectionState = textSelectionState,
-                    onShowContextMenu = { position ->
-                        contextMenuPosition = position
-                        showContextMenu = true
+                    onSelectionChanged = { text ->
+                        selectedText = text
+                        println("DEBUG: Selection changed: '$text'")
                     },
                     modifier = Modifier.fillMaxSize()
                 )
@@ -144,81 +157,74 @@ fun TextSelectionImageViewer(
             )
         }
         
-        // Native-style context menu - only show when text is actually selected
-        if (showContextMenu && textSelectionState.hasSelectedText()) {
-            println("DEBUG: Showing context menu - selectedText: '${textSelectionState.getSelectedText()}'")
-            println("DEBUG: Context menu position: $contextMenuPosition")
-            NativeTextSelectionContextMenu(
-                position = contextMenuPosition,
-                selectedText = textSelectionState.getSelectedText(),
-                onDismiss = { showContextMenu = false },
-                onCopy = {
-                    val selectedText = textSelectionState.getSelectedText()
-                    if (selectedText.isNotEmpty()) {
-                        clipboardManager.setText(AnnotatedString(selectedText))
-                        println("DEBUG: Copied text to clipboard: '$selectedText'")
-                    }
-                    showContextMenu = false
-                },
-                onShare = {
-                    val selectedText = textSelectionState.getSelectedText()
-                    if (selectedText.isNotEmpty()) {
-                        val shareIntent = Intent().apply {
-                            action = Intent.ACTION_SEND
-                            putExtra(Intent.EXTRA_TEXT, selectedText)
-                            type = "text/plain"
-                        }
-                        context.startActivity(Intent.createChooser(shareIntent, "Share text"))
-                    }
-                    showContextMenu = false
-                },
-                onWebSearch = {
-                    val selectedText = textSelectionState.getSelectedText()
-                    if (selectedText.isNotEmpty()) {
-                        val searchIntent = Intent().apply {
-                            action = Intent.ACTION_WEB_SEARCH
-                            putExtra("query", selectedText)
-                        }
-                        try {
-                            context.startActivity(searchIntent)
-                        } catch (e: Exception) {
-                            // Fallback to browser search
-                            val browserIntent = Intent().apply {
-                                action = Intent.ACTION_VIEW
-                                data = android.net.Uri.parse("https://www.google.com/search?q=${android.net.Uri.encode(selectedText)}")
-                            }
-                            context.startActivity(browserIntent)
-                        }
-                    }
-                    showContextMenu = false
-                },
-                onSelectAll = {
-                    textSelectionState.selectAllTextBlocks()
-                    showContextMenu = false
-                }
+        // View All Text Dialog
+        if (showViewAllTextDialog && ocrResult != null) {
+            ViewAllTextDialog(
+                ocrResult = ocrResult,
+                onDismiss = { showViewAllTextDialog = false }
             )
-        } else {
-            if (showContextMenu) {
-                println("DEBUG: Context menu requested but not showing - hasSelectedText: ${textSelectionState.hasSelectedText()}")
-            }
         }
         
-        // Bottom selection panel
-        if (textSelectionState.hasSelectedText()) {
-            BottomSelectionPanel(
-                selectedText = textSelectionState.getSelectedText(),
-                onCopy = {
-                    clipboardManager.setText(AnnotatedString(textSelectionState.getSelectedText()))
-                },
-                onSelectAll = {
-                    textSelectionState.selectAllTextBlocks()
-                },
-                onClear = {
-                    textSelectionState.clearAllSelections()
-                },
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
-        }
+        // Draggable bottom panel - ALL text actions (NO top app bar)
+        DraggableBottomPanel(
+            selectedText = selectedText,
+            hasSelection = selectedText.isNotEmpty(),
+            position = panelPosition,
+            offset = panelOffset,
+            onPositionChanged = { newPosition, newOffset ->
+                panelPosition = newPosition
+                panelOffset = newOffset
+            },
+            onCopy = {
+                if (selectedText.isNotEmpty()) {
+                    clipboardManager.setText(AnnotatedString(selectedText))
+                }
+            },
+            onSelectAll = {
+                if (selectedText.isNotEmpty()) {
+                    // Deselect all text
+                    selectedText = ""
+                } else {
+                    // Select all text elements in the current OCR result
+                    ocrResult?.let { result ->
+                        val allElements = result.textBlocks.flatMap { it.getAllElements() }
+                        val allText = allElements.joinToString(" ") { it.text }
+                        selectedText = allText
+                    }
+                }
+            },
+            onShare = {
+                if (selectedText.isNotEmpty()) {
+                    val shareIntent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_TEXT, selectedText)
+                        type = "text/plain"
+                    }
+                    context.startActivity(Intent.createChooser(shareIntent, "Share text"))
+                }
+            },
+            onWebSearch = {
+                if (selectedText.isNotEmpty()) {
+                    val searchIntent = Intent().apply {
+                        action = Intent.ACTION_WEB_SEARCH
+                        putExtra(SearchManager.QUERY, selectedText)
+                    }
+                    try {
+                        context.startActivity(searchIntent)
+                    } catch (e: Exception) {
+                        // Fallback to browser search
+                        val browserIntent = Intent().apply {
+                            action = Intent.ACTION_VIEW
+                            data = Uri.parse("https://www.google.com/search?q=${Uri.encode(selectedText)}")
+                        }
+                        context.startActivity(browserIntent)
+                    }
+                }
+            },
+            onViewAllText = {
+                showViewAllTextDialog = true
+            }
+        )
     }
 }
 
@@ -650,6 +656,387 @@ private fun BottomSelectionPanel(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Clear")
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Enhanced bottom panel with all text selection functionality
+ */
+@Composable
+private fun EnhancedBottomPanel(
+    selectedText: String,
+    hasSelection: Boolean,
+    onCopy: () -> Unit,
+    onSelectAll: () -> Unit,
+    onViewAllText: () -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .navigationBarsPadding()
+            .padding(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            // Selected text preview (only show if text is selected)
+            if (hasSelection) {
+                Text(
+                    text = "Selected: ${selectedText.take(100)}${if (selectedText.length > 100) "..." else ""}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+            }
+
+            // Action buttons - two rows for better layout
+            Column {
+                // First row: Copy and Select All
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    // Copy button (only enabled when text is selected)
+                    Button(
+                        onClick = onCopy,
+                        enabled = hasSelection,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = com.aks_labs.tulsi.R.drawable.copy),
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Copy")
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Select All button (always enabled)
+                    OutlinedButton(
+                        onClick = onSelectAll,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Select All")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Second row: View All Text and Close
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    // View All Text button (always enabled)
+                    OutlinedButton(
+                        onClick = onViewAllText,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("View All Text")
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Close button (always enabled)
+                    OutlinedButton(
+                        onClick = onClose,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Close")
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Responsive dialog to view all extracted text with proper selection and scrolling
+ */
+@Composable
+private fun ViewAllTextDialog(
+    ocrResult: SelectableOcrResult,
+    onDismiss: () -> Unit
+) {
+    val clipboardManager = LocalClipboardManager.current
+
+    // Extract all text from OCR result with better formatting
+    val allText = remember(ocrResult) {
+        ocrResult.textBlocks.joinToString("\n\n") { block ->
+            block.lines.joinToString("\n") { line ->
+                line.elements.joinToString(" ") { it.text }
+            }
+        }
+    }
+
+    // Calculate responsive dialog height based on text length
+    val dialogHeight = remember(allText) {
+        when {
+            allText.length < 200 -> 200.dp
+            allText.length < 500 -> 300.dp
+            allText.length < 1000 -> 400.dp
+            else -> 500.dp
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "All Extracted Text",
+                style = MaterialTheme.typography.headlineSmall
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    text = "Text extracted from this image:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(dialogHeight),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    )
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(12.dp)
+                    ) {
+                        LazyColumn {
+                            item {
+                                Text(
+                                    text = allText,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        lineHeight = MaterialTheme.typography.bodyMedium.fontSize * 1.1 // More compact line spacing
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    clipboardManager.setText(AnnotatedString(allText))
+                    onDismiss()
+                }
+            ) {
+                Text("Copy All")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
+}
+
+/**
+ * Draggable bottom panel that can be moved to avoid covering text
+ * Contains ALL text selection actions (no top app bar)
+ */
+@Composable
+private fun DraggableBottomPanel(
+    selectedText: String,
+    hasSelection: Boolean,
+    position: Alignment,
+    offset: Offset,
+    onPositionChanged: (Alignment, Offset) -> Unit,
+    onCopy: () -> Unit,
+    onSelectAll: () -> Unit,
+    onShare: () -> Unit,
+    onWebSearch: () -> Unit,
+    onViewAllText: () -> Unit
+) {
+    val density = LocalDensity.current
+    var isDragging by remember { mutableStateOf(false) }
+    var dragOffset by remember { mutableStateOf(Offset.Zero) }
+
+    // Use current offset for positioning
+    val currentOffset = if (isDragging) dragOffset else offset
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Card(
+            modifier = Modifier
+                .align(position)
+                .offset {
+                    IntOffset(
+                        x = currentOffset.x.toInt(),
+                        y = currentOffset.y.toInt()
+                    )
+                }
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(16.dp)
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = { startOffset ->
+                            isDragging = true
+                            dragOffset = offset
+                        },
+                        onDragEnd = {
+                            isDragging = false
+                            // Snap to nearest position (top or bottom)
+                            val screenHeight = size.height.toFloat()
+                            val newPosition = if (dragOffset.y < screenHeight / 2) {
+                                Alignment.TopCenter
+                            } else {
+                                Alignment.BottomCenter
+                            }
+
+                            val snappedOffset = when (newPosition) {
+                                Alignment.TopCenter -> Offset(0f, 50f) // Small offset from top
+                                else -> Offset.Zero // Bottom position
+                            }
+
+                            onPositionChanged(newPosition, snappedOffset)
+                        },
+                        onDrag = { change, dragAmount ->
+                            dragOffset += dragAmount
+                        }
+                    )
+                },
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            shape = RoundedCornerShape(24.dp) // Increased to 24dp for more pill-shaped design
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                // Visual drag handle indicator
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .width(40.dp)
+                        .height(4.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                            shape = RoundedCornerShape(2.dp)
+                        )
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Selected text preview (only show if text is selected)
+                if (hasSelection) {
+                    Text(
+                        text = "Selected: ${selectedText.take(100)}${if (selectedText.length > 100) "..." else ""}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 2,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                }
+
+                // All text selection actions in bottom panel (NO top app bar)
+                Column {
+                    // First row: Primary actions
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp) // Tight spacing
+                    ) {
+                        // Copy button (only enabled when text is selected)
+                        Button(
+                            onClick = onCopy,
+                            enabled = hasSelection,
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp) // Compact padding
+                        ) {
+                            Icon(
+                                painter = painterResource(id = com.aks_labs.tulsi.R.drawable.copy),
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp) // Smaller icon
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = "Copy",
+                                style = MaterialTheme.typography.labelSmall // Smaller text
+                            )
+                        }
+
+                        // Smart Select All/Deselect All toggle
+                        OutlinedButton(
+                            onClick = onSelectAll,
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = if (hasSelection) "Deselect" else "Select All",
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+
+                        // Share button (only enabled when text is selected)
+                        OutlinedButton(
+                            onClick = onShare,
+                            enabled = hasSelection,
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = "Share",
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    // Second row: Secondary actions
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        // Web Search button (only enabled when text is selected)
+                        OutlinedButton(
+                            onClick = onWebSearch,
+                            enabled = hasSelection,
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = "Web Search",
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+
+                        // View All Text button (always enabled)
+                        OutlinedButton(
+                            onClick = onViewAllText,
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = "View All",
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
+                    }
                 }
             }
         }
