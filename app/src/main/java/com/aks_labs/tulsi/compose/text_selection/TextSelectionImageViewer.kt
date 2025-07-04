@@ -53,6 +53,8 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import android.app.SearchManager
 import android.net.Uri
 
@@ -79,12 +81,23 @@ fun TextSelectionImageViewer(
     var selectedText by remember { mutableStateOf("") }
     var showViewAllTextDialog by remember { mutableStateOf(false) }
 
+    // External selection control for Select All/Deselect All
+    var selectionControl by remember { mutableStateOf<String?>(null) }
+
     // Draggable panel state
     var panelPosition by remember { mutableStateOf(Alignment.BottomCenter) }
     var panelOffset by remember { mutableStateOf(Offset.Zero) }
 
     // Container size for coordinate transformation
     var containerSize by remember { mutableStateOf(Size.Zero) }
+
+    // Reset selection control after triggering
+    LaunchedEffect(selectionControl) {
+        if (selectionControl != null) {
+            kotlinx.coroutines.delay(100)
+            selectionControl = null
+        }
+    }
     
     // Enable edge-to-edge display
     LaunchedEffect(Unit) {
@@ -126,6 +139,7 @@ fun TextSelectionImageViewer(
                         selectedText = text
                         println("DEBUG: Selection changed: '$text'")
                     },
+                    externalSelectionControl = selectionControl,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -165,7 +179,7 @@ fun TextSelectionImageViewer(
             )
         }
         
-        // Draggable bottom panel - ALL text actions (NO top app bar)
+        // Streamlined bottom panel with essential actions only
         DraggableBottomPanel(
             selectedText = selectedText,
             hasSelection = selectedText.isNotEmpty(),
@@ -183,42 +197,10 @@ fun TextSelectionImageViewer(
             onSelectAll = {
                 if (selectedText.isNotEmpty()) {
                     // Deselect all text
-                    selectedText = ""
+                    selectionControl = "DESELECT_ALL"
                 } else {
-                    // Select all text elements in the current OCR result
-                    ocrResult?.let { result ->
-                        val allElements = result.textBlocks.flatMap { it.getAllElements() }
-                        val allText = allElements.joinToString(" ") { it.text }
-                        selectedText = allText
-                    }
-                }
-            },
-            onShare = {
-                if (selectedText.isNotEmpty()) {
-                    val shareIntent = Intent().apply {
-                        action = Intent.ACTION_SEND
-                        putExtra(Intent.EXTRA_TEXT, selectedText)
-                        type = "text/plain"
-                    }
-                    context.startActivity(Intent.createChooser(shareIntent, "Share text"))
-                }
-            },
-            onWebSearch = {
-                if (selectedText.isNotEmpty()) {
-                    val searchIntent = Intent().apply {
-                        action = Intent.ACTION_WEB_SEARCH
-                        putExtra(SearchManager.QUERY, selectedText)
-                    }
-                    try {
-                        context.startActivity(searchIntent)
-                    } catch (e: Exception) {
-                        // Fallback to browser search
-                        val browserIntent = Intent().apply {
-                            action = Intent.ACTION_VIEW
-                            data = Uri.parse("https://www.google.com/search?q=${Uri.encode(selectedText)}")
-                        }
-                        context.startActivity(browserIntent)
-                    }
+                    // Select all text elements
+                    selectionControl = "SELECT_ALL"
                 }
             },
             onViewAllText = {
@@ -763,7 +745,7 @@ private fun EnhancedBottomPanel(
 }
 
 /**
- * Responsive dialog to view all extracted text with proper selection and scrolling
+ * Editable dialog to view and modify all extracted text
  */
 @Composable
 private fun ViewAllTextDialog(
@@ -773,7 +755,7 @@ private fun ViewAllTextDialog(
     val clipboardManager = LocalClipboardManager.current
 
     // Extract all text from OCR result with better formatting
-    val allText = remember(ocrResult) {
+    val initialText = remember(ocrResult) {
         ocrResult.textBlocks.joinToString("\n\n") { block ->
             block.lines.joinToString("\n") { line ->
                 line.elements.joinToString(" ") { it.text }
@@ -781,12 +763,15 @@ private fun ViewAllTextDialog(
         }
     }
 
+    // Editable text state
+    var editableText by remember { mutableStateOf(initialText) }
+
     // Calculate responsive dialog height based on text length
-    val dialogHeight = remember(allText) {
+    val dialogHeight = remember(editableText) {
         when {
-            allText.length < 200 -> 200.dp
-            allText.length < 500 -> 300.dp
-            allText.length < 1000 -> 400.dp
+            editableText.length < 200 -> 200.dp
+            editableText.length < 500 -> 300.dp
+            editableText.length < 1000 -> 400.dp
             else -> 500.dp
         }
     }
@@ -821,17 +806,27 @@ private fun ViewAllTextDialog(
                             .fillMaxSize()
                             .padding(12.dp)
                     ) {
-                        LazyColumn {
-                            item {
+                        // Editable text field with scrolling
+                        OutlinedTextField(
+                            value = editableText,
+                            onValueChange = { editableText = it },
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(4.dp),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                lineHeight = MaterialTheme.typography.bodyMedium.fontSize * 1.1 // Compact line spacing
+                            ),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                            ),
+                            placeholder = {
                                 Text(
-                                    text = allText,
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        lineHeight = MaterialTheme.typography.bodyMedium.fontSize * 1.1 // More compact line spacing
-                                    ),
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    text = "Edit extracted text...",
+                                    style = MaterialTheme.typography.bodyMedium
                                 )
                             }
-                        }
+                        )
                     }
                 }
             }
@@ -839,7 +834,7 @@ private fun ViewAllTextDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    clipboardManager.setText(AnnotatedString(allText))
+                    clipboardManager.setText(AnnotatedString(editableText))
                     onDismiss()
                 }
             ) {
@@ -855,8 +850,7 @@ private fun ViewAllTextDialog(
 }
 
 /**
- * Draggable bottom panel that can be moved to avoid covering text
- * Contains ALL text selection actions (no top app bar)
+ * Streamlined draggable bottom panel with essential text selection actions
  */
 @Composable
 private fun DraggableBottomPanel(
@@ -867,8 +861,6 @@ private fun DraggableBottomPanel(
     onPositionChanged: (Alignment, Offset) -> Unit,
     onCopy: () -> Unit,
     onSelectAll: () -> Unit,
-    onShare: () -> Unit,
-    onWebSearch: () -> Unit,
     onViewAllText: () -> Unit
 ) {
     val density = LocalDensity.current
@@ -953,89 +945,58 @@ private fun DraggableBottomPanel(
                     )
                 }
 
-                // All text selection actions in bottom panel (NO top app bar)
-                Column {
-                    // First row: Primary actions
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp) // Tight spacing
+                // Streamlined single-row layout with essential actions
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp) // Better spacing
+                ) {
+                    // Copy button (only enabled when text is selected)
+                    Button(
+                        onClick = onCopy,
+                        enabled = hasSelection,
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp) // More comfortable padding
                     ) {
-                        // Copy button (only enabled when text is selected)
-                        Button(
-                            onClick = onCopy,
-                            enabled = hasSelection,
-                            modifier = Modifier.weight(1f),
-                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp) // Compact padding
-                        ) {
-                            Icon(
-                                painter = painterResource(id = com.aks_labs.tulsi.R.drawable.copy),
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp) // Smaller icon
+                        Icon(
+                            painter = painterResource(id = com.aks_labs.tulsi.R.drawable.copy),
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Copy",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold // Thick text
                             )
-                            Spacer(modifier = Modifier.width(3.dp))
-                            Text(
-                                text = "Copy",
-                                style = MaterialTheme.typography.labelSmall // Smaller text
-                            )
-                        }
-
-                        // Smart Select All/Deselect All toggle
-                        OutlinedButton(
-                            onClick = onSelectAll,
-                            modifier = Modifier.weight(1f),
-                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
-                        ) {
-                            Text(
-                                text = if (hasSelection) "Deselect" else "Select All",
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        }
-
-                        // Share button (only enabled when text is selected)
-                        OutlinedButton(
-                            onClick = onShare,
-                            enabled = hasSelection,
-                            modifier = Modifier.weight(1f),
-                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
-                        ) {
-                            Text(
-                                text = "Share",
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        }
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    // Second row: Secondary actions
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    // Smart Select All/Deselect All toggle
+                    OutlinedButton(
+                        onClick = onSelectAll,
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
                     ) {
-                        // Web Search button (only enabled when text is selected)
-                        OutlinedButton(
-                            onClick = onWebSearch,
-                            enabled = hasSelection,
-                            modifier = Modifier.weight(1f),
-                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
-                        ) {
-                            Text(
-                                text = "Web Search",
-                                style = MaterialTheme.typography.labelSmall
+                        Text(
+                            text = if (hasSelection) "Deselect All" else "Select All",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold // Thick text
                             )
-                        }
+                        )
+                    }
 
-                        // View All Text button (always enabled)
-                        OutlinedButton(
-                            onClick = onViewAllText,
-                            modifier = Modifier.weight(1f),
-                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
-                        ) {
-                            Text(
-                                text = "View All",
-                                style = MaterialTheme.typography.labelSmall
+                    // View All Text button (always enabled)
+                    OutlinedButton(
+                        onClick = onViewAllText,
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
+                    ) {
+                        Text(
+                            text = "View All",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold // Thick text
                             )
-                        }
+                        )
                     }
                 }
             }

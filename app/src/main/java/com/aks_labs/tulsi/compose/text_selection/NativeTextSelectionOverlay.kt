@@ -36,7 +36,8 @@ fun NativeTextSelectionOverlay(
     ocrResult: SelectableOcrResult,
     containerSize: Size,
     modifier: Modifier = Modifier,
-    onSelectionChanged: (String) -> Unit = {}
+    onSelectionChanged: (String) -> Unit = {},
+    externalSelectionControl: String? = null // External control for select all/deselect all
 ) {
     val context = LocalContext.current
     val view = LocalView.current
@@ -54,9 +55,64 @@ fun NativeTextSelectionOverlay(
         transformElementsToScreen(ocrResult, containerSize)
     }
     
+    // Handle external selection control (Select All/Deselect All from bottom panel)
+    LaunchedEffect(externalSelectionControl) {
+        when (externalSelectionControl) {
+            "SELECT_ALL" -> {
+                selectedElements = screenElements
+                selectionStart = null
+                selectionEnd = null
+            }
+            "DESELECT_ALL" -> {
+                selectedElements = emptyList()
+                selectionStart = null
+                selectionEnd = null
+            }
+        }
+    }
+
     // Update selection when elements change - NO ActionMode to prevent top app bar
     LaunchedEffect(selectedElements) {
-        val selectedText = selectedElements.joinToString(" ") { it.text }
+        // Sort selected elements by position (top to bottom, left to right) for sequential copying
+        val sortedElements = selectedElements.sortedWith { a, b ->
+            when {
+                // First sort by vertical position (top to bottom)
+                kotlin.math.abs(a.boundingBox.top - b.boundingBox.top) > 10f -> {
+                    a.boundingBox.top.compareTo(b.boundingBox.top)
+                }
+                // If roughly same vertical position, sort by horizontal position (left to right)
+                else -> a.boundingBox.left.compareTo(b.boundingBox.left)
+            }
+        }
+
+        // Join with appropriate spacing for readability
+        val selectedText = sortedElements.joinToString(" ") { element ->
+            element.text
+        }.let { text ->
+            // Add line breaks between text blocks that are far apart vertically
+            if (sortedElements.size > 1) {
+                val result = StringBuilder()
+                var previousElement: SelectableTextElement? = null
+
+                sortedElements.forEach { element ->
+                    if (previousElement != null) {
+                        val verticalDistance = element.boundingBox.top - previousElement!!.boundingBox.bottom
+                        // If elements are far apart vertically (likely different lines/paragraphs)
+                        if (verticalDistance > 20f) {
+                            result.append("\n")
+                        } else {
+                            result.append(" ")
+                        }
+                    }
+                    result.append(element.text)
+                    previousElement = element
+                }
+                result.toString()
+            } else {
+                text
+            }
+        }
+
         onSelectionChanged(selectedText)
         // Note: ActionMode removed to prevent unwanted top app bar
         // All text actions are now handled through the bottom panel only
