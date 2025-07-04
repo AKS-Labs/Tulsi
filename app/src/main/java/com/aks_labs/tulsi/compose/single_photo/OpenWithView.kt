@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ContentValues
 import android.content.res.Configuration
+import android.graphics.drawable.Drawable
 import android.net.Uri
+import com.bumptech.glide.load.engine.GlideException
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -40,6 +42,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -49,8 +52,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilledTonalIconToggleButton
@@ -66,19 +73,24 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -101,6 +113,7 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.bumptech.glide.integration.compose.placeholder
 import com.bumptech.glide.load.engine.DiskCacheStrategy
+
 import com.bumptech.glide.signature.ObjectKey
 import com.aks_labs.tulsi.BuildConfig
 import com.aks_labs.tulsi.LocalNavController
@@ -109,6 +122,15 @@ import com.aks_labs.tulsi.compose.app_bars.BottomAppBarItem
 import com.aks_labs.tulsi.compose.rememberDeviceOrientation
 import com.aks_labs.tulsi.compose.app_bars.setBarVisibility
 import com.aks_labs.tulsi.compose.dialogs.ExplanationDialog
+import com.aks_labs.tulsi.compose.text_selection.TextSelectionOverlay
+import com.aks_labs.tulsi.compose.text_selection.TextSelectionToolbar
+import com.aks_labs.tulsi.compose.text_selection.TextSelectionStatusIndicator
+import com.aks_labs.tulsi.compose.text_selection.TextSelectionState
+import com.aks_labs.tulsi.compose.text_selection.TextSelectionOverlay
+import com.aks_labs.tulsi.compose.text_selection.TextSelectionToolbar
+import com.aks_labs.tulsi.compose.text_selection.handleTextSelectionGestures
+import com.aks_labs.tulsi.compose.text_selection.rememberTextClipboardManager
+import com.aks_labs.tulsi.compose.text_selection.rememberTextSelectionState
 import com.aks_labs.tulsi.helpers.MediaItemSortMode
 import com.aks_labs.tulsi.helpers.MultiScreenViewType
 import com.aks_labs.tulsi.helpers.Screens
@@ -116,8 +138,11 @@ import com.aks_labs.tulsi.helpers.shareImage
 import com.aks_labs.tulsi.mediastore.MediaType
 import com.aks_labs.tulsi.mediastore.copyUriToUri
 import com.aks_labs.tulsi.models.multi_album.formatDate
+import com.aks_labs.tulsi.ocr.EnhancedOcrExtractor
 import com.aks_labs.tulsi.ui.theme.GalleryTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.File
 
 class OpenWithView : ComponentActivity() {
@@ -252,6 +277,8 @@ private fun Content(
 ) {
     val appBarsVisible = remember { mutableStateOf(true) }
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val hapticFeedback = LocalHapticFeedback.current
 
     val releaseExoPlayer: MutableState<() -> Unit> = remember { mutableStateOf({}) }
 
@@ -260,34 +287,76 @@ private fun Content(
         if (mimeType.contains("image")) MediaType.Image
         else MediaType.Video
 
+    // Text selection state
+    val textSelectionState = rememberTextSelectionState()
+    val clipboardManager = rememberTextClipboardManager()
+
+    // Image size state for coordinate transformation
+    val imageSize = remember { mutableStateOf(Size.Zero) }
+
+    // Set default image size for text selection (will be improved later with actual image dimensions)
+    LaunchedEffect(uri) {
+        if (imageSize.value == Size.Zero) {
+            imageSize.value = Size(1920f, 1080f) // Default size, will be replaced with actual size
+        }
+    }
+
+    // Load OCR data for images
+    LaunchedEffect(uri, type) {
+        if (type == MediaType.Image) {
+            coroutineScope.launch(Dispatchers.IO) {
+                try {
+                    val ocrResult = EnhancedOcrExtractor.extractSelectableTextFromImage(context, uri)
+                    textSelectionState.updateOcrResult(ocrResult)
+                } catch (e: Exception) {
+                    // Handle OCR extraction error silently
+                }
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
-            TopBar(
-                appBarsVisible = appBarsVisible
-            ) {
-                releaseExoPlayer.value()
+            // Hide top bar when in text selection mode
+            if (!textSelectionState.isTextSelectionMode) {
+                TopBar(
+                    appBarsVisible = appBarsVisible,
+                    mediaType = type,
+                    textSelectionState = textSelectionState
+                ) {
+                    releaseExoPlayer.value()
+                }
             }
         },
         bottomBar = {
-            BottomBar(
-                uri = uri,
-                appBarsVisible = appBarsVisible,
-                window = window,
-                mediaType = type,
-                mimeType = mimeType
-            )
+            // Hide bottom bar when in text selection mode
+            if (!textSelectionState.isTextSelectionMode) {
+                BottomBar(
+                    uri = uri,
+                    appBarsVisible = appBarsVisible,
+                    window = window,
+                    mediaType = type,
+                    mimeType = mimeType,
+                    textSelectionState = textSelectionState,
+                    clipboardManager = clipboardManager
+                )
+            }
         },
         containerColor = MaterialTheme.colorScheme.background,
         contentColor = MaterialTheme.colorScheme.onBackground
     ) { _ ->
-        Column(
+        Box(
             modifier = Modifier
-                .padding(0.dp)
+                .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .fillMaxSize(1f),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Column(
+                modifier = Modifier
+                    .padding(0.dp)
+                    .fillMaxSize(1f),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             val scale = rememberSaveable { mutableFloatStateOf(1f) }
             val rotation = rememberSaveable { mutableFloatStateOf(0f) }
             val offset = remember { mutableStateOf(Offset.Zero) }
@@ -306,24 +375,115 @@ private fun Content(
                     modifier = Modifier
                 )
             } else {
-                GlideImage(
-                    model = uri,
-                    contentDescription = "opened image",
-                    contentScale = ContentScale.Fit,
-                    failure = placeholder(R.drawable.broken_image),
+                BoxWithConstraints(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    GlideImage(
+                        model = uri,
+                        contentDescription = "opened image",
+                        contentScale = ContentScale.Fit,
+                        failure = placeholder(R.drawable.broken_image),
+                        modifier = Modifier
+                            .fillMaxSize(1f)
+                            .mediaModifier(
+                                scale = scale,
+                                rotation = rotation,
+                                offset = offset,
+                                window = window,
+                                appBarsVisible = appBarsVisible
+                            )
+                            .pointerInput(textSelectionState.isTextSelectionMode) {
+                                if (textSelectionState.isTextSelectionMode) {
+                                    handleTextSelectionGestures(
+                                        textSelectionState = textSelectionState,
+                                        imageSize = imageSize.value,
+                                        screenSize = Size(maxWidth.value, maxHeight.value),
+                                        scale = scale.floatValue,
+                                        offset = offset.value,
+                                        onHapticFeedback = {
+                                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        }
+                                    )
+                                }
+                            }
+                    ) {
+                        it.signature(ObjectKey(uri.toString().hashCode() + mimeType.hashCode()))
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    }
+
+                    // Text selection overlay
+                    if (imageSize.value != Size.Zero) {
+                        TextSelectionOverlay(
+                            ocrResult = textSelectionState.ocrResult,
+                            isTextSelectionMode = textSelectionState.isTextSelectionMode,
+                            imageSize = imageSize.value,
+                            screenSize = Size(maxWidth.value, maxHeight.value),
+                            scale = scale.floatValue,
+                            offset = offset.value,
+                            onTextBlockSelected = { blockId, isSelected ->
+                                textSelectionState.selectTextBlock(blockId, isSelected)
+                            }
+                        )
+                    }
+                }
+            }
+            }
+
+            // Text Selection Status Indicator (top)
+            TextSelectionStatusIndicator(
+                isTextSelectionMode = textSelectionState.isTextSelectionMode,
+                selectedCount = textSelectionState.getSelectedTextBlocks().size,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 16.dp)
+            )
+
+            // Exit button for text selection mode
+            if (textSelectionState.isTextSelectionMode && type == MediaType.Image) {
+                IconButton(
+                    onClick = {
+                        textSelectionState.toggleTextSelectionMode()
+                    },
                     modifier = Modifier
-                        .fillMaxSize(1f)
-                        .mediaModifier(
-                            scale = scale,
-                            rotation = rotation,
-                            offset = offset,
-                            window = window,
-                            appBarsVisible = appBarsVisible
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                            shape = androidx.compose.foundation.shape.CircleShape
                         )
                 ) {
-                    it.signature(ObjectKey(uri.toString().hashCode() + mimeType.hashCode()))
-                        .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    Icon(
+                        painter = painterResource(id = R.drawable.close),
+                        contentDescription = "Exit text selection mode",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
+            }
+
+            // Text Selection Toolbar (bottom)
+            if (type == MediaType.Image) {
+                TextSelectionToolbar(
+                    visible = textSelectionState.isTextSelectionMode && textSelectionState.hasSelectedText(),
+                    selectedTextCount = textSelectionState.getSelectedTextBlocks().size,
+                    selectedText = textSelectionState.getSelectedText(),
+                    onCopyClick = {
+                        clipboardManager.copySelectedText(
+                            textSelectionState = textSelectionState,
+                            showToast = true,
+                            showSnackbar = false
+                        )
+                    },
+                    onClearSelection = {
+                        textSelectionState.clearSelection()
+                    },
+                    onSelectAll = {
+                        textSelectionState.selectAllTextBlocks()
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 80.dp) // Above bottom bar
+                )
             }
         }
     }
@@ -745,6 +905,8 @@ private fun OpenWithVideoPlayer(
 @Composable
 private fun TopBar(
     appBarsVisible: MutableState<Boolean>,
+    mediaType: MediaType,
+    textSelectionState: TextSelectionState,
     releaseExoPlayer: () -> Unit
 ) {
     AnimatedVisibility(
@@ -791,6 +953,73 @@ private fun TopBar(
                             .size(24.dp)
                     )
                 }
+            },
+            actions = {
+                // Text Selection button - dedicated backup solution for images
+                if (mediaType == MediaType.Image) {
+                    IconButton(
+                        onClick = {
+                            textSelectionState.toggleTextSelectionMode()
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(
+                                id = if (textSelectionState.isTextSelectionMode) R.drawable.close else R.drawable.text
+                            ),
+                            contentDescription = if (textSelectionState.isTextSelectionMode) "Exit text selection mode" else "Enter text selection mode",
+                            tint = if (textSelectionState.isTextSelectionMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                // Three-dot menu for additional options
+                if (mediaType == MediaType.Image) {
+                    val showDropdownMenu = remember { mutableStateOf(false) }
+
+                    Box {
+                        IconButton(
+                            onClick = {
+                                showDropdownMenu.value = true
+                            }
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.more_options),
+                                contentDescription = "More options",
+                                tint = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = showDropdownMenu.value,
+                            onDismissRequest = {
+                                showDropdownMenu.value = false
+                            }
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = if (textSelectionState.isTextSelectionMode) "Exit Text Selection" else "Select Text"
+                                    )
+                                },
+                                onClick = {
+                                    textSelectionState.toggleTextSelectionMode()
+                                    showDropdownMenu.value = false
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        painter = painterResource(
+                                            id = if (textSelectionState.isTextSelectionMode) R.drawable.close else R.drawable.text
+                                        ),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
             }
         )
     }
@@ -802,7 +1031,9 @@ private fun BottomBar(
     appBarsVisible: MutableState<Boolean>,
     window: Window,
     mediaType: MediaType,
-    mimeType: String
+    mimeType: String,
+    textSelectionState: com.aks_labs.tulsi.compose.text_selection.TextSelectionState,
+    clipboardManager: com.aks_labs.tulsi.compose.text_selection.TextClipboardManager
 ) {
     val context = LocalContext.current
     val navController = LocalNavController.current
@@ -829,15 +1060,13 @@ private fun BottomBar(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(1f)
-                        .padding(12.dp, 0.dp),
+                        .padding(12.dp, 0.dp)
+                        .horizontalScroll(rememberScrollState()),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement =
-                    if (isLandscape)
-                        Arrangement.spacedBy(
-                            space = 48.dp,
-                            alignment = Alignment.CenterHorizontally
-                        )
-                    else Arrangement.SpaceEvenly
+                    horizontalArrangement = Arrangement.spacedBy(
+                        space = if (isLandscape) 48.dp else 24.dp,
+                        alignment = Alignment.CenterHorizontally
+                    )
                 ) {
                     BottomAppBarItem(
                         text = "Share",
@@ -910,6 +1139,22 @@ private fun BottomBar(
                             { showNotImplementedDialog.value = true }
                         }
                     )
+
+                    // Copy button (only visible when text is selected)
+                    if (mediaType == MediaType.Image && textSelectionState.isTextSelectionMode && textSelectionState.hasSelectedText()) {
+                        BottomAppBarItem(
+                            text = "Copy",
+                            iconResId = R.drawable.copy,
+                            cornerRadius = 32.dp,
+                            action = {
+                                clipboardManager.copySelectedText(
+                                    textSelectionState = textSelectionState,
+                                    showToast = true,
+                                    showSnackbar = false
+                                )
+                            }
+                        )
+                    }
                 }
             }
         )

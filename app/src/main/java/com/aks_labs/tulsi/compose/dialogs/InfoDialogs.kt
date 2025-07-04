@@ -324,7 +324,8 @@ fun SinglePhotoInfoDialog(
     groupedMedia: MutableState<List<MediaStoreData>>,
     loadsFromMainViewModel: Boolean,
     showMoveCopyOptions: Boolean = true,
-    startInRenameMode: Boolean = false
+    startInRenameMode: Boolean = false,
+    textSelectionState: com.aks_labs.tulsi.compose.text_selection.TextSelectionState? = null
 ) {
     val context = LocalContext.current
     val isEditingFileName = remember { mutableStateOf(startInRenameMode) }
@@ -438,13 +439,14 @@ fun SinglePhotoInfoDialog(
                 val addedHeight by remember { derivedStateOf { 36.dp * (mediaData.keys.size + 1) } } // + 1 for the delete exif data row
                 val moveCopyHeight =
                     if (showMoveCopyOptions) 82.dp else 0.dp // 40.dp is height of one single row
+                val textSelectionHeight = if (currentMediaItem.type == MediaType.Image && textSelectionState != null) 40.dp else 0.dp
                 val setAsHeight = if (currentMediaItem.type != MediaType.Video) 40.dp else 0.dp
 
                 val height by animateDpAsState(
                     targetValue = if (!isEditingFileName.value && expanded.value) {
-                        42.dp + addedHeight + moveCopyHeight + setAsHeight
+                        42.dp + addedHeight + moveCopyHeight + textSelectionHeight + setAsHeight
                     } else if (!isEditingFileName.value && !expanded.value) {
-                        42.dp + moveCopyHeight + setAsHeight
+                        42.dp + moveCopyHeight + textSelectionHeight + setAsHeight
                     } else {
                         0.dp
                     },
@@ -489,6 +491,18 @@ fun SinglePhotoInfoDialog(
                         ) {
                             isMoving = true
                             show.value = true
+                        }
+                    }
+
+                    // Text Selection Mode toggle - only show for images
+                    if (currentMediaItem.type == MediaType.Image && textSelectionState != null) {
+                        DialogClickableItem(
+                            text = if (textSelectionState.isTextSelectionMode) "Exit Selection Mode" else "Selection Mode",
+                            iconResId = if (textSelectionState.isTextSelectionMode) R.drawable.close else R.drawable.text,
+                            position = RowPosition.Middle,
+                        ) {
+                            textSelectionState.toggleTextSelectionMode()
+                            showDialog.value = false // Close dialog after toggling
                         }
                     }
 

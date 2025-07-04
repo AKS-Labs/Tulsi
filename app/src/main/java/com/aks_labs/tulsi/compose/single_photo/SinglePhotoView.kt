@@ -14,6 +14,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.pager.PagerState
@@ -49,6 +51,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -72,6 +76,11 @@ import com.aks_labs.tulsi.compose.dialogs.ConfirmationDialog
 import com.aks_labs.tulsi.compose.dialogs.ExplanationDialog
 import com.aks_labs.tulsi.compose.dialogs.LoadingDialog
 import com.aks_labs.tulsi.compose.dialogs.SinglePhotoInfoDialog
+import com.aks_labs.tulsi.compose.text_selection.TextSelectionState
+import com.aks_labs.tulsi.compose.text_selection.rememberTextSelectionState
+import com.aks_labs.tulsi.compose.text_selection.TextSelectionOverlay
+import com.aks_labs.tulsi.compose.text_selection.TextSelectionToolbar
+import com.aks_labs.tulsi.ocr.EnhancedOcrExtractor
 import com.aks_labs.tulsi.datastore.Permissions
 import com.aks_labs.tulsi.helpers.GetDirectoryPermissionAndRun
 import com.aks_labs.tulsi.helpers.GetPermissionAndRun
@@ -168,6 +177,24 @@ fun SinglePhotoView(
 
     val showInfoDialog = remember { mutableStateOf(false) }
     val showRenameDialog = remember { mutableStateOf(false) }
+    val textSelectionState = rememberTextSelectionState()
+    val context = LocalContext.current
+
+    // Load OCR data when text selection mode is activated
+    LaunchedEffect(textSelectionState.isTextSelectionMode, currentMediaItem.value.uri) {
+        if (textSelectionState.isTextSelectionMode && currentMediaItem.value.type == MediaType.Image) {
+            try {
+                val ocrResult = EnhancedOcrExtractor.extractSelectableTextFromImage(
+                    context = context,
+                    imageUri = currentMediaItem.value.uri
+                )
+                textSelectionState.updateOcrResult(ocrResult)
+            } catch (e: Exception) {
+                // Handle OCR extraction error
+                println("OCR extraction failed: ${e.message}")
+            }
+        }
+    }
 
     BackHandler(
         enabled = !showInfoDialog.value
@@ -177,57 +204,64 @@ fun SinglePhotoView(
 
     Scaffold(
         topBar = {
-            val coroutineScope = rememberCoroutineScope()
+            // Hide top bar when in text selection mode
+            if (!textSelectionState.isTextSelectionMode) {
+                val coroutineScope = rememberCoroutineScope()
 
-            TopBar(
-                mediaItem = currentMediaItem.value,
-                visible = appBarsVisible.value,
-                showInfoDialog = showInfoDialog,
-                showRenameDialog = showRenameDialog,
-                removeIfInFavGrid = {
-                    if (navController.previousBackStackEntry?.destination?.route == MultiScreenViewType.FavouritesGridView.name) {
-                        sortOutMediaMods(
-                            currentMediaItem.value,
-                            groupedMedia,
-                            coroutineScope,
-                            state
-                        ) {
-                            navController.popBackStack()
+                TopBar(
+                    mediaItem = currentMediaItem.value,
+                    visible = appBarsVisible.value,
+                    showInfoDialog = showInfoDialog,
+                    showRenameDialog = showRenameDialog,
+                    removeIfInFavGrid = {
+                        if (navController.previousBackStackEntry?.destination?.route == MultiScreenViewType.FavouritesGridView.name) {
+                            sortOutMediaMods(
+                                currentMediaItem.value,
+                                groupedMedia,
+                                coroutineScope,
+                                state
+                            ) {
+                                navController.popBackStack()
+                            }
                         }
-                    }
-                },
-                onBackClick = {
-                    navController.popBackStack()
-                }
-            )
+                    },
+                    onBackClick = {
+                        navController.popBackStack()
+                    },
+                    textSelectionState = textSelectionState
+                )
+            }
         },
         bottomBar = {
-            BottomBar(
-                visible = appBarsVisible.value,
-                currentItem = currentMediaItem.value,
-                groupedMedia = groupedMedia,
-                loadsFromMainViewModel = loadsFromMainViewModel,
-                state = state,
-                showEditingView = {
-                    setBarVisibility(
-                        visible = true,
-                        window = window
-                    ) {
-                        appBarsVisible.value = it
-                    }
+            // Hide bottom bar when in text selection mode
+            if (!textSelectionState.isTextSelectionMode) {
+                BottomBar(
+                    visible = appBarsVisible.value,
+                    currentItem = currentMediaItem.value,
+                    groupedMedia = groupedMedia,
+                    loadsFromMainViewModel = loadsFromMainViewModel,
+                    state = state,
+                    showEditingView = {
+                        setBarVisibility(
+                            visible = true,
+                            window = window
+                        ) {
+                            appBarsVisible.value = it
+                        }
 
-                    navController.navigate(
-                        Screens.EditingScreen(
-                            absolutePath = currentMediaItem.value.absolutePath,
-                            uri = currentMediaItem.value.uri.toString(),
-                            dateTaken = currentMediaItem.value.dateTaken
+                        navController.navigate(
+                            Screens.EditingScreen(
+                                absolutePath = currentMediaItem.value.absolutePath,
+                                uri = currentMediaItem.value.uri.toString(),
+                                dateTaken = currentMediaItem.value.dateTaken
+                            )
                         )
-                    )
-                },
-                onZeroItemsLeft = {
-                    navController.popBackStack()
-                }
-            )
+                    },
+                    onZeroItemsLeft = {
+                        navController.popBackStack()
+                    }
+                )
+            }
         },
         containerColor = MaterialTheme.colorScheme.background,
         contentColor = MaterialTheme.colorScheme.onBackground
@@ -237,7 +271,8 @@ fun SinglePhotoView(
             currentMediaItem = currentMediaItem.value,
             groupedMedia = groupedMedia,
             loadsFromMainViewModel = loadsFromMainViewModel,
-            showMoveCopyOptions = true
+            showMoveCopyOptions = true,
+            textSelectionState = textSelectionState
         )
 
         // Rename dialog triggered by clicking filename
@@ -247,24 +282,92 @@ fun SinglePhotoView(
             groupedMedia = groupedMedia,
             loadsFromMainViewModel = loadsFromMainViewModel,
             showMoveCopyOptions = false,
-            startInRenameMode = true
+            startInRenameMode = true,
+            textSelectionState = textSelectionState
         )
 
-        Column(
+        BoxWithConstraints(
             modifier = Modifier
-                .padding(0.dp)
+                .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .fillMaxSize(1f),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            HorizontalImageList(
-                currentMediaItem = currentMediaItem.value,
-                groupedMedia = groupedMedia.value,
-                state = state,
-                window = window,
-                appBarsVisible = appBarsVisible
-            )
+            val screenWidth = maxWidth
+            val screenHeight = maxHeight
+
+            // Main image content
+            Column(
+                modifier = Modifier
+                    .padding(0.dp)
+                    .fillMaxSize(1f),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                HorizontalImageList(
+                    currentMediaItem = currentMediaItem.value,
+                    groupedMedia = groupedMedia.value,
+                    state = state,
+                    window = window,
+                    appBarsVisible = appBarsVisible
+                )
+            }
+
+            // Text selection interface - only show when in text selection mode
+            if (textSelectionState.isTextSelectionMode && currentMediaItem.value.type == MediaType.Image) {
+                // Exit button for text selection mode
+                IconButton(
+                    onClick = {
+                        textSelectionState.toggleTextSelectionMode()
+                    },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                            shape = CircleShape
+                        )
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.close),
+                        contentDescription = "Exit text selection mode",
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                // Text selection overlay
+                TextSelectionOverlay(
+                    ocrResult = textSelectionState.ocrResult,
+                    isTextSelectionMode = textSelectionState.isTextSelectionMode,
+                    imageSize = Size(screenWidth.value, screenHeight.value), // Use screen size as approximation
+                    screenSize = Size(screenWidth.value, screenHeight.value),
+                    scale = 1f, // Default scale for now
+                    offset = Offset.Zero, // Default offset for now
+                    onTextBlockSelected = { blockId, isSelected ->
+                        textSelectionState.selectTextBlock(blockId, isSelected)
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                // Text selection toolbar - show when text is selected
+                TextSelectionToolbar(
+                    visible = textSelectionState.isTextSelectionMode && textSelectionState.hasSelectedText(),
+                    selectedTextCount = textSelectionState.getSelectedTextBlocks().size,
+                    selectedText = textSelectionState.getSelectedText(),
+                    onCopyClick = {
+                        // Copy functionality will be handled by the toolbar itself
+                        // The selected text is already available via textSelectionState.getSelectedText()
+                    },
+                    onClearSelection = {
+                        textSelectionState.clearSelection()
+                    },
+                    onSelectAll = {
+                        textSelectionState.selectAllTextBlocks()
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(16.dp)
+                )
+            }
         }
     }
 }
@@ -277,7 +380,8 @@ private fun TopBar(
     showInfoDialog: MutableState<Boolean>,
     showRenameDialog: MutableState<Boolean>,
     removeIfInFavGrid: () -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    textSelectionState: TextSelectionState
 ) {
     val context = LocalContext.current
     val localConfig = LocalConfiguration.current
@@ -383,6 +487,24 @@ private fun TopBar(
                             painter = painterResource(id = R.drawable.lens),
                             contentDescription = "search with Google Lens",
                             tint = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier
+                                .size(24.dp)
+                        )
+                    }
+
+                    // Text Selection button - dedicated backup solution
+                    IconButton(
+                        onClick = {
+                            vibratorManager.vibrateShort()
+                            textSelectionState.toggleTextSelectionMode()
+                        },
+                    ) {
+                        Icon(
+                            painter = painterResource(
+                                id = if (textSelectionState.isTextSelectionMode) R.drawable.close else R.drawable.text
+                            ),
+                            contentDescription = if (textSelectionState.isTextSelectionMode) "Exit text selection mode" else "Enter text selection mode",
+                            tint = if (textSelectionState.isTextSelectionMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier
                                 .size(24.dp)
                         )
