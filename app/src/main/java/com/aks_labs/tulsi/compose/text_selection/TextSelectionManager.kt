@@ -81,10 +81,17 @@ class TextSelectionState {
     }
     
     /**
-     * Check if any text is selected
+     * Check if any text is selected (block-level or element-level)
      */
     fun hasSelectedText(): Boolean {
-        return ocrResult?.getSelectedBlocks()?.isNotEmpty() == true
+        return ocrResult?.let { result ->
+            // Check for block-level selection
+            result.getSelectedBlocks().isNotEmpty() ||
+            // Check for element-level selection
+            result.textBlocks.any { block ->
+                block.getAllElements().any { element -> element.isSelected }
+            }
+        } == true
     }
 
     /**

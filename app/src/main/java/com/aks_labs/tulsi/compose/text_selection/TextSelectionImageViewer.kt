@@ -21,8 +21,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -78,7 +80,7 @@ fun TextSelectionImageViewer(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(MaterialTheme.colorScheme.background) // Respect current theme
             .systemGestureExclusion()
     ) {
         // Main image display
@@ -116,7 +118,7 @@ fun TextSelectionImageViewer(
             }
         }
         
-        // Close button (top-right)
+        // Close button (top-right) - theme-aware
         IconButton(
             onClick = onBackPressed,
             modifier = Modifier
@@ -124,7 +126,7 @@ fun TextSelectionImageViewer(
                 .statusBarsPadding()
                 .padding(16.dp)
                 .background(
-                    color = Color.Black.copy(alpha = 0.6f),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
                     shape = CircleShape
                 )
                 .size(48.dp)
@@ -132,36 +134,55 @@ fun TextSelectionImageViewer(
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Close text selection",
-                tint = Color.White,
+                tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(24.dp)
             )
         }
         
-        // Native-style context menu
-        if (showContextMenu) {
+        // Native-style context menu - only show when text is actually selected
+        if (showContextMenu && textSelectionState.hasSelectedText()) {
             NativeTextSelectionContextMenu(
                 position = contextMenuPosition,
                 selectedText = textSelectionState.getSelectedText(),
                 onDismiss = { showContextMenu = false },
                 onCopy = {
-                    clipboardManager.setText(AnnotatedString(textSelectionState.getSelectedText()))
+                    val selectedText = textSelectionState.getSelectedText()
+                    if (selectedText.isNotEmpty()) {
+                        clipboardManager.setText(AnnotatedString(selectedText))
+                        println("DEBUG: Copied text to clipboard: '$selectedText'")
+                    }
                     showContextMenu = false
                 },
                 onShare = {
-                    val shareIntent = Intent().apply {
-                        action = Intent.ACTION_SEND
-                        putExtra(Intent.EXTRA_TEXT, textSelectionState.getSelectedText())
-                        type = "text/plain"
+                    val selectedText = textSelectionState.getSelectedText()
+                    if (selectedText.isNotEmpty()) {
+                        val shareIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_TEXT, selectedText)
+                            type = "text/plain"
+                        }
+                        context.startActivity(Intent.createChooser(shareIntent, "Share text"))
                     }
-                    context.startActivity(Intent.createChooser(shareIntent, "Share text"))
                     showContextMenu = false
                 },
                 onWebSearch = {
-                    val searchIntent = Intent().apply {
-                        action = Intent.ACTION_WEB_SEARCH
-                        putExtra("query", textSelectionState.getSelectedText())
+                    val selectedText = textSelectionState.getSelectedText()
+                    if (selectedText.isNotEmpty()) {
+                        val searchIntent = Intent().apply {
+                            action = Intent.ACTION_WEB_SEARCH
+                            putExtra("query", selectedText)
+                        }
+                        try {
+                            context.startActivity(searchIntent)
+                        } catch (e: Exception) {
+                            // Fallback to browser search
+                            val browserIntent = Intent().apply {
+                                action = Intent.ACTION_VIEW
+                                data = android.net.Uri.parse("https://www.google.com/search?q=${android.net.Uri.encode(selectedText)}")
+                            }
+                            context.startActivity(browserIntent)
+                        }
                     }
-                    context.startActivity(searchIntent)
                     showContextMenu = false
                 },
                 onSelectAll = {
@@ -213,11 +234,19 @@ private fun TextSelectionOverlaySimplified(
         // Draw individual word overlays for granular selection
         screenTextBlocks.forEach { textBlock ->
             textBlock.getAllElements().forEach { element ->
+                // Get current selection state from TextSelectionState
+                val isElementSelected = textSelectionState.ocrResult?.textBlocks
+                    ?.flatMap { it.getAllElements() }
+                    ?.find { it.id == element.id }?.isSelected ?: false
+
                 WordInteractiveOverlayAccurate(
                     element = element,
-                    isSelected = element.isSelected,
-                    onTap = { 
+                    isSelected = isElementSelected,
+                    onTap = {
+                        println("DEBUG: Tapping element ${element.id} with text '${element.text}'")
                         textSelectionState.toggleElementSelection(element.id)
+                        println("DEBUG: After toggle, hasSelectedText: ${textSelectionState.hasSelectedText()}")
+
                         // Show context menu if text is selected
                         if (textSelectionState.hasSelectedText()) {
                             onShowContextMenu(
@@ -229,6 +258,7 @@ private fun TextSelectionOverlaySimplified(
                         }
                     },
                     onLongPress = {
+                        println("DEBUG: Long pressing element ${element.id} with text '${element.text}'")
                         // Select entire sentence on long press
                         selectSentence(textBlock, element, textSelectionState)
                         // Show context menu
@@ -321,26 +351,37 @@ private fun WordInteractiveOverlayAccurate(
     val density = LocalDensity.current
     var isPressed by remember { mutableStateOf(false) }
 
-    // Animated highlight color for smooth transitions
+    // High contrast highlight colors for visibility on all backgrounds
     val highlightColor by animateColorAsState(
         targetValue = when {
-            isSelected -> Color(0xFF1976D2).copy(alpha = 0.5f) // Google-style blue highlight
-            isPressed -> Color(0xFF1976D2).copy(alpha = 0.2f) // Pressed state
+            isSelected -> Color(0xFF1976D2).copy(alpha = 0.6f) // Google Lens blue with higher opacity
+            isPressed -> Color(0xFF1976D2).copy(alpha = 0.3f) // Pressed state
             else -> Color.Transparent
         },
         animationSpec = tween(durationMillis = 200),
         label = "highlight_color"
     )
 
-    // Subtle border for text boundaries
+    // High contrast border for visibility on all image types
     val borderColor by animateColorAsState(
         targetValue = when {
-            isSelected -> Color(0xFF1976D2).copy(alpha = 0.8f)
-            isPressed -> Color(0xFF1976D2).copy(alpha = 0.4f)
-            else -> Color.White.copy(alpha = 0.2f) // Subtle border to show text boundaries
+            isSelected -> Color(0xFF1976D2) // Solid blue border for selected text
+            isPressed -> Color(0xFF1976D2).copy(alpha = 0.7f)
+            else -> Color.White.copy(alpha = 0.8f) // High contrast white border for unselected
         },
         animationSpec = tween(durationMillis = 200),
         label = "border_color"
+    )
+
+    // Shadow/outline for better visibility on all backgrounds
+    val shadowColor by animateColorAsState(
+        targetValue = when {
+            isSelected -> Color.Black.copy(alpha = 0.3f)
+            isPressed -> Color.Black.copy(alpha = 0.2f)
+            else -> Color.Black.copy(alpha = 0.1f)
+        },
+        animationSpec = tween(durationMillis = 200),
+        label = "shadow_color"
     )
 
     // Scale animation for press feedback
@@ -363,12 +404,22 @@ private fun WordInteractiveOverlayAccurate(
                 height = with(density) { element.boundingBox.height.toDp() }
             )
             .scale(scale)
+            // Add shadow/outline for better visibility
+            .drawBehind {
+                // Draw shadow for better contrast on all backgrounds
+                drawRoundRect(
+                    color = shadowColor,
+                    topLeft = androidx.compose.ui.geometry.Offset(2f, 2f),
+                    size = size,
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(12f, 12f)
+                )
+            }
             .background(
                 color = highlightColor,
                 shape = RoundedCornerShape(4.dp)
             )
             .border(
-                width = if (isSelected) 2.dp else 0.5.dp,
+                width = if (isSelected) 3.dp else 1.dp, // Thicker border for better visibility
                 color = borderColor,
                 shape = RoundedCornerShape(4.dp)
             )

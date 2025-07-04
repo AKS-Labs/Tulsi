@@ -346,12 +346,27 @@ data class SelectableOcrResult(
     val processingTimeMs: Long = 0L
 ) {
     /**
-     * Get all selected text concatenated
+     * Get all selected text concatenated (block-level and element-level)
      */
     fun getSelectedText(): String {
-        return textBlocks
+        val blockLevelText = textBlocks
             .filter { it.isSelected }
             .joinToString("\n") { it.text }
+
+        val elementLevelText = textBlocks
+            .flatMap { block ->
+                block.getAllElements()
+                    .filter { it.isSelected }
+                    .map { it.text }
+            }
+            .joinToString(" ")
+
+        return when {
+            blockLevelText.isNotEmpty() && elementLevelText.isNotEmpty() -> "$blockLevelText\n$elementLevelText"
+            blockLevelText.isNotEmpty() -> blockLevelText
+            elementLevelText.isNotEmpty() -> elementLevelText
+            else -> ""
+        }
     }
     
     /**
