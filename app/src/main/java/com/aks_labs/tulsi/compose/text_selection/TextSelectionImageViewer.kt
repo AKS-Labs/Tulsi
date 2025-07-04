@@ -118,7 +118,7 @@ fun TextSelectionImageViewer(
             }
         }
         
-        // Close button (top-right) - theme-aware
+        // Close button (top-right) - theme-aware without 3D effects
         IconButton(
             onClick = onBackPressed,
             modifier = Modifier
@@ -127,6 +127,11 @@ fun TextSelectionImageViewer(
                 .padding(16.dp)
                 .background(
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                    shape = CircleShape
+                )
+                .border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
                     shape = CircleShape
                 )
                 .size(48.dp)
@@ -141,6 +146,8 @@ fun TextSelectionImageViewer(
         
         // Native-style context menu - only show when text is actually selected
         if (showContextMenu && textSelectionState.hasSelectedText()) {
+            println("DEBUG: Showing context menu - selectedText: '${textSelectionState.getSelectedText()}'")
+            println("DEBUG: Context menu position: $contextMenuPosition")
             NativeTextSelectionContextMenu(
                 position = contextMenuPosition,
                 selectedText = textSelectionState.getSelectedText(),
@@ -190,6 +197,10 @@ fun TextSelectionImageViewer(
                     showContextMenu = false
                 }
             )
+        } else {
+            if (showContextMenu) {
+                println("DEBUG: Context menu requested but not showing - hasSelectedText: ${textSelectionState.hasSelectedText()}")
+            }
         }
         
         // Bottom selection panel
@@ -223,10 +234,14 @@ private fun TextSelectionOverlaySimplified(
     onShowContextMenu: (Offset) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Use the current OCR result from textSelectionState (which contains selection updates)
+    val currentOcrResult = textSelectionState.ocrResult ?: ocrResult
+
     // Transform text blocks to screen coordinates using simplified transformation
-    val screenTextBlocks = remember(ocrResult, containerSize) {
-        ocrResult.textBlocks.map { block ->
-            transformTextBlockToScreen(block, ocrResult.imageSize, containerSize)
+    val screenTextBlocks = remember(currentOcrResult, containerSize) {
+        println("DEBUG: Recomputing screenTextBlocks - currentOcrResult blocks: ${currentOcrResult.textBlocks.size}")
+        currentOcrResult.textBlocks.map { block ->
+            transformTextBlockToScreen(block, currentOcrResult.imageSize, containerSize)
         }
     }
     
@@ -234,21 +249,24 @@ private fun TextSelectionOverlaySimplified(
         // Draw individual word overlays for granular selection
         screenTextBlocks.forEach { textBlock ->
             textBlock.getAllElements().forEach { element ->
-                // Get current selection state from TextSelectionState
-                val isElementSelected = textSelectionState.ocrResult?.textBlocks
-                    ?.flatMap { it.getAllElements() }
-                    ?.find { it.id == element.id }?.isSelected ?: false
+                println("DEBUG: Rendering element ${element.id} with text '${element.text}' - isSelected: ${element.isSelected}")
+                println("DEBUG: Element bounding box: ${element.boundingBox}")
 
                 WordInteractiveOverlayAccurate(
                     element = element,
-                    isSelected = isElementSelected,
+                    isSelected = element.isSelected, // Use the element's own selection state
                     onTap = {
                         println("DEBUG: Tapping element ${element.id} with text '${element.text}'")
+                        println("DEBUG: Before toggle - element.isSelected: ${element.isSelected}")
+
                         textSelectionState.toggleElementSelection(element.id)
+
                         println("DEBUG: After toggle, hasSelectedText: ${textSelectionState.hasSelectedText()}")
+                        println("DEBUG: Selected text: '${textSelectionState.getSelectedText()}'")
 
                         // Show context menu if text is selected
                         if (textSelectionState.hasSelectedText()) {
+                            println("DEBUG: Showing context menu at position: ${element.boundingBox.center}")
                             onShowContextMenu(
                                 Offset(
                                     element.boundingBox.center.x,
@@ -261,6 +279,9 @@ private fun TextSelectionOverlaySimplified(
                         println("DEBUG: Long pressing element ${element.id} with text '${element.text}'")
                         // Select entire sentence on long press
                         selectSentence(textBlock, element, textSelectionState)
+
+                        println("DEBUG: After sentence selection, hasSelectedText: ${textSelectionState.hasSelectedText()}")
+
                         // Show context menu
                         onShowContextMenu(
                             Offset(
@@ -423,20 +444,22 @@ private fun WordInteractiveOverlayAccurate(
                 color = borderColor,
                 shape = RoundedCornerShape(4.dp)
             )
-            .combinedClickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onTap,
-                onLongClick = onLongPress,
-                onClickLabel = "Select word: ${element.text}",
-                onLongClickLabel = "Select sentence containing: ${element.text}"
-            )
-            .pointerInput(Unit) {
+            .pointerInput(element.id) {
                 detectTapGestures(
                     onPress = {
+                        println("DEBUG: Press detected on element ${element.id}")
                         isPressed = true
                         tryAwaitRelease()
                         isPressed = false
+                        println("DEBUG: Press released on element ${element.id}")
+                    },
+                    onTap = { offset ->
+                        println("DEBUG: Tap detected on element ${element.id} at offset $offset")
+                        onTap()
+                    },
+                    onLongPress = { offset ->
+                        println("DEBUG: Long press detected on element ${element.id} at offset $offset")
+                        onLongPress()
                     }
                 )
             }

@@ -124,12 +124,26 @@ class TextSelectionState {
      * Toggle selection state of a text element (word)
      */
     fun toggleElementSelection(elementId: String) {
+        println("DEBUG: toggleElementSelection called for elementId: $elementId")
+
         ocrResult?.let { result ->
+            val currentlySelected = isElementSelected(elementId)
+            println("DEBUG: Element $elementId currently selected: $currentlySelected")
+
             val updatedBlocks = result.textBlocks.map { block ->
-                block.updateElementSelection(elementId, !isElementSelected(elementId))
+                val updatedBlock = block.updateElementSelection(elementId, !currentlySelected)
+                println("DEBUG: Updated block ${block.id} - elements: ${updatedBlock.getAllElements().count { it.isSelected }} selected")
+                updatedBlock
             }
-            ocrResult = result.copy(textBlocks = updatedBlocks)
-        }
+
+            val newResult = result.copy(textBlocks = updatedBlocks)
+            println("DEBUG: Creating new OCR result with ${newResult.textBlocks.flatMap { it.getAllElements() }.count { it.isSelected }} selected elements")
+
+            ocrResult = newResult
+
+            println("DEBUG: After assignment - hasSelectedText: ${hasSelectedText()}")
+            println("DEBUG: Selected text: '${getSelectedText()}'")
+        } ?: println("DEBUG: ocrResult is null!")
     }
 
     /**
@@ -158,11 +172,14 @@ class TextSelectionState {
      * Check if a specific element is selected
      */
     private fun isElementSelected(elementId: String): Boolean {
-        return ocrResult?.textBlocks?.any { block ->
+        val result = ocrResult?.textBlocks?.any { block ->
             block.getAllElements().any { element ->
                 element.id == elementId && element.isSelected
             }
         } ?: false
+
+        println("DEBUG: isElementSelected($elementId) = $result")
+        return result
     }
     
     /**
