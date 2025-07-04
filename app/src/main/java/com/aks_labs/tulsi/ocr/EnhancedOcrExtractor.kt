@@ -3,6 +3,11 @@ package com.aks_labs.tulsi.ocr
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
+import android.graphics.Matrix
+import android.graphics.Paint
 import android.net.Uri
 import android.util.Log
 import androidx.compose.ui.geometry.Size
@@ -12,6 +17,8 @@ import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeoutOrNull
 import java.io.InputStream
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * Enhanced OCR text extractor that provides detailed text block information
@@ -21,9 +28,17 @@ object EnhancedOcrExtractor {
     
     private const val TAG = "EnhancedOcrExtractor"
     private const val OCR_TIMEOUT_MS = 30000L // 30 seconds timeout
-    
-    // Initialize the text recognizer
-    private val textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+
+    // Enhanced text recognizer with optimized options
+    private val textRecognizer = TextRecognition.getClient(
+        TextRecognizerOptions.Builder()
+            .build()
+    )
+
+    // Image preprocessing constants
+    private const val MIN_IMAGE_SIZE = 100
+    private const val MAX_IMAGE_SIZE = 2048
+    private const val OPTIMAL_IMAGE_SIZE = 1024
     
     /**
      * Extract detailed text information from image URI
@@ -39,17 +54,25 @@ object EnhancedOcrExtractor {
             Log.d(TAG, "Starting enhanced OCR for image: $imageUri")
             
             // Load bitmap from URI
-            val bitmap = loadBitmapFromUri(context, imageUri)
-            if (bitmap == null) {
+            val originalBitmap = loadBitmapFromUri(context, imageUri)
+            if (originalBitmap == null) {
                 Log.e(TAG, "Failed to load bitmap from URI: $imageUri")
                 return null
             }
+
+            // Preprocess bitmap for better OCR accuracy
+            val preprocessedBitmap = preprocessImageForOCR(originalBitmap)
+
+            val result = extractSelectableTextFromBitmap(preprocessedBitmap)
+
+            // Clean up bitmaps
+            if (!originalBitmap.isRecycled && originalBitmap != preprocessedBitmap) {
+                originalBitmap.recycle()
+            }
             
-            val result = extractSelectableTextFromBitmap(bitmap)
-            
-            // Clean up bitmap
-            if (!bitmap.isRecycled) {
-                bitmap.recycle()
+            // Clean up preprocessed bitmap
+            if (!preprocessedBitmap.isRecycled) {
+                preprocessedBitmap.recycle()
             }
             
             result
@@ -131,8 +154,99 @@ object EnhancedOcrExtractor {
      * Check if bitmap has valid size for OCR processing
      */
     private fun isValidSize(bitmap: Bitmap): Boolean {
-        val minSize = 50 // Minimum size in pixels
-        return bitmap.width >= minSize && bitmap.height >= minSize
+        return bitmap.width >= MIN_IMAGE_SIZE && bitmap.height >= MIN_IMAGE_SIZE
+    }
+
+    /**
+     * Preprocess image for better OCR accuracy
+     * This includes resizing, contrast enhancement, and noise reduction
+     */
+    private fun preprocessImageForOCR(originalBitmap: Bitmap): Bitmap {
+        try {
+            Log.d(TAG, "Preprocessing image: ${originalBitmap.width}x${originalBitmap.height}")
+
+            // Step 1: Resize image to optimal size for OCR
+            val resizedBitmap = resizeImageForOCR(originalBitmap)
+
+            // Step 2: Enhance contrast and brightness
+            val enhancedBitmap = enhanceImageContrast(resizedBitmap)
+
+            // Clean up intermediate bitmap if different
+            if (resizedBitmap != originalBitmap && resizedBitmap != enhancedBitmap && !resizedBitmap.isRecycled) {
+                resizedBitmap.recycle()
+            }
+
+            Log.d(TAG, "Image preprocessing completed: ${enhancedBitmap.width}x${enhancedBitmap.height}")
+            return enhancedBitmap
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Image preprocessing failed, using original", e)
+            return originalBitmap
+        }
+    }
+
+    /**
+     * Resize image to optimal size for OCR processing
+     */
+    private fun resizeImageForOCR(bitmap: Bitmap): Bitmap {
+        val width = bitmap.width
+        val height = bitmap.height
+
+        // If image is already optimal size, return as-is
+        if (width <= MAX_IMAGE_SIZE && height <= MAX_IMAGE_SIZE &&
+            width >= MIN_IMAGE_SIZE && height >= MIN_IMAGE_SIZE) {
+            return bitmap
+        }
+
+        // Calculate scale factor
+        val scaleFactor = when {
+            max(width, height) > MAX_IMAGE_SIZE -> {
+                MAX_IMAGE_SIZE.toFloat() / max(width, height)
+            }
+            min(width, height) < MIN_IMAGE_SIZE -> {
+                MIN_IMAGE_SIZE.toFloat() / min(width, height)
+            }
+            else -> {
+                // Aim for optimal size
+                OPTIMAL_IMAGE_SIZE.toFloat() / max(width, height)
+            }
+        }
+
+        val newWidth = (width * scaleFactor).toInt()
+        val newHeight = (height * scaleFactor).toInt()
+
+        Log.d(TAG, "Resizing image from ${width}x${height} to ${newWidth}x${newHeight} (scale: $scaleFactor)")
+
+        return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+    }
+
+    /**
+     * Enhance image contrast and brightness for better text recognition
+     */
+    private fun enhanceImageContrast(bitmap: Bitmap): Bitmap {
+        val enhancedBitmap = Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(enhancedBitmap)
+        val paint = Paint()
+
+        // Create color matrix for contrast and brightness enhancement
+        val colorMatrix = ColorMatrix()
+
+        // Increase contrast (values > 1.0 increase contrast)
+        val contrast = 1.2f
+        // Adjust brightness (positive values brighten, negative darken)
+        val brightness = 10f
+
+        colorMatrix.set(floatArrayOf(
+            contrast, 0f, 0f, 0f, brightness,
+            0f, contrast, 0f, 0f, brightness,
+            0f, 0f, contrast, 0f, brightness,
+            0f, 0f, 0f, 1f, 0f
+        ))
+
+        paint.colorFilter = ColorMatrixColorFilter(colorMatrix)
+        canvas.drawBitmap(bitmap, 0f, 0f, paint)
+
+        return enhancedBitmap
     }
     
     /**

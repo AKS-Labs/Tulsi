@@ -112,6 +112,51 @@ class TextSelectionState {
             ocrResult = result.copy(textBlocks = updatedBlocks)
         }
     }
+
+    /**
+     * Toggle selection state of a text element (word)
+     */
+    fun toggleElementSelection(elementId: String) {
+        ocrResult?.let { result ->
+            val updatedBlocks = result.textBlocks.map { block ->
+                block.updateElementSelection(elementId, !isElementSelected(elementId))
+            }
+            ocrResult = result.copy(textBlocks = updatedBlocks)
+        }
+    }
+
+    /**
+     * Select a line by line ID
+     */
+    fun selectLine(lineId: String) {
+        ocrResult?.let { result ->
+            val updatedBlocks = result.textBlocks.map { block ->
+                val updatedLines = block.lines.map { line ->
+                    if (line.id == lineId) {
+                        val updatedElements = line.elements.map { element ->
+                            element.copy(isSelected = true)
+                        }
+                        line.copy(elements = updatedElements, isSelected = true)
+                    } else {
+                        line
+                    }
+                }
+                block.copy(lines = updatedLines)
+            }
+            ocrResult = result.copy(textBlocks = updatedBlocks)
+        }
+    }
+
+    /**
+     * Check if a specific element is selected
+     */
+    private fun isElementSelected(elementId: String): Boolean {
+        return ocrResult?.textBlocks?.any { block ->
+            block.getAllElements().any { element ->
+                element.id == elementId && element.isSelected
+            }
+        } ?: false
+    }
     
     /**
      * Start drag selection

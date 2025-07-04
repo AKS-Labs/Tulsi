@@ -19,6 +19,48 @@ data class SelectableTextBlock(
     val isSelected: Boolean = false,
     val lines: List<SelectableTextLine> = emptyList()
 ) {
+
+    /**
+     * Get all selectable elements (words) in this block
+     */
+    fun getAllElements(): List<SelectableTextElement> {
+        return lines.flatMap { it.elements }
+    }
+
+    /**
+     * Check if any element in this block is selected
+     */
+    fun hasSelectedElements(): Boolean {
+        return getAllElements().any { it.isSelected }
+    }
+
+    /**
+     * Get selected text from individual elements
+     */
+    fun getSelectedElementsText(): String {
+        return getAllElements()
+            .filter { it.isSelected }
+            .joinToString(" ") { it.text }
+    }
+
+    /**
+     * Update selection state of a specific element
+     */
+    fun updateElementSelection(elementId: String, isSelected: Boolean): SelectableTextBlock {
+        val updatedLines = lines.map { line ->
+            line.updateElementSelection(elementId, isSelected)
+        }
+        return copy(lines = updatedLines)
+    }
+
+    /**
+     * Find element at given position
+     */
+    fun findElementAt(position: Offset): SelectableTextElement? {
+        return getAllElements().find { element ->
+            element.boundingBox.contains(position)
+        }
+    }
     /**
      * Convert to screen coordinates based on image transformation
      * This matches the coordinate system used by HorizontalImageList's graphicsLayer transformation
@@ -114,6 +156,45 @@ data class SelectableTextLine(
     val isSelected: Boolean = false,
     val elements: List<SelectableTextElement> = emptyList()
 ) {
+
+    /**
+     * Check if any element in this line is selected
+     */
+    fun hasSelectedElements(): Boolean {
+        return elements.any { it.isSelected }
+    }
+
+    /**
+     * Get selected text from individual elements
+     */
+    fun getSelectedElementsText(): String {
+        return elements
+            .filter { it.isSelected }
+            .joinToString(" ") { it.text }
+    }
+
+    /**
+     * Update selection state of a specific element
+     */
+    fun updateElementSelection(elementId: String, isSelected: Boolean): SelectableTextLine {
+        val updatedElements = elements.map { element ->
+            if (element.id == elementId) {
+                element.copy(isSelected = isSelected)
+            } else {
+                element
+            }
+        }
+        return copy(elements = updatedElements)
+    }
+
+    /**
+     * Find element at given position
+     */
+    fun findElementAt(position: Offset): SelectableTextElement? {
+        return elements.find { element ->
+            element.boundingBox.contains(position)
+        }
+    }
     /**
      * Convert to screen coordinates based on image transformation
      * This matches the coordinate system used by HorizontalImageList's graphicsLayer transformation
@@ -376,7 +457,22 @@ fun Text.Line.toSelectableTextLine(id: String): SelectableTextLine {
 fun Text.Element.toSelectableTextElement(id: String): SelectableTextElement {
     return SelectableTextElement(
         id = id,
-        text = text,
-        boundingBox = boundingBox.toComposeRect()
+        text = text.trim(), // Clean whitespace for better word boundaries
+        boundingBox = expandBoundingBoxForTouchTarget(boundingBox.toComposeRect())
+    )
+}
+
+/**
+ * Expand bounding box to provide better touch targets for text selection
+ */
+private fun expandBoundingBoxForTouchTarget(originalRect: Rect): Rect {
+    val minTouchTarget = 44f // Minimum touch target size in dp (Android accessibility guidelines)
+    val expansion = 8f // Additional padding for easier selection
+
+    return Rect(
+        left = originalRect.left - expansion,
+        top = originalRect.top - expansion,
+        right = originalRect.right + expansion,
+        bottom = originalRect.bottom + expansion
     )
 }

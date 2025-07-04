@@ -272,7 +272,8 @@ fun HorizontalImageList(
                                 rotation = rotation,
                                 offset = offset,
                                 window = window,
-                                appBarsVisible = appBarsVisible
+                                appBarsVisible = appBarsVisible,
+                                item = mediaStoreItem
                             )
                     ) {
                         it.signature(mediaStoreItem.signature())
@@ -291,7 +292,7 @@ fun Modifier.mediaModifier(
     offset: MutableState<Offset>,
     window: Window,
     appBarsVisible: MutableState<Boolean>,
-    item: MediaStoreData? = null,
+    item: MediaStoreData? = null
 ): Modifier {
     val vibratorManager = rememberVibratorManager()
     var isDoubleTapToScaling by remember { mutableStateOf(false) }

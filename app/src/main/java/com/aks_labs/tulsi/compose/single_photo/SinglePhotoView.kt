@@ -183,9 +183,10 @@ fun SinglePhotoView(
     // Image transformation states are no longer needed for text selection
     // as the dedicated TextSelectionViewer handles coordinate transformation internally
 
-    // Load OCR data when text selection mode is activated
-    LaunchedEffect(textSelectionState.isTextSelectionMode, currentMediaItem.value.uri) {
-        if (textSelectionState.isTextSelectionMode && currentMediaItem.value.type == MediaType.Image) {
+    // Use dedicated TextSelectionImageViewer when in text selection mode
+    if (textSelectionState.isTextSelectionMode && currentMediaItem.value.type == MediaType.Image) {
+        // Load OCR data when text selection mode is activated
+        LaunchedEffect(currentMediaItem.value.uri) {
             try {
                 val ocrResult = EnhancedOcrExtractor.extractSelectableTextFromImage(
                     context = context,
@@ -197,11 +198,8 @@ fun SinglePhotoView(
                 println("OCR extraction failed: ${e.message}")
             }
         }
-    }
 
-    // Use dedicated TextSelectionViewer when in text selection mode
-    if (textSelectionState.isTextSelectionMode && currentMediaItem.value.type == MediaType.Image) {
-        TextSelectionViewer(
+        com.aks_labs.tulsi.compose.text_selection.TextSelectionImageViewer(
             imageUri = currentMediaItem.value.uri.toString(),
             ocrResult = textSelectionState.ocrResult,
             textSelectionState = textSelectionState,
