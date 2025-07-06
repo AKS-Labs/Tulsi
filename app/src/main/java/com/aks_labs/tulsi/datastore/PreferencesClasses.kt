@@ -759,4 +759,32 @@ class SettingsPhotoGridImpl(
     }
 }
 
+class SettingsOcrImpl(
+    private val context: Context,
+    private val viewModelScope: CoroutineScope
+) {
+    private val latinOcrEnabledKey = booleanPreferencesKey("latin_ocr_enabled")
+    private val devanagariOcrEnabledKey = booleanPreferencesKey("devanagari_ocr_enabled")
+
+    val latinOcrEnabled: Flow<Boolean> = context.datastore.data.map { preferences ->
+        preferences[latinOcrEnabledKey] ?: true // Default to enabled for Latin OCR
+    }
+
+    val devanagariOcrEnabled: Flow<Boolean> = context.datastore.data.map { preferences ->
+        preferences[devanagariOcrEnabledKey] ?: false // Default to disabled for Devanagari OCR
+    }
+
+    fun setLatinOcrEnabled(enabled: Boolean) = viewModelScope.launch {
+        context.datastore.edit { preferences ->
+            preferences[latinOcrEnabledKey] = enabled
+        }
+    }
+
+    fun setDevanagariOcrEnabled(enabled: Boolean) = viewModelScope.launch {
+        context.datastore.edit { preferences ->
+            preferences[devanagariOcrEnabledKey] = enabled
+        }
+    }
+}
+
 

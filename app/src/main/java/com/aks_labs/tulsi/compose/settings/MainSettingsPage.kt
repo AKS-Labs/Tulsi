@@ -114,6 +114,21 @@ fun MainSettingsPage() {
 
             item {
                 PreferencesRow(
+                    title = "OCR Language Models",
+                    summary = "Configure text extraction languages",
+                    iconResID = R.drawable.ocr,
+                    position = RowPosition.Middle,
+                    showBackground = false,
+                    titleTextSize = 20f,
+                    modifier = Modifier
+                    	.padding(0.dp, 6.dp)
+                ) {
+                    navController.navigate(MultiScreenViewType.OcrLanguageModelsView.name)
+                }
+            }
+
+            item {
+                PreferencesRow(
                     title = "Debugging",
                     summary = "Tools for debugging issues",
                     iconResID = R.drawable.memory,

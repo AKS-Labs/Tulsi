@@ -179,7 +179,7 @@ class SimpleOcrService(private val context: Context) {
     }
     
     /**
-     * Search images by OCR text
+     * Search images by OCR text (both Latin and Devanagari)
      * Based on ScreenshotGo's search approach with FTS and fallback
      */
     suspend fun searchImagesByText(query: String): List<Long> {
@@ -187,18 +187,28 @@ class SimpleOcrService(private val context: Context) {
             if (query.isBlank()) {
                 emptyList()
             } else {
-                Log.d(TAG, "Searching for: '$query'")
+                Log.d(TAG, "Searching for: '$query' in both Latin and Devanagari OCR")
 
                 val results = mutableSetOf<Long>()
 
-                // Use LIKE search (FTS temporarily disabled)
+                // Search Latin OCR table
                 try {
-                    // Strategy 1: Exact phrase search
-                    val exactResults = database.ocrTextDao().searchOcrTextFallback(query)
-                    results.addAll(exactResults.map { it.mediaId })
-                    Log.d(TAG, "Exact search found ${exactResults.size} results")
+                    // Strategy 1: Exact phrase search in Latin OCR
+                    val latinExactResults = database.ocrTextDao().searchOcrTextFallback(query)
+                    results.addAll(latinExactResults.map { it.mediaId })
+                    Log.d(TAG, "Latin exact search found ${latinExactResults.size} results")
                 } catch (e: Exception) {
-                    Log.w(TAG, "Exact search failed: ${e.message}")
+                    Log.w(TAG, "Latin exact search failed: ${e.message}")
+                }
+
+                // Search Devanagari OCR table
+                try {
+                    // Strategy 1: Exact phrase search in Devanagari OCR
+                    val devanagariExactResults = database.devanagariOcrTextDao().searchOcrTextFallback(query)
+                    results.addAll(devanagariExactResults.map { it.mediaId })
+                    Log.d(TAG, "Devanagari exact search found ${devanagariExactResults.size} results")
+                } catch (e: Exception) {
+                    Log.w(TAG, "Devanagari exact search failed: ${e.message}")
                 }
 
                 // Additional word-based search for better recall
@@ -206,18 +216,27 @@ class SimpleOcrService(private val context: Context) {
                 if (words.size > 1) {
                     for (word in words) {
                         if (word.length >= 2) {
+                            // Search Latin OCR for individual words
                             try {
-                                val wordResults = database.ocrTextDao().searchOcrTextFallback(word)
-                                results.addAll(wordResults.map { it.mediaId })
+                                val latinWordResults = database.ocrTextDao().searchOcrTextFallback(word)
+                                results.addAll(latinWordResults.map { it.mediaId })
                             } catch (e: Exception) {
-                                Log.w(TAG, "Word search failed for '$word': ${e.message}")
+                                Log.w(TAG, "Latin word search failed for '$word': ${e.message}")
+                            }
+
+                            // Search Devanagari OCR for individual words
+                            try {
+                                val devanagariWordResults = database.devanagariOcrTextDao().searchOcrTextFallback(word)
+                                results.addAll(devanagariWordResults.map { it.mediaId })
+                            } catch (e: Exception) {
+                                Log.w(TAG, "Devanagari word search failed for '$word': ${e.message}")
                             }
                         }
                     }
                 }
 
                 val mediaIds = results.toList()
-                Log.d(TAG, "Found ${mediaIds.size} total images matching '$query'")
+                Log.d(TAG, "Found ${mediaIds.size} total images matching '$query' across both Latin and Devanagari OCR")
                 mediaIds
             }
         } catch (e: Exception) {
@@ -241,11 +260,20 @@ class SimpleOcrService(private val context: Context) {
     */
     
     /**
-     * Get OCR text for a specific image
+     * Get OCR text for a specific image (from both Latin and Devanagari)
      */
     suspend fun getOcrTextForImage(mediaId: Long): String? {
         return try {
-            database.ocrTextDao().getOcrTextByMediaId(mediaId)?.extractedText
+            val latinText = database.ocrTextDao().getOcrTextByMediaId(mediaId)?.extractedText
+            val devanagariText = database.devanagariOcrTextDao().getOcrTextByMediaId(mediaId)?.extractedText
+
+            // Combine both texts if available
+            when {
+                latinText != null && devanagariText != null -> "$latinText\n$devanagariText"
+                latinText != null -> latinText
+                devanagariText != null -> devanagariText
+                else -> null
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to get OCR text for media $mediaId", e)
             null

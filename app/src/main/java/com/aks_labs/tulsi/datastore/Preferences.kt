@@ -46,3 +46,6 @@ val Settings.DefaultTabs: SettingsDefaultTabsImpl
 val Settings.PhotoGrid: SettingsPhotoGridImpl
     get() = SettingsPhotoGridImpl(context, viewModelScope)
 
+val Settings.Ocr: SettingsOcrImpl
+    get() = SettingsOcrImpl(context, viewModelScope)
+

@@ -17,7 +17,8 @@ enum class MultiScreenViewType {
     OpenWithView,
     UpdatesPage,
 	DataAndBackup,
-	PrivacyAndSecurity
+	PrivacyAndSecurity,
+	OcrLanguageModelsView
 }
 
 object Screens {

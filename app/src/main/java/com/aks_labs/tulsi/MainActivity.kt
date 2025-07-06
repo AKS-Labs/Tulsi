@@ -221,6 +221,7 @@ class MainActivity : ComponentActivity() {
         // Configure window for better navigation bar handling
         configureSystemUI()
 
+        Log.d(TAG, "Creating database instance with migrations...")
         val mediaDatabase = Room.databaseBuilder(
             applicationContext,
             MediaDatabase::class.java,
@@ -230,10 +231,27 @@ class MainActivity : ComponentActivity() {
                 Migration3to4(applicationContext),
                 Migration4to5(applicationContext),
                 Migration5to6(applicationContext),
-                Migration6to7(applicationContext)
+                Migration6to7(applicationContext),
+                com.aks_labs.tulsi.database.migrations.Migration7to8
             )
         }.build()
         applicationDatabase = mediaDatabase
+
+        // Verify database version and Devanagari tables
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val version = mediaDatabase.openHelper.readableDatabase.version
+                Log.d(TAG, "📊 Current database version: $version")
+
+                // Test Devanagari OCR tables accessibility
+                val devanagariTextCount = mediaDatabase.devanagariOcrTextDao().getOcrTextCount()
+                val devanagariProgress = mediaDatabase.devanagariOcrProgressDao().getProgress()
+                Log.d(TAG, "✅ Devanagari OCR tables accessible - Text count: $devanagariTextCount, Progress: $devanagariProgress")
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Failed to access Devanagari OCR tables", e)
+                Log.e(TAG, "This indicates the database migration did not run properly")
+            }
+        }
 
         // Initialize OCR functionality
         initializeOcrSystem()
@@ -884,6 +902,24 @@ class MainActivity : ComponentActivity() {
                         )
 
                         PrivacyAndSecurityPage()
+                    }
+
+                    composable(MultiScreenViewType.OcrLanguageModelsView.name) {
+                        enableEdgeToEdge(
+                            navigationBarStyle = SystemBarStyle.dark(MaterialTheme.colorScheme.background.toArgb()),
+                            statusBarStyle = SystemBarStyle.auto(
+                                MaterialTheme.colorScheme.background.toArgb(),
+                                MaterialTheme.colorScheme.background.toArgb()
+                            )
+                        )
+                        setupNextScreen(
+                            selectedItemsList,
+                            window
+                        )
+
+                        com.aks_labs.tulsi.compose.settings.OcrLanguageModelsPage(
+                            onNavigateUp = { navControllerLocal.navigateUp() }
+                        )
                     }
                 }
             }
