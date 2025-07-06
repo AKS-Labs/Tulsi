@@ -498,7 +498,7 @@ fun SinglePhotoInfoDialog(
                     if (currentMediaItem.type == MediaType.Image && textSelectionState != null) {
                         DialogClickableItem(
                             text = if (textSelectionState.isTextSelectionMode) "Exit Selection Mode" else "Selection Mode",
-                            iconResId = if (textSelectionState.isTextSelectionMode) R.drawable.close else R.drawable.text,
+                            iconResId = if (textSelectionState.isTextSelectionMode) R.drawable.close else R.drawable.ocr,
                             position = RowPosition.Middle,
                         ) {
                             textSelectionState.toggleTextSelectionMode()

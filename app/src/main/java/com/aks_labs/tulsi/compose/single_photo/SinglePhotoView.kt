@@ -461,7 +461,7 @@ private fun TopBar(
                     ) {
                         Icon(
                             painter = painterResource(
-                                id = if (textSelectionState.isTextSelectionMode) R.drawable.close else R.drawable.text
+                                id = if (textSelectionState.isTextSelectionMode) R.drawable.close else R.drawable.ocr
                             ),
                             contentDescription = if (textSelectionState.isTextSelectionMode) "Exit text selection mode" else "Enter text selection mode",
                             tint = if (textSelectionState.isTextSelectionMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground,
