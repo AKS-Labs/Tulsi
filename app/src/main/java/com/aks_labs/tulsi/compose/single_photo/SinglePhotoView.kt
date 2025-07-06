@@ -466,7 +466,7 @@ private fun TopBar(
                             contentDescription = if (textSelectionState.isTextSelectionMode) "Exit text selection mode" else "Enter text selection mode",
                             tint = if (textSelectionState.isTextSelectionMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier
-                                .size(24.dp)
+                                .size(22.dp)
                         )
                     }
                 }

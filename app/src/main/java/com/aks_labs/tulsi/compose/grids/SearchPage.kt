@@ -212,7 +212,6 @@ fun SearchPage(
         }
         val ocrManager = remember { OcrManager(context, database) }
         val ocrProgress by ocrManager.getProgressFlow().collectAsStateWithLifecycle(initialValue = null)
-        var progressBarDismissed by rememberSaveable { mutableStateOf(false) }
 
         // Ensure progress monitoring is active when page loads
         LaunchedEffect(Unit) {
@@ -226,12 +225,8 @@ fun SearchPage(
                 Log.d("SearchPage", "OCR processing detected, ensuring monitoring is active")
                 ocrManager.ensureProgressMonitoring()
 
-                // Reset progress bar dismissed state when OCR starts processing
-                if (progressBarDismissed) {
-                    Log.d("SearchPage", "OCR processing started, showing progress bar")
-                    progressBarDismissed = false
-                    ocrManager.showProgressBar()
-                }
+                // Progress bar visibility is now controlled by database state
+                // No need to manually reset dismissed state
             }
         }
 
@@ -425,13 +420,13 @@ fun SearchPage(
             val currentProgress = ocrProgress
             OcrProgressBar(
                 progress = currentProgress,
-                isVisible = !progressBarDismissed &&
-                           currentProgress != null &&
+                isVisible = currentProgress != null &&
                            !currentProgress.isComplete &&
+                           !currentProgress.progressDismissed && // Respect database dismissed state
                            (currentProgress.isProcessing || currentProgress.isPaused ||
                             (currentProgress.processedImages < currentProgress.totalImages && currentProgress.totalImages > 0)),
                 onDismiss = {
-                    progressBarDismissed = true
+                    // Remove local state management, rely on database state
                     coroutineScope.launch {
                         ocrManager.dismissProgressBar()
                     }
@@ -448,14 +443,8 @@ fun SearchPage(
                 }
             )
 
-                    // Reset dismissed state when new images are added and processing resumes
-                    LaunchedEffect(currentProgress?.totalImages) {
-                        val progressState = ocrProgress
-                        if (progressState != null && progressBarDismissed && !progressState.isComplete) {
-                            progressBarDismissed = false
-                            ocrManager.showProgressBar()
-                        }
-                    }
+                    // Note: Removed automatic reset of dismissed state to prevent instant reappearance
+                    // Progress bar will only reappear when user manually enables OCR or app restarts
                 }
             }
         }

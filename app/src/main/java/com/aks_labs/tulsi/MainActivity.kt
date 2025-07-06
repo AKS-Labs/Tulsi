@@ -139,10 +139,14 @@ import com.aks_labs.tulsi.database.Migration5to6
 import com.aks_labs.tulsi.database.Migration6to7
 import com.aks_labs.tulsi.ocr.SimpleOcrService
 import com.aks_labs.tulsi.ocr.OcrManager
+import com.aks_labs.tulsi.ocr.DevanagariOcrManager
 import com.aks_labs.tulsi.ocr.MediaContentObserver
+import com.aks_labs.tulsi.datastore.Settings
+import com.aks_labs.tulsi.datastore.Ocr
 import android.provider.MediaStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers as CoroutineDispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import com.aks_labs.tulsi.datastore.AlbumInfo
 import com.aks_labs.tulsi.datastore.AlbumInfoNavType
@@ -1295,6 +1299,58 @@ class MainActivity : ComponentActivity() {
                 Log.e(TAG, "Failed to initialize OCR system", e)
             }
         }
+
+        // Initialize Devanagari OCR system if enabled
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // Check if Devanagari OCR is enabled in settings
+                val settings = Settings(applicationContext, CoroutineScope(Dispatchers.IO))
+                val isDevanagariOcrEnabled = settings.Ocr.devanagariOcrEnabled.first()
+
+                Log.d(TAG, "Devanagari OCR enabled in settings: $isDevanagariOcrEnabled")
+
+                if (isDevanagariOcrEnabled) {
+                    Log.d(TAG, "Initializing Devanagari OCR system...")
+
+                    val devanagariOcrManager = DevanagariOcrManager(applicationContext, applicationDatabase)
+                    val totalImages = getTotalImageCount()
+
+                    // Initialize progress if needed
+                    val devanagariProgress = applicationDatabase.devanagariOcrProgressDao().getProgress()
+                    if (devanagariProgress == null && totalImages > 0) {
+                        Log.d(TAG, "Devanagari OCR system not initialized, initializing now...")
+                        devanagariOcrManager.initializeProgress(totalImages)
+                    }
+
+                    // Check current progress
+                    val processedCount = applicationDatabase.devanagariOcrProgressDao().getProcessedCount() ?: 0
+                    Log.d(TAG, "Devanagari OCR - Already processed: $processedCount images")
+
+                    // Start automatic Devanagari OCR processing if needed
+                    if (processedCount < totalImages) {
+                        Log.d(TAG, "Starting automatic Devanagari OCR processing for ${totalImages - processedCount} remaining images")
+
+                        // Ensure progress status is properly set before starting
+                        applicationDatabase.devanagariOcrProgressDao().updateProcessingStatus(true)
+                        applicationDatabase.devanagariOcrProgressDao().updatePausedStatus(false)
+
+                        devanagariOcrManager.startContinuousProcessing(batchSize = 50)
+                    } else {
+                        Log.d(TAG, "All Devanagari OCR images already processed")
+                        // Mark as complete if all images are processed
+                        applicationDatabase.devanagariOcrProgressDao().updateProcessingStatus(false)
+                    }
+
+                    // Ensure progress monitoring is active
+                    devanagariOcrManager.ensureProgressMonitoring()
+                } else {
+                    Log.d(TAG, "Devanagari OCR is disabled in settings, skipping initialization")
+                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to initialize Devanagari OCR system", e)
+            }
+        }
     }
 
     /**
@@ -1390,6 +1446,34 @@ class MainActivity : ComponentActivity() {
                 } else {
                     Log.d(TAG, "OCR system already fully processed")
                 }
+
+                // Also check Devanagari OCR resume logic
+                val settings = Settings(applicationContext, CoroutineScope(Dispatchers.IO))
+                val isDevanagariOcrEnabled = settings.Ocr.devanagariOcrEnabled.first()
+
+                if (isDevanagariOcrEnabled) {
+                    Log.d(TAG, "Checking Devanagari OCR resume status...")
+                    val devanagariOcrManager = DevanagariOcrManager(applicationContext, applicationDatabase)
+                    val devanagariProgress = applicationDatabase.devanagariOcrProgressDao().getProgress()
+
+                    if (devanagariProgress != null) {
+                        val devanagariProcessedCount = applicationDatabase.devanagariOcrProgressDao().getProcessedCount() ?: 0
+                        Log.d(TAG, "Devanagari OCR progress: $devanagariProcessedCount/$totalImages processed")
+
+                        if (devanagariProcessedCount < totalImages && !devanagariProgress.isProcessing && !devanagariProgress.isPaused) {
+                            Log.d(TAG, "Resuming Devanagari OCR processing for remaining images")
+                            applicationDatabase.devanagariOcrProgressDao().updateProcessingStatus(true)
+                            devanagariOcrManager.startContinuousProcessing(batchSize = 50)
+                        } else if (devanagariProgress.isProcessing) {
+                            Log.d(TAG, "Devanagari OCR processing already in progress")
+                        } else if (devanagariProgress.isPaused) {
+                            Log.d(TAG, "Devanagari OCR processing is paused")
+                        } else {
+                            Log.d(TAG, "Devanagari OCR processing appears to be complete")
+                        }
+                    }
+                }
+
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to ensure OCR system initialization", e)
             }

@@ -238,6 +238,36 @@ class DevanagariOcrManager(
     }
 
     /**
+     * Check if monitoring should be active and start if needed
+     */
+    suspend fun ensureProgressMonitoring() {
+        val progress = database.devanagariOcrProgressDao().getProgress()
+        Log.d(TAG, "Checking Devanagari progress monitoring: progress=$progress, job=${progressMonitorJob != null}")
+
+        if (progress != null && (progress.isProcessing || progress.isPaused)) {
+            // Force refresh the progress data to ensure accurate display
+            val totalImages = getTotalImageCount()
+            val totalProcessedImages = database.devanagariOcrTextDao().getAllProcessedMediaIds().size
+
+            Log.d(TAG, "Refreshing Devanagari progress data: $totalProcessedImages/$totalImages (stored: ${progress.processedImages}/${progress.totalImages})")
+
+            // Update database with current counts
+            database.devanagariOcrProgressDao().updateTotalCount(totalImages)
+            database.devanagariOcrProgressDao().updateProcessedCount(totalProcessedImages)
+
+            // Start monitoring if not already active
+            if (progressMonitorJob == null || progressMonitorJob?.isActive != true) {
+                Log.d(TAG, "Starting Devanagari progress monitoring...")
+                startProgressMonitoring()
+            } else {
+                Log.d(TAG, "Devanagari progress monitoring already active")
+            }
+        } else {
+            Log.d(TAG, "No active Devanagari OCR processing, monitoring not needed")
+        }
+    }
+
+    /**
      * Start real-time progress monitoring
      */
     private fun startProgressMonitoring() {

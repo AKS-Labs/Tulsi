@@ -143,44 +143,75 @@ fun OcrLanguageModelsPage(
                 }
             }
 
-            // Progress Bar for Active Devanagari OCR Processing (positioned at top for visibility)
-            // Only show when Devanagari OCR is enabled AND actively processing
+            // Progress Bars for Active OCR Processing (positioned at top for visibility)
+
+            // Check for active OCR systems
             val isDevanagariEnabledAndActive = devanagariOcrEnabled &&
                 (devanagariOcrProgress?.isProcessing == true || devanagariOcrProgress?.isPaused == true)
+            val isLatinEnabledAndActive = latinOcrEnabled &&
+                (latinOcrProgress?.isProcessing == true || latinOcrProgress?.isPaused == true)
 
             Log.d(TAG, "Progress bar visibility check:")
-            Log.d(TAG, "  Devanagari enabled: $devanagariOcrEnabled")
-            Log.d(TAG, "  Devanagari processing: ${devanagariOcrProgress?.isProcessing}")
-            Log.d(TAG, "  Devanagari paused: ${devanagariOcrProgress?.isPaused}")
-            Log.d(TAG, "  Show progress bar: $isDevanagariEnabledAndActive")
+            Log.d(TAG, "  Latin enabled: $latinOcrEnabled, active: $isLatinEnabledAndActive")
+            Log.d(TAG, "  Devanagari enabled: $devanagariOcrEnabled, active: $isDevanagariEnabledAndActive")
 
+            // Show Devanagari OCR progress bar (non-dismissible)
             if (isDevanagariEnabledAndActive && devanagariOcrProgress != null) {
                 Log.d(TAG, "🟦 Showing Devanagari OCR progress: ${devanagariOcrProgress?.processedImages}/${devanagariOcrProgress?.totalImages}")
-                val activeProgress = devanagariOcrProgress?.toOcrProgressEntity()
+                val devanagariActiveProgress = devanagariOcrProgress?.toOcrProgressEntity()
 
-                if (activeProgress != null) {
+                if (devanagariActiveProgress != null) {
                     OcrProgressBar(
-                        progress = activeProgress,
+                        progress = devanagariActiveProgress,
+                        isVisible = true,
+                        showDismissButton = false, // Hide dismiss button for Devanagari OCR in settings
+                        horizontalPadding = 0.dp, // Use 0dp since page already has 16dp padding
+                        onDismiss = {
+                            // This won't be called since dismiss button is hidden
+                            Log.d(TAG, "Devanagari OCR progress bar dismiss ignored in settings page")
+                        },
+                        onPauseResume = {
+                            scope.launch {
+                                if (devanagariActiveProgress?.isPaused == true) {
+                                    Log.d(TAG, "Resuming Devanagari OCR processing")
+                                    devanagariOcrManager.resumeProcessing()
+                                } else {
+                                    Log.d(TAG, "Pausing Devanagari OCR processing")
+                                    devanagariOcrManager.pauseProcessing()
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+
+            // Show Latin OCR progress bar (dismissible at all times)
+            if (isLatinEnabledAndActive && latinOcrProgress != null) {
+                Log.d(TAG, "🟨 Showing Latin OCR progress: ${latinOcrProgress?.processedImages}/${latinOcrProgress?.totalImages}")
+
+                OcrProgressBar(
+                    progress = latinOcrProgress,
                     isVisible = true,
-                    showDismissButton = false, // Hide dismiss button for Devanagari OCR in settings
+                    showDismissButton = true, // Show dismiss button for Latin OCR (dismissible at all times)
                     horizontalPadding = 0.dp, // Use 0dp since page already has 16dp padding
                     onDismiss = {
-                        // This won't be called since dismiss button is hidden
-                        Log.d(TAG, "Devanagari OCR progress bar dismiss ignored in settings page")
+                        Log.d(TAG, "Latin OCR progress bar dismissed in settings page")
+                        scope.launch {
+                            latinOcrManager.dismissProgressBar()
+                        }
                     },
                     onPauseResume = {
                         scope.launch {
-                            if (activeProgress?.isPaused == true) {
-                                Log.d(TAG, "Resuming Devanagari OCR processing")
-                                devanagariOcrManager.resumeProcessing()
+                            if (latinOcrProgress?.isPaused == true) {
+                                Log.d(TAG, "Resuming Latin OCR processing")
+                                latinOcrManager.resumeProcessing()
                             } else {
-                                Log.d(TAG, "Pausing Devanagari OCR processing")
-                                devanagariOcrManager.pauseProcessing()
+                                Log.d(TAG, "Pausing Latin OCR processing")
+                                latinOcrManager.pauseProcessing()
                             }
                         }
                     }
                 )
-                }
             }
 
             // Latin OCR Settings
