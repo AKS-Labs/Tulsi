@@ -29,13 +29,30 @@ class DevanagariOcrNotificationReceiver : BroadcastReceiver() {
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        Log.d(TAG, "Received action: ${intent.action}")
+        Log.d(TAG, "🔔 === DEVANAGARI OCR NOTIFICATION ACTION RECEIVED ===")
+        Log.d(TAG, "Action: ${intent.action}")
+        Log.d(TAG, "Context: ${context.javaClass.simpleName}")
 
         when (intent.action) {
-            ACTION_PAUSE -> handlePause(context)
-            ACTION_RESUME -> handleResume(context)
-            ACTION_CANCEL -> handleCancel(context)
-            ACTION_VIEW_PROGRESS -> handleViewProgress(context)
+            ACTION_PAUSE -> {
+                Log.d(TAG, "📴 Handling PAUSE action")
+                handlePause(context)
+            }
+            ACTION_RESUME -> {
+                Log.d(TAG, "▶️ Handling RESUME action")
+                handleResume(context)
+            }
+            ACTION_CANCEL -> {
+                Log.d(TAG, "❌ Handling CANCEL action")
+                handleCancel(context)
+            }
+            ACTION_VIEW_PROGRESS -> {
+                Log.d(TAG, "👁️ Handling VIEW_PROGRESS action")
+                handleViewProgress(context)
+            }
+            else -> {
+                Log.w(TAG, "⚠️ Unknown action received: ${intent.action}")
+            }
         }
     }
 
@@ -43,16 +60,19 @@ class DevanagariOcrNotificationReceiver : BroadcastReceiver() {
      * Handle pause action
      */
     private fun handlePause(context: Context) {
-        Log.d(TAG, "Handling Devanagari OCR pause action")
-        
+        Log.d(TAG, "📴 === HANDLING DEVANAGARI OCR PAUSE ACTION ===")
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                Log.d(TAG, "Creating database instance...")
                 val database = getDatabase(context)
+                Log.d(TAG, "Creating DevanagariOcrManager...")
                 val manager = DevanagariOcrManager(context, database)
+                Log.d(TAG, "Calling pauseProcessing()...")
                 manager.pauseProcessing()
-                Log.d(TAG, "Devanagari OCR processing paused successfully")
+                Log.d(TAG, "✅ Devanagari OCR processing paused successfully")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to pause Devanagari OCR processing", e)
+                Log.e(TAG, "❌ Failed to pause Devanagari OCR processing", e)
             }
         }
     }
@@ -61,16 +81,19 @@ class DevanagariOcrNotificationReceiver : BroadcastReceiver() {
      * Handle resume action
      */
     private fun handleResume(context: Context) {
-        Log.d(TAG, "Handling Devanagari OCR resume action")
-        
+        Log.d(TAG, "▶️ === HANDLING DEVANAGARI OCR RESUME ACTION ===")
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                Log.d(TAG, "Creating database instance...")
                 val database = getDatabase(context)
+                Log.d(TAG, "Creating DevanagariOcrManager...")
                 val manager = DevanagariOcrManager(context, database)
+                Log.d(TAG, "Calling resumeProcessing()...")
                 manager.resumeProcessing()
-                Log.d(TAG, "Devanagari OCR processing resumed successfully")
+                Log.d(TAG, "✅ Devanagari OCR processing resumed successfully")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to resume Devanagari OCR processing", e)
+                Log.e(TAG, "❌ Failed to resume Devanagari OCR processing", e)
             }
         }
     }

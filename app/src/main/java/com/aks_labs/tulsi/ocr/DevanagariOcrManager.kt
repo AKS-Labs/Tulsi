@@ -446,6 +446,19 @@ class DevanagariOcrManager(
     }
 
     /**
+     * Mark progress bar as dismissed and show notification
+     */
+    suspend fun dismissProgressBar() {
+        Log.d(TAG, "Devanagari progress bar dismissed - showing notification")
+        database.devanagariOcrProgressDao().updateDismissedStatus(true)
+
+        val progress = database.devanagariOcrProgressDao().getProgress()
+        if (progress != null && (progress.isProcessing || progress.isPaused)) {
+            notificationManager.updateProgress(progress.copy(progressDismissed = true))
+        }
+    }
+
+    /**
      * Verify that database tables exist and are accessible
      */
     private suspend fun verifyDatabaseTables() {

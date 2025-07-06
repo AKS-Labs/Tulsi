@@ -20,6 +20,8 @@ import com.aks_labs.tulsi.MainActivity.Companion.mainViewModel
 import com.aks_labs.tulsi.R
 import com.aks_labs.tulsi.datastore.Ocr
 import com.aks_labs.tulsi.compose.PreferencesSwitchRow
+import com.aks_labs.tulsi.compose.components.OcrProgressBar
+import com.aks_labs.tulsi.database.entities.OcrProgressEntity
 import com.aks_labs.tulsi.database.MediaDatabase
 import com.aks_labs.tulsi.database.Migration3to4
 import com.aks_labs.tulsi.database.Migration4to5
@@ -31,6 +33,25 @@ import com.aks_labs.tulsi.ocr.OcrManager
 import kotlinx.coroutines.launch
 
 private const val TAG = "OcrLanguageModelsPage"
+
+/**
+ * Convert DevanagariOcrProgressEntity to OcrProgressEntity for UI compatibility
+ */
+private fun com.aks_labs.tulsi.database.entities.DevanagariOcrProgressEntity.toOcrProgressEntity(): OcrProgressEntity {
+    return OcrProgressEntity(
+        id = this.id,
+        totalImages = this.totalImages,
+        processedImages = this.processedImages,
+        failedImages = this.failedImages,
+        isProcessing = this.isProcessing,
+        isPaused = this.isPaused,
+        lastUpdated = this.lastUpdated,
+        estimatedCompletionTime = this.estimatedCompletionTime,
+        averageProcessingTimeMs = this.averageProcessingTimeMs,
+        currentBatchId = this.currentBatchId,
+        progressDismissed = this.progressDismissed
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,6 +87,15 @@ fun OcrLanguageModelsPage(
     // OCR managers
     val latinOcrManager = remember { OcrManager(context, database) }
     val devanagariOcrManager = remember { DevanagariOcrManager(context, database) }
+
+    // Progress monitoring state
+    val latinOcrProgress by latinOcrManager.getProgressFlow().collectAsStateWithLifecycle(initialValue = null)
+    val devanagariOcrProgress by devanagariOcrManager.getProgressFlow().collectAsStateWithLifecycle(initialValue = null)
+
+    // Progress bar visibility state
+    var progressBarDismissed by remember { mutableStateOf(false) }
+
+    Log.d(TAG, "Progress state - Latin: $latinOcrProgress, Devanagari: $devanagariOcrProgress")
 
     Scaffold(
         topBar = {
@@ -168,7 +198,58 @@ fun OcrLanguageModelsPage(
                     }
                 }
             )
-            
+
+            // Progress Bar for Active OCR Processing
+            val activeProgress: OcrProgressEntity? = when {
+                latinOcrProgress?.isProcessing == true || latinOcrProgress?.isPaused == true -> latinOcrProgress
+                devanagariOcrProgress?.isProcessing == true || devanagariOcrProgress?.isPaused == true -> devanagariOcrProgress?.toOcrProgressEntity()
+                else -> null
+            }
+
+            val isDevanagariActive = devanagariOcrProgress?.isProcessing == true || devanagariOcrProgress?.isPaused == true
+
+            if (activeProgress != null && !progressBarDismissed) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OcrProgressBar(
+                    progress = activeProgress,
+                    isVisible = true,
+                    onDismiss = {
+                        progressBarDismissed = true
+                        scope.launch {
+                            if (isDevanagariActive) {
+                                devanagariOcrManager.dismissProgressBar()
+                            } else {
+                                latinOcrManager.dismissProgressBar()
+                            }
+                        }
+                    },
+                    onPauseResume = {
+                        scope.launch {
+                            if (isDevanagariActive) {
+                                if (activeProgress?.isPaused == true) {
+                                    Log.d(TAG, "Resuming Devanagari OCR processing")
+                                    devanagariOcrManager.resumeProcessing()
+                                } else {
+                                    Log.d(TAG, "Pausing Devanagari OCR processing")
+                                    devanagariOcrManager.pauseProcessing()
+                                }
+                            } else {
+                                if (activeProgress?.isPaused == true) {
+                                    Log.d(TAG, "Resuming Latin OCR processing")
+                                    latinOcrManager.resumeProcessing()
+                                } else {
+                                    Log.d(TAG, "Pausing Latin OCR processing")
+                                    latinOcrManager.pauseProcessing()
+                                }
+                            }
+                        }
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             // Processing Status Information
             if (latinOcrEnabled || devanagariOcrEnabled) {
                 Card(

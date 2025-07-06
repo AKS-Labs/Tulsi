@@ -107,5 +107,18 @@
                 <action android:name="com.aks_labs.tulsi.OCR_VIEW_PROGRESS" />
             </intent-filter>
         </receiver>
+
+        <!-- Devanagari OCR Notification Receiver -->
+        <receiver
+            android:name=".ocr.DevanagariOcrNotificationReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.aks_labs.tulsi.ocr.devanagari.PAUSE" />
+                <action android:name="com.aks_labs.tulsi.ocr.devanagari.RESUME" />
+                <action android:name="com.aks_labs.tulsi.ocr.devanagari.CANCEL" />
+                <action android:name="com.aks_labs.tulsi.ocr.devanagari.VIEW_PROGRESS" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
