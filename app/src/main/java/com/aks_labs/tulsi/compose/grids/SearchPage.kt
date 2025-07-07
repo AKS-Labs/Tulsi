@@ -68,6 +68,9 @@ import com.aks_labs.tulsi.compose.SearchTextField
 import com.aks_labs.tulsi.compose.ViewProperties
 import com.aks_labs.tulsi.compose.components.OcrProgressBar
 import com.aks_labs.tulsi.compose.components.SearchBar
+import com.aks_labs.tulsi.compose.utils.DynamicStatusBarController
+import com.aks_labs.tulsi.compose.utils.ScrollVisibilityState
+import com.aks_labs.tulsi.compose.utils.handleScrollVisibilityChange
 import com.aks_labs.tulsi.database.MediaDatabase
 import com.aks_labs.tulsi.database.Migration3to4
 import com.aks_labs.tulsi.database.Migration4to5
@@ -118,13 +121,16 @@ fun SearchPage(
     val gridState = rememberLazyGridState()
     val navController = LocalNavController.current
 
-    // Auto-hide search bar on scroll
-    var isSearchBarVisible by remember { mutableStateOf(true) }
+    // Auto-hide search bar and status bar on scroll
+    var scrollVisibilityState by remember { mutableStateOf(ScrollVisibilityState()) }
     var lastScrollIndex by remember { mutableStateOf(0) }
     var showFilterDropdown by remember { mutableStateOf(false) }
 
     // Track immersive mode for proper window insets handling
-    val isImmersiveMode = !isSearchBarVisible
+    val isImmersiveMode = !scrollVisibilityState.isAppBarVisible
+
+    // Dynamic status bar controller
+    DynamicStatusBarController(isVisible = scrollVisibilityState.isStatusBarVisible)
 
     // Auto-collapse filter chips after 10 seconds of inactivity
     LaunchedEffect(showFilterDropdown) {
@@ -138,21 +144,20 @@ fun SearchPage(
     LaunchedEffect(gridState.firstVisibleItemIndex) {
         val currentIndex = gridState.firstVisibleItemIndex
 
-        // Show search bar when at top or scrolling up
-        if (currentIndex == 0) {
-            isSearchBarVisible = true
-            onTopBarVisibilityChange(true) // Show top app bar
-        } else if (currentIndex < lastScrollIndex) {
-            // Scrolling up - show search bar but hide filter chips
-            isSearchBarVisible = true
-            onTopBarVisibilityChange(true) // Show top app bar
-            showFilterDropdown = false // Hide filter chips when search bar reappears
-        } else if (currentIndex > lastScrollIndex + 2) {
-            // Scrolling down significantly
-            isSearchBarVisible = false
-            onTopBarVisibilityChange(false) // Hide top app bar
-            showFilterDropdown = false // Hide filter chips when scrolling down
-        }
+        // Handle scroll visibility changes for both app bar and status bar
+        handleScrollVisibilityChange(
+            currentIndex = currentIndex,
+            lastScrollIndex = lastScrollIndex,
+            onVisibilityChange = { newState ->
+                scrollVisibilityState = newState
+                onTopBarVisibilityChange(newState.isAppBarVisible)
+
+                // Hide filter chips when scrolling or when bars are hidden
+                if (!newState.isAppBarVisible || currentIndex != lastScrollIndex) {
+                    showFilterDropdown = false
+                }
+            }
+        )
 
         lastScrollIndex = currentIndex
     }
@@ -262,7 +267,7 @@ fun SearchPage(
         ) {
             // Animated search bar container - smooth fade animations
             AnimatedVisibility(
-                visible = isSearchBarVisible,
+                visible = scrollVisibilityState.isAppBarVisible,
                 enter = fadeIn(animationSpec = tween(400)),
                 exit = fadeOut(animationSpec = tween(400))
             ) {

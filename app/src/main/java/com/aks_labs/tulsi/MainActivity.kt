@@ -110,6 +110,9 @@ import com.aks_labs.tulsi.compose.app_bars.MainAppSelectingBottomBar
 import com.aks_labs.tulsi.compose.app_bars.MainAppTopBar
 import com.aks_labs.tulsi.compose.app_bars.getAppBarContentTransition
 import com.aks_labs.tulsi.compose.app_bars.setBarVisibility
+import com.aks_labs.tulsi.compose.utils.DynamicStatusBarController
+import com.aks_labs.tulsi.compose.utils.ScrollVisibilityState
+import com.aks_labs.tulsi.compose.utils.handleScrollVisibilityChange
 import com.aks_labs.tulsi.compose.dialogs.MainAppDialog
 import com.aks_labs.tulsi.compose.grids.AlbumsGridView
 import com.aks_labs.tulsi.compose.grids.FavouritesGridView
@@ -957,6 +960,14 @@ class MainActivity : ComponentActivity() {
         val groupedMedia = remember { mutableStateOf(mediaStoreData.value) }
         var isTopBarVisible by remember { mutableStateOf(true) }
 
+        // Scroll visibility state for photos page
+        var photosScrollVisibilityState by remember { mutableStateOf(ScrollVisibilityState()) }
+        var photosLastScrollIndex by remember { mutableStateOf(0) }
+
+        // Scroll visibility state for custom album pages
+        var albumScrollVisibilityState by remember { mutableStateOf(ScrollVisibilityState()) }
+        var albumLastScrollIndex by remember { mutableStateOf(0) }
+
         // Create scroll behavior for smooth top app bar animations
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
@@ -981,6 +992,25 @@ class MainActivity : ComponentActivity() {
                     SystemBarStyle.dark(backgroundColor)
                 }
             )
+        }
+
+        // Dynamic status bar controller for photos and album pages
+        when (currentView.value) {
+            DefaultTabs.TabTypes.Gallery -> {
+                DynamicStatusBarController(isVisible = photosScrollVisibilityState.isStatusBarVisible)
+            }
+            DefaultTabs.TabTypes.search -> {
+                // Search page handles its own status bar controller
+            }
+            else -> {
+                // For custom album tabs that use PhotoGrid
+                if (currentView.value.albumPaths.isNotEmpty()) {
+                    DynamicStatusBarController(isVisible = albumScrollVisibilityState.isStatusBarVisible)
+                } else {
+                    // For other tabs, ensure status bar is visible
+                    DynamicStatusBarController(isVisible = true)
+                }
+            }
         }
 
         // faster loading if no custom tabs are present
@@ -1087,6 +1117,23 @@ class MainActivity : ComponentActivity() {
                                     groupedMedia.value = mediaStoreData.value
                                 }
 
+                                // Monitor scroll state for custom album page auto-hide functionality
+                                LaunchedEffect(sharedGridState.firstVisibleItemIndex) {
+                                    val currentIndex = sharedGridState.firstVisibleItemIndex
+
+                                    // Handle scroll visibility changes for both app bar and status bar
+                                    handleScrollVisibilityChange(
+                                        currentIndex = currentIndex,
+                                        lastScrollIndex = albumLastScrollIndex,
+                                        onVisibilityChange = { newState ->
+                                            albumScrollVisibilityState = newState
+                                            isTopBarVisible = newState.isAppBarVisible
+                                        }
+                                    )
+
+                                    albumLastScrollIndex = currentIndex
+                                }
+
                                 PhotoGrid(
                                     groupedMedia = groupedMedia,
                                     albumInfo = AlbumInfo(
@@ -1119,6 +1166,23 @@ class MainActivity : ComponentActivity() {
 
                                 LaunchedEffect(mediaStoreData.value) {
                                     groupedMedia.value = mediaStoreData.value
+                                }
+
+                                // Monitor scroll state for photos page auto-hide functionality
+                                LaunchedEffect(sharedGridState.firstVisibleItemIndex) {
+                                    val currentIndex = sharedGridState.firstVisibleItemIndex
+
+                                    // Handle scroll visibility changes for both app bar and status bar
+                                    handleScrollVisibilityChange(
+                                        currentIndex = currentIndex,
+                                        lastScrollIndex = photosLastScrollIndex,
+                                        onVisibilityChange = { newState ->
+                                            photosScrollVisibilityState = newState
+                                            isTopBarVisible = newState.isAppBarVisible
+                                        }
+                                    )
+
+                                    photosLastScrollIndex = currentIndex
                                 }
 
                                 PhotoGrid(
