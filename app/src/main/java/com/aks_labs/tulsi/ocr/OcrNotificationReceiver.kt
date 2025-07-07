@@ -104,12 +104,12 @@ class OcrNotificationReceiver : BroadcastReceiver() {
     }
     
     /**
-     * Open app to search screen
+     * Open app to OCR Language Models settings page
      */
     private fun openAppToSearchScreen(context: Context) {
         val intent = Intent(context, com.aks_labs.tulsi.MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("open_search", true)
+            putExtra("navigate_to_ocr_settings", true)
         }
         context.startActivity(intent)
     }

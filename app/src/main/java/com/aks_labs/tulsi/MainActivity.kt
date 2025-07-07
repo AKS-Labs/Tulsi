@@ -353,6 +353,15 @@ class MainActivity : ComponentActivity() {
             ensureOcrSystemInitialized()
         }
 
+        // Handle notification navigation intents
+        LaunchedEffect(Unit) {
+            val navigateToOcrSettings = intent?.getBooleanExtra("navigate_to_ocr_settings", false) ?: false
+            if (navigateToOcrSettings) {
+                Log.d(TAG, "Navigation intent received - navigating to OCR Language Models page")
+                navControllerLocal.navigate("ocr_language_models")
+            }
+        }
+
         val selectedItemsList = remember { SnapshotStateList<MediaStoreData>() }
 
         val logPath = "${context.appStorageDir}/log.txt"
@@ -1294,6 +1303,10 @@ class MainActivity : ComponentActivity() {
 
                 // Ensure progress monitoring is active
                 ocrManager.ensureProgressMonitoring()
+
+                // Reset dismissed state on app restart to allow progress monitoring
+                Log.d(TAG, "Resetting Latin OCR progress bar dismissed state on app restart")
+                ocrManager.showProgressBar()
 
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to initialize OCR system", e)

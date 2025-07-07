@@ -61,7 +61,7 @@ class OcrNotificationManager(private val context: Context) {
     fun showProcessingNotification(progress: OcrProgressEntity) {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("open_search", true)
+            putExtra("navigate_to_ocr_settings", true)
         }
         
         val pendingIntent = PendingIntent.getActivity(
@@ -135,7 +135,7 @@ class OcrNotificationManager(private val context: Context) {
     fun showCompletionNotification(totalProcessed: Int) {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("open_search", true)
+            putExtra("navigate_to_ocr_settings", true)
         }
         
         val pendingIntent = PendingIntent.getActivity(

@@ -166,6 +166,7 @@ fun OcrLanguageModelsPage(
                         isVisible = true,
                         showDismissButton = false, // Hide dismiss button for Devanagari OCR in settings
                         horizontalPadding = 0.dp, // Use 0dp since page already has 16dp padding
+                        title = "Devanagari OCR Progress: ${devanagariActiveProgress.processedImages}/${devanagariActiveProgress.totalImages} images",
                         onDismiss = {
                             // This won't be called since dismiss button is hidden
                             Log.d(TAG, "Devanagari OCR progress bar dismiss ignored in settings page")
@@ -192,13 +193,12 @@ fun OcrLanguageModelsPage(
                 OcrProgressBar(
                     progress = latinOcrProgress,
                     isVisible = true,
-                    showDismissButton = true, // Show dismiss button for Latin OCR (dismissible at all times)
+                    showDismissButton = false, // Hide dismiss button for Latin OCR in settings page for consistency
                     horizontalPadding = 0.dp, // Use 0dp since page already has 16dp padding
+                    title = "Latin OCR Progress: ${latinOcrProgress?.processedImages}/${latinOcrProgress?.totalImages} images",
                     onDismiss = {
-                        Log.d(TAG, "Latin OCR progress bar dismissed in settings page")
-                        scope.launch {
-                            latinOcrManager.dismissProgressBar()
-                        }
+                        // This won't be called since dismiss button is hidden
+                        Log.d(TAG, "Latin OCR progress bar dismiss ignored in settings page")
                     },
                     onPauseResume = {
                         scope.launch {

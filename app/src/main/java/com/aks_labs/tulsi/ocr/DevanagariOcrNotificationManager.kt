@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.aks_labs.tulsi.MainActivity
 import com.aks_labs.tulsi.R
 import com.aks_labs.tulsi.database.entities.DevanagariOcrProgressEntity
 
@@ -98,11 +99,24 @@ class DevanagariOcrNotificationManager(private val context: Context) {
         Log.d(TAG, "  Text: $text")
         Log.d(TAG, "  Progress: $progressPercentage%")
 
+        // Create main notification tap intent to navigate to OCR Language Models page
+        val mainIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("navigate_to_ocr_settings", true)
+        }
+        val mainPendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            mainIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         Log.d(TAG, "🔧 Building notification with NotificationCompat.Builder...")
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ocr)
             .setContentTitle(title)
             .setContentText(text)
+            .setContentIntent(mainPendingIntent) // Add main tap action
             .setProgress(100, progressPercentage, false)
             .setOngoing(progress.isProcessing)
             .setAutoCancel(!progress.isProcessing)

@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.room.Room
+import com.aks_labs.tulsi.MainActivity
 import com.aks_labs.tulsi.database.MediaDatabase
 import com.aks_labs.tulsi.database.Migration3to4
 import com.aks_labs.tulsi.database.Migration4to5
@@ -130,15 +131,14 @@ class DevanagariOcrNotificationReceiver : BroadcastReceiver() {
      */
     private fun handleViewProgress(context: Context) {
         Log.d(TAG, "Handling Devanagari OCR view progress action")
-        
+
         try {
-            // Launch main activity with intent to show progress
-            val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-            launchIntent?.apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                putExtra("show_devanagari_ocr_progress", true)
-                context.startActivity(this)
+            // Launch main activity with intent to navigate to OCR Language Models page
+            val intent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("navigate_to_ocr_settings", true)
             }
+            context.startActivity(intent)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to launch app for Devanagari OCR progress view", e)
         }

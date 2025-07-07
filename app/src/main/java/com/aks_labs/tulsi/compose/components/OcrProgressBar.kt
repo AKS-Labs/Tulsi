@@ -53,7 +53,8 @@ fun OcrProgressBar(
     onPauseResume: () -> Unit,
     modifier: Modifier = Modifier,
     showDismissButton: Boolean = true,
-    horizontalPadding: Dp = 12.dp
+    horizontalPadding: Dp = 12.dp,
+    title: String? = null
 ) {
     AnimatedVisibility(
         visible = isVisible && progress != null && !progress.isComplete,
@@ -83,7 +84,7 @@ fun OcrProgressBar(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Getting Search-Ready...   ${progressData.processedImages}/${progressData.totalImages} images",
+                            text = title ?: "Getting Search-Ready...   ${progressData.processedImages}/${progressData.totalImages} images",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
