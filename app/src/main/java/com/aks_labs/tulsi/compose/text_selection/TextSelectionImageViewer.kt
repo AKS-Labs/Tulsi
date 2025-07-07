@@ -41,6 +41,7 @@ import com.bumptech.glide.integration.compose.GlideImage
 import com.aks_labs.tulsi.ocr.SelectableOcrResult
 import com.aks_labs.tulsi.ocr.SelectableTextBlock
 import com.aks_labs.tulsi.ocr.EnhancedOcrExtractor
+import com.aks_labs.tulsi.compose.utils.rememberSystemUIController
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
@@ -78,6 +79,7 @@ fun TextSelectionImageViewer(
     val density = LocalDensity.current
     val view = LocalView.current
     val window = (view.context as ComponentActivity).window
+    val systemUIController = rememberSystemUIController()
     
     // Selection state
     var selectedText by remember { mutableStateOf("") }
@@ -141,6 +143,17 @@ fun TextSelectionImageViewer(
     // Enable edge-to-edge display
     LaunchedEffect(Unit) {
         WindowCompat.setDecorFitsSystemWindows(window, false)
+    }
+
+    // Hide status bar when entering text selection mode and restore when exiting
+    DisposableEffect(Unit) {
+        // Hide status bar immediately when entering text selection mode
+        systemUIController.hideStatusBar()
+
+        // Cleanup: restore status bar when exiting text selection mode
+        onDispose {
+            systemUIController.showStatusBar()
+        }
     }
     
     Box(
