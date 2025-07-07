@@ -7,6 +7,7 @@ import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
@@ -64,6 +65,7 @@ class OcrManager(
             .setConstraints(constraints)
             .addTag("ocr_single")
             .addTag("media_${mediaItem.id}")
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
 
         workManager.enqueueUniqueWork(
@@ -96,6 +98,7 @@ class OcrManager(
             .setConstraints(constraints)
             .addTag("ocr_single")
             .addTag("media_${imageDetails.id}")
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
 
         workManager.enqueueUniqueWork(
@@ -112,6 +115,9 @@ class OcrManager(
      */
     fun processBatch(batchSize: Int = OcrIndexingWorker.DEFAULT_BATCH_SIZE): UUID {
         Log.d(TAG, "Starting batch OCR processing with batch size: $batchSize")
+
+        // Start foreground service to ensure processing continues in background
+        OcrForegroundService.startLatinOcr(context)
 
         // Update processing status
         CoroutineScope(Dispatchers.IO).launch {
@@ -135,6 +141,7 @@ class OcrManager(
             .setInputData(inputData)
             .setConstraints(constraints)
             .addTag("ocr_batch")
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
 
         workManager.enqueueUniqueWork(
@@ -155,6 +162,9 @@ class OcrManager(
      */
     fun startContinuousProcessing(batchSize: Int = 50): UUID {
         Log.d(TAG, "Starting continuous OCR processing with batch size: $batchSize")
+
+        // Start foreground service to ensure processing continues in background
+        OcrForegroundService.startLatinOcr(context)
 
         // Update processing status and ensure not paused
         CoroutineScope(Dispatchers.IO).launch {
@@ -181,6 +191,7 @@ class OcrManager(
             .setConstraints(constraints)
             .addTag("ocr_continuous")
             .addTag("ocr_batch")
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
 
         workManager.enqueueUniqueWork(
@@ -399,8 +410,21 @@ class OcrManager(
      * Cancel all OCR work
      */
     fun cancelAllOcr() {
+        // Stop foreground service for Latin OCR
+        OcrForegroundService.stopLatinOcr(context)
+
         workManager.cancelAllWorkByTag("ocr_single")
         workManager.cancelAllWorkByTag("ocr_batch")
+        workManager.cancelAllWorkByTag("ocr_continuous")
+
+        // Cancel progress monitoring
+        progressMonitorJob?.cancel()
+        progressMonitorJob = null
+
+        // Hide notification
+        notificationManager.hideNotification()
+
+        Log.d(TAG, "All Latin OCR processing cancelled")
     }
     
     /**

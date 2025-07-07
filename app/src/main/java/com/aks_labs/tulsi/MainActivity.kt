@@ -358,7 +358,7 @@ class MainActivity : ComponentActivity() {
             val navigateToOcrSettings = intent?.getBooleanExtra("navigate_to_ocr_settings", false) ?: false
             if (navigateToOcrSettings) {
                 Log.d(TAG, "Navigation intent received - navigating to OCR Language Models page")
-                navControllerLocal.navigate("ocr_language_models")
+                navControllerLocal.navigate(MultiScreenViewType.OcrLanguageModelsView.name)
             }
         }
 

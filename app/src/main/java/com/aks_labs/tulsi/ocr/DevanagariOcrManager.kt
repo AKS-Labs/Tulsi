@@ -7,6 +7,7 @@ import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
@@ -65,6 +66,7 @@ class DevanagariOcrManager(
             .setConstraints(constraints)
             .addTag("devanagari_ocr_single")
             .addTag("devanagari_media_${mediaItem.id}")
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
 
         workManager.enqueueUniqueWork(
@@ -97,6 +99,7 @@ class DevanagariOcrManager(
             .setConstraints(constraints)
             .addTag("devanagari_ocr_single")
             .addTag("devanagari_media_${imageDetails.id}")
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
 
         workManager.enqueueUniqueWork(
@@ -113,6 +116,9 @@ class DevanagariOcrManager(
      */
     fun processBatch(batchSize: Int = DevanagariOcrIndexingWorker.DEFAULT_BATCH_SIZE): UUID {
         Log.d(TAG, "Starting Devanagari batch OCR processing with batch size: $batchSize")
+
+        // Start foreground service to ensure processing continues in background
+        OcrForegroundService.startDevanagariOcr(context)
 
         // Update processing status
         CoroutineScope(Dispatchers.IO).launch {
@@ -136,6 +142,7 @@ class DevanagariOcrManager(
             .setInputData(inputData)
             .setConstraints(constraints)
             .addTag("devanagari_ocr_batch")
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
 
         workManager.enqueueUniqueWork(
@@ -157,6 +164,9 @@ class DevanagariOcrManager(
     fun startContinuousProcessing(batchSize: Int = 50): UUID {
         Log.d(TAG, "=== STARTING CONTINUOUS DEVANAGARI OCR PROCESSING ===")
         Log.d(TAG, "Batch size: $batchSize")
+
+        // Start foreground service to ensure processing continues in background
+        OcrForegroundService.startDevanagariOcr(context)
 
         // Update processing status and ensure not paused
         CoroutineScope(Dispatchers.IO).launch {
@@ -198,6 +208,7 @@ class DevanagariOcrManager(
             .setConstraints(constraints)
             .addTag("devanagari_ocr_continuous")
             .addTag("devanagari_ocr_batch")
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
         Log.d(TAG, "Work request created with ID: ${workRequest.id}")
 
@@ -439,8 +450,21 @@ class DevanagariOcrManager(
      * Cancel all OCR work
      */
     fun cancelAllOcr() {
+        // Stop foreground service for Devanagari OCR
+        OcrForegroundService.stopDevanagariOcr(context)
+
         workManager.cancelAllWorkByTag("devanagari_ocr_single")
         workManager.cancelAllWorkByTag("devanagari_ocr_batch")
+        workManager.cancelAllWorkByTag("devanagari_ocr_continuous")
+
+        // Cancel progress monitoring
+        progressMonitorJob?.cancel()
+        progressMonitorJob = null
+
+        // Hide notification
+        notificationManager.hideNotification()
+
+        Log.d(TAG, "All Devanagari OCR processing cancelled")
     }
 
     /**
