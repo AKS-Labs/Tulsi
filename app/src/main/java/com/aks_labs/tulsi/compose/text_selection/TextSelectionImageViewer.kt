@@ -210,9 +210,10 @@ fun TextSelectionImageViewer(
                     isReprocessing = true
                 },
                 modifier = Modifier
+                    .height(48.dp)
                     .background(
                         color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(32.dp)
                     )
             )
 

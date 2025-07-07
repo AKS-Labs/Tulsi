@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.aks_labs.tulsi.ocr.MultiLanguageOcrExtractor
 
@@ -152,7 +153,7 @@ fun LanguageSelector(
     OutlinedButton(
         onClick = { showDialog = true },
         modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+        contentPadding = PaddingValues(horizontal = 21.dp, vertical = 8.dp)
     ) {
         Text(
             text = when (currentLanguage) {
@@ -165,7 +166,8 @@ fun LanguageSelector(
                 // MultiLanguageOcrExtractor.Language.KOREAN -> "한"
             },
             style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            fontSize = 13.sp
         )
     }
     
