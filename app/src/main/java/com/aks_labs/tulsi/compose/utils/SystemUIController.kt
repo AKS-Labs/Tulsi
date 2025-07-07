@@ -180,8 +180,12 @@ fun handleScrollVisibilityChange(
         currentIndex < lastScrollIndex -> {
             onVisibilityChange(ScrollVisibilityState().toNormalMode())
         }
-        // Scrolling down significantly - hide everything
+        // Scrolling down - hide everything (immediate if threshold is 0, otherwise after threshold)
         currentIndex > lastScrollIndex + scrollThreshold -> {
+            onVisibilityChange(ScrollVisibilityState().toImmersiveMode())
+        }
+        // For immediate response (threshold = 0), hide on any downward scroll
+        scrollThreshold == 0 && currentIndex > lastScrollIndex -> {
             onVisibilityChange(ScrollVisibilityState().toImmersiveMode())
         }
         // No significant change - maintain current state

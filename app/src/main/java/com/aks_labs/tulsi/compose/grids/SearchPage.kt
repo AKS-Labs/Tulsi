@@ -260,8 +260,7 @@ fun SearchPage(
 
         Column(
             modifier = Modifier
-                .fillMaxWidth(1f)
-                .background(MaterialTheme.colorScheme.background),
+                .fillMaxWidth(1f),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -493,7 +492,9 @@ fun SearchPage(
 
 
         Box(
-            modifier = Modifier.fillMaxHeight(1f)
+            modifier = Modifier
+                .fillMaxHeight(1f)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             PhotoGrid(
                 groupedMedia = groupedMedia,

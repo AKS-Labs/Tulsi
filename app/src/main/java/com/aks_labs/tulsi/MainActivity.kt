@@ -1122,9 +1122,11 @@ class MainActivity : ComponentActivity() {
                                     val currentIndex = sharedGridState.firstVisibleItemIndex
 
                                     // Handle scroll visibility changes for both app bar and status bar
+                                    // Use immediate response for album pages like Photos screen
                                     handleScrollVisibilityChange(
                                         currentIndex = currentIndex,
                                         lastScrollIndex = albumLastScrollIndex,
+                                        scrollThreshold = 0, // Immediate hiding for album pages
                                         onVisibilityChange = { newState ->
                                             albumScrollVisibilityState = newState
                                             isTopBarVisible = newState.isAppBarVisible
@@ -1173,9 +1175,11 @@ class MainActivity : ComponentActivity() {
                                     val currentIndex = sharedGridState.firstVisibleItemIndex
 
                                     // Handle scroll visibility changes for both app bar and status bar
+                                    // Use immediate response (threshold = 0) for Photos screen since it has no search bar
                                     handleScrollVisibilityChange(
                                         currentIndex = currentIndex,
                                         lastScrollIndex = photosLastScrollIndex,
+                                        scrollThreshold = 0, // Immediate hiding for Photos screen
                                         onVisibilityChange = { newState ->
                                             photosScrollVisibilityState = newState
                                             isTopBarVisible = newState.isAppBarVisible
