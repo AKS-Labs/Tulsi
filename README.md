@@ -38,7 +38,7 @@ One-tap Google Lens integration for object identification, text translation, and
 
 ### 🔍 **AI-Powered Text Search**
 - **Offline OCR Engine** - Find photos by text content using Google ML Kit
-- **Multi-Language Support** - Latin scripts (English, Spanish, French, German, Italian, Portuguese) + Devanagari scripts (Hindi, Marathi, Nepali, Sanskrit)
+- **Multi-Language Support** - Latin scripts (English, Spanish, French, German, Italian, Portuguese+) + Devanagari scripts (Hindi, Marathi, Nepali, Sanskrit+)
 - **Background Processing** - OCR continues with WorkManager even when app is closed
 - **Full-Text Search** - Lightning-fast search through extracted text using SQLite FTS
 - **Real-Time Progress** - Live progress updates with dismissible notifications
@@ -50,13 +50,14 @@ One-tap Google Lens integration for object identification, text translation, and
 - **Multi-Row Intelligence** - Smart selection across text rows following reading order
 - **Context Actions** - Copy, Select All, View All Text, and Web Search
 
-</td>
-<td width="50%">
-
 ### 🎨 **Beautiful Interface**
 - **Dynamic Status Bar** - Automatically hides during photo browsing for immersive experience
 - **Floating Navigation** - Elegant bottom app bar with smooth shrink animations
 - **Material Design 3** - Modern pill-shaped panels with smooth transitions
+
+</td>
+<td width="50%">
+
 - **Intuitive Layout** - Three-column grid with configurable date grouping
 - **Dark/Light Themes** - Adapts to your system preference
 
@@ -107,7 +108,7 @@ One-tap Google Lens integration for object identification, text translation, and
 - **📄 Documents** - Locate receipts, business cards, and extract contact details
 - **🍕 Menus & Signs** - Search restaurant names, translate foreign text
 - **📚 Study Materials** - Find notes, whiteboards, textbooks and copy key information
-- **🌍 Multi-Language** - Supports Latin scripts (English, Spanish, French, German, Italian, Portuguese) and Devanagari scripts (Hindi, Marathi, Nepali, Sanskrit)
+- **🌍 Multi-Language** - Supports 80+ languages including Latin scripts (English, Spanish, French, German, Italian, Portuguese, etc.) and Devanagari scripts (Hindi, Marathi, Nepali, Sanskrit, etc.)
 
 ## 📥 Download Tulsi Gallery
 
@@ -124,7 +125,7 @@ One-tap Google Lens integration for object identification, text translation, and
   </a>
   <a href="https://github.com/AKS-Labs/Tulsi/releases/latest">
     <img alt='Get it on GitHub'
-         src='https://img.shields.io/badge/GitHub-Download%20APK-181717?style=flat-square&logo=github&logoColor=white'
+         src='https://img.shields.io/badge/GitHub-Download%20APK-181717?style=for-the-badge&logo=github&logoColor=white'
          height="80" />
   </a>
 </p>
