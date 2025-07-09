@@ -165,19 +165,22 @@ fun SearchPage(
             }
         )
 
-        // Handle bottom bar scroll visibility for search screen
-        Log.d(TAG, "Search: Calling handleBottomBarScrollVisibilityChange")
-        handleBottomBarScrollVisibilityChange(
-            currentIndex = currentIndex,
-            lastScrollIndex = lastScrollIndex,
-            scrollThreshold = 1, // Slight threshold for search screen to avoid too sensitive hiding
-            onBottomBarVisibilityChange = { visible ->
-                Log.d(TAG, "Search: Bottom bar visibility callback - visible=$visible")
-                onBottomBarVisibilityChange(visible)
-            }
-        )
-
         lastScrollIndex = currentIndex
+    }
+
+    // Monitor scroll state for bottom bar animations (separate from index changes)
+    LaunchedEffect(gridState.isScrollInProgress) {
+        val isScrolling = gridState.isScrollInProgress
+        Log.d(TAG, "Search: Scroll state changed - isScrollInProgress=$isScrolling")
+
+        // Bottom bar logic: hide while scrolling, show when stopped
+        if (isScrolling) {
+            Log.d(TAG, "Search: Scrolling started - hiding bottom bar")
+            onBottomBarVisibilityChange(false)
+        } else {
+            Log.d(TAG, "Search: Scrolling stopped - showing bottom bar")
+            onBottomBarVisibilityChange(true)
+        }
     }
 
     // Observe grid view mode changes to update the UI immediately

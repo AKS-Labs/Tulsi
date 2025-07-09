@@ -9,6 +9,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
@@ -253,9 +254,10 @@ fun MainAppBottomBar(
  * based on scroll state. Designed for Material Design animation principles.
  *
  * Features:
- * - Smooth scale animation with Material Design curves
- * - Fade effect for better visual feedback
- * - Performance optimized with proper animation specs
+ * - Responsive scale animation with FastOutLinearInEasing for immediate feedback
+ * - Optimized fade effect with high visibility (alpha 0.75) when shrunk
+ * - Fast animation timing (200ms scale, 180ms alpha) for modern UX
+ * - Performance optimized with hardware acceleration
  * - Maintains navigation functionality during animations
  */
 @Composable
@@ -265,31 +267,27 @@ fun AnimatedBottomNavigationBar(
     selectedItemsList: SnapshotStateList<MediaStoreData>,
     isVisible: Boolean = true
 ) {
-    Log.d(TAG, "AnimatedBottomNavigationBar: isVisible=$isVisible")
-
-    // Animate scale with smooth Material Design curves
-    // Uses FastOutSlowInEasing for natural motion that feels responsive
+    // Animate scale with responsive Material Design curves
+    // Uses FastOutLinearInEasing for immediate response and smooth deceleration
     val scale by animateFloatAsState(
         targetValue = if (isVisible) 1f else 0.75f, // Slightly less aggressive shrinking
         animationSpec = tween(
-            durationMillis = 280, // Slightly faster for better responsiveness
-            easing = FastOutSlowInEasing
+            durationMillis = 200, // Faster for immediate responsiveness
+            easing = FastOutLinearInEasing // More responsive curve
         ),
         label = "bottomBarScale"
     )
 
-    // Animate alpha for fade effect
-    // Separate timing for alpha creates layered animation effect
+    // Animate alpha for fade effect with better visibility
+    // Higher minimum alpha ensures bottom bar remains clearly visible when shrunk
     val alpha by animateFloatAsState(
-        targetValue = if (isVisible) 1f else 0.4f, // More visible when hidden for better UX
+        targetValue = if (isVisible) 1f else 0.75f, // Much more visible when hidden (0.4 -> 0.75)
         animationSpec = tween(
-            durationMillis = 220, // Faster alpha transition
-            easing = FastOutSlowInEasing
+            durationMillis = 180, // Even faster alpha transition for immediate feedback
+            easing = FastOutLinearInEasing // Consistent responsive curve
         ),
         label = "bottomBarAlpha"
     )
-
-    Log.d(TAG, "AnimatedBottomNavigationBar: scale=$scale, alpha=$alpha")
 
     // Apply transformations to the bottom bar
     // Using graphicsLayer for hardware acceleration

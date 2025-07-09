@@ -262,25 +262,18 @@ fun AlbumsGridView(
         }
 
         // Bottom bar scroll detection for albums screen
-        var lastScrollIndex by remember { mutableStateOf(0) }
-        LaunchedEffect(lazyGridState.firstVisibleItemIndex) {
-            val currentIndex = lazyGridState.firstVisibleItemIndex
-            Log.d(BOTTOM_BAR_TAG, "Albums: LaunchedEffect triggered - firstVisibleItemIndex=$currentIndex")
-            Log.d(BOTTOM_BAR_TAG, "Albums: Scroll detected - currentIndex=$currentIndex, lastIndex=$lastScrollIndex")
+        LaunchedEffect(lazyGridState.isScrollInProgress) {
+            val isScrolling = lazyGridState.isScrollInProgress
+            Log.d(BOTTOM_BAR_TAG, "Albums: Scroll state changed - isScrollInProgress=$isScrolling")
 
-            // Handle bottom bar scroll visibility for albums screen
-            Log.d(BOTTOM_BAR_TAG, "Albums: Calling handleBottomBarScrollVisibilityChange")
-            handleBottomBarScrollVisibilityChange(
-                currentIndex = currentIndex,
-                lastScrollIndex = lastScrollIndex,
-                scrollThreshold = 1, // Slight threshold for albums screen
-                onBottomBarVisibilityChange = { visible ->
-                    Log.d(BOTTOM_BAR_TAG, "Albums: Bottom bar visibility callback - visible=$visible")
-                    onBottomBarVisibilityChange(visible)
-                }
-            )
-
-            lastScrollIndex = currentIndex
+            // Bottom bar logic: hide while scrolling, show when stopped
+            if (isScrolling) {
+                Log.d(BOTTOM_BAR_TAG, "Albums: Scrolling started - hiding bottom bar")
+                onBottomBarVisibilityChange(false)
+            } else {
+                Log.d(BOTTOM_BAR_TAG, "Albums: Scrolling stopped - showing bottom bar")
+                onBottomBarVisibilityChange(true)
+            }
         }
 
         SortModeHeader(

@@ -1159,19 +1159,22 @@ class MainActivity : ComponentActivity() {
                                         }
                                     )
 
-                                    // Handle bottom bar scroll visibility for album screen
-                                    Log.d(TAG, "Custom Album: Calling handleBottomBarScrollVisibilityChange")
-                                    handleBottomBarScrollVisibilityChange(
-                                        currentIndex = currentIndex,
-                                        lastScrollIndex = albumLastScrollIndex,
-                                        scrollThreshold = 0, // Immediate hiding for smooth animation
-                                        onBottomBarVisibilityChange = { visible ->
-                                            Log.d(TAG, "Custom Album: Bottom bar visibility callback - visible=$visible, previous=$isBottomBarVisible")
-                                            isBottomBarVisible = visible
-                                        }
-                                    )
-
                                     albumLastScrollIndex = currentIndex
+                                }
+
+                                // Monitor scroll state for bottom bar animations (separate from index changes)
+                                LaunchedEffect(sharedGridState.isScrollInProgress) {
+                                    val isScrolling = sharedGridState.isScrollInProgress
+                                    Log.d(TAG, "Custom Album: Scroll state changed - isScrollInProgress=$isScrolling")
+
+                                    // Bottom bar logic: hide while scrolling, show when stopped
+                                    if (isScrolling) {
+                                        Log.d(TAG, "Custom Album: Scrolling started - hiding bottom bar")
+                                        isBottomBarVisible = false
+                                    } else {
+                                        Log.d(TAG, "Custom Album: Scrolling stopped - showing bottom bar")
+                                        isBottomBarVisible = true
+                                    }
                                 }
 
                                 PhotoGrid(
@@ -1226,19 +1229,22 @@ class MainActivity : ComponentActivity() {
                                         }
                                     )
 
-                                    // Handle bottom bar scroll visibility for gallery screen
-                                    Log.d(TAG, "Gallery: Calling handleBottomBarScrollVisibilityChange")
-                                    handleBottomBarScrollVisibilityChange(
-                                        currentIndex = currentIndex,
-                                        lastScrollIndex = photosLastScrollIndex,
-                                        scrollThreshold = 0, // Immediate hiding for smooth animation
-                                        onBottomBarVisibilityChange = { visible ->
-                                            Log.d(TAG, "Gallery: Bottom bar visibility callback - visible=$visible, previous=$isBottomBarVisible")
-                                            isBottomBarVisible = visible
-                                        }
-                                    )
-
                                     photosLastScrollIndex = currentIndex
+                                }
+
+                                // Monitor scroll state for bottom bar animations (separate from index changes)
+                                LaunchedEffect(sharedGridState.isScrollInProgress) {
+                                    val isScrolling = sharedGridState.isScrollInProgress
+                                    Log.d(TAG, "Gallery: Scroll state changed - isScrollInProgress=$isScrolling")
+
+                                    // Bottom bar logic: hide while scrolling, show when stopped
+                                    if (isScrolling) {
+                                        Log.d(TAG, "Gallery: Scrolling started - hiding bottom bar")
+                                        isBottomBarVisible = false
+                                    } else {
+                                        Log.d(TAG, "Gallery: Scrolling stopped - showing bottom bar")
+                                        isBottomBarVisible = true
+                                    }
                                 }
 
                                 PhotoGrid(
