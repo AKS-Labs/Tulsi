@@ -32,51 +32,74 @@ One-tap Google Lens integration for object identification, text translation, and
 
 ## 🚀 Key Features
 
-<table>
-<tr>
-<td width="50%">
+<div align="center">
 
 ### 🔍 **AI-Powered Text Search**
-- **Offline OCR Engine** - Find photos by text content using Google ML Kit
-- **Multi-Language Support** - Latin scripts (English, Spanish, French, German, Italian, Portuguese+) + Devanagari scripts (Hindi, Marathi, Nepali, Sanskrit+)
-- **Background Processing** - OCR continues with WorkManager even when app is closed
-- **Full-Text Search** - Lightning-fast search through extracted text using SQLite FTS
-- **Real-Time Progress** - Live progress updates with dismissible notifications
+*Find any photo instantly with offline OCR intelligence*
 
-### ✨ **Text Selection Mode**
-- **OCR-Detected Regions** - Text areas automatically highlighted as selectable overlays
-- **Native Android Experience** - Word boundaries, sentence selection, context menus
-- **Drag & Tap Selection** - Intuitive selection with semi-transparent highlighting
-- **Multi-Row Intelligence** - Smart selection across text rows following reading order
-- **Context Actions** - Copy, Select All, View All Text, and Web Search
+</div>
 
-### 🎨 **Beautiful Interface**
-- **Dynamic Status Bar** - Automatically hides during photo browsing for immersive experience
-- **Floating Navigation** - Elegant bottom app bar with smooth shrink animations
-- **Material Design 3** - Modern pill-shaped panels with smooth transitions
+| Feature | Description |
+|---------|-------------|
+| **🤖 Offline OCR Engine** | Find photos by text content using Google ML Kit - completely offline |
+| **🌍 Multi-Language Support** | Latin scripts (English, Spanish, French, German, Italian, Portuguese+) + Devanagari scripts (Hindi, Marathi, Nepali, Sanskrit+) |
+| **⚡ Background Processing** | OCR continues with WorkManager even when app is closed |
+| **🔍 Full-Text Search** | Lightning-fast search through extracted text using SQLite FTS |
+| **📊 Real-Time Progress** | Live progress updates with dismissible notifications |
 
-</td>
-<td width="50%">
+---
 
-- **Intuitive Layout** - Three-column grid with configurable date grouping
-- **Dark/Light Themes** - Adapts to your system preference
+<div align="center">
 
-### 📱 **Smart Integration**
-- **Google Lens** - One-tap visual search and object identification
-- **Quick Actions** - Copy, share, edit with seamless workflows
-- **Secure Vault** - Encrypted storage for private photos
-- **Album Management** - Flexible organization with drag selection support
-- **Cross-Platform** - Works seamlessly across different Android devices
+### ✨ **Interactive Text Selection**
+*Select and copy text directly from your photos with precision*
 
-### 🔒 **Privacy-First**
-- **100% Offline Processing** - All OCR and AI features run completely on your device
-- **Zero Data Collection** - No telemetry, analytics, or data transmission
-- **Open Source** - Fully transparent and auditable code under GPL v3.0
-- **Battery Optimized** - Efficient processing that respects device resources
+</div>
 
-</td>
-</tr>
-</table>
+| Feature | Description |
+|---------|-------------|
+| **🎯 OCR-Detected Regions** | Text areas automatically highlighted as selectable overlays |
+| **📱 Native Android Experience** | Word boundaries, sentence selection, context menus |
+| **👆 Drag & Tap Selection** | Intuitive selection with semi-transparent highlighting |
+| **📖 Multi-Row Intelligence** | Smart selection across text rows following reading order |
+| **⚙️ Context Actions** | Copy, Select All, View All Text, and Web Search |
+
+---
+
+<div align="center">
+
+### 🎨 **Premium User Experience**
+*Beautiful design that gets out of your way*
+
+</div>
+
+| Feature | Description |
+|---------|-------------|
+| **🌟 Dynamic Status Bar** | Automatically hides during photo browsing for immersive experience |
+| **🎈 Floating Navigation** | Elegant bottom app bar with smooth shrink animations |
+| **💎 Material Design 3** | Modern pill-shaped panels with smooth transitions |
+| **🎨 Intuitive Layout** | Three-column grid with configurable date grouping |
+| **🌙 Dark/Light Themes** | Adapts to your system preference automatically |
+
+---
+
+<div align="center">
+
+### 📱 **Smart Integration & Privacy**
+*Powerful features that respect your privacy*
+
+</div>
+
+| Feature | Description |
+|---------|-------------|
+| **🔍 Google Lens Integration** | One-tap visual search and object identification |
+| **⚡ Quick Actions** | Copy, share, edit with seamless workflows |
+| **🔒 Secure Vault** | Encrypted storage for private photos |
+| **📁 Album Management** | Flexible organization with drag selection support |
+| **🛡️ 100% Offline Processing** | All OCR and AI features run completely on your device |
+| **🚫 Zero Data Collection** | No telemetry, analytics, or data transmission |
+| **📖 Open Source** | Fully transparent and auditable code under GPL v3.0 |
+| **🔋 Battery Optimized** | Efficient processing that respects device resources |
 
 ## 💡 Perfect For
 
