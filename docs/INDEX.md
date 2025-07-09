@@ -53,7 +53,7 @@ tulsi/
 ├── app/                     # 📱 Android app source code
 ├── fastlane/               # 🚀 CI/CD and deployment
 ├── fdroiddata/             # 📦 F-Droid packaging
-├── scripts/                # 🔧 Build and utility scripts
+├── scripts/                # 🔧 Build and utility scripts (build.sh, fix_packages.ps1, etc.)
 ├── assets/                 # 🎨 Project assets
 └── gradle/                 # 🏗️ Gradle build configuration
 ```
