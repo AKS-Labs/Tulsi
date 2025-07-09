@@ -32,74 +32,46 @@ One-tap Google Lens integration for object identification, text translation, and
 
 ## 🚀 Key Features
 
-<div align="center">
+<table>
+<tr>
+<td width="50%">
 
 ### 🔍 **AI-Powered Text Search**
-*Find any photo instantly with offline OCR intelligence*
-
-</div>
-
-| Feature | Description |
-|---------|-------------|
-| **🤖 Offline OCR Engine** | Find photos by text content using Google ML Kit - completely offline |
-| **🌍 Multi-Language Support** | Latin scripts (English, Spanish, French, German, Italian, Portuguese+) + Devanagari scripts (Hindi, Marathi, Nepali, Sanskrit+) |
-| **⚡ Background Processing** | OCR continues with WorkManager even when app is closed |
-| **🔍 Full-Text Search** | Lightning-fast search through extracted text using SQLite FTS |
-| **📊 Real-Time Progress** | Live progress updates with dismissible notifications |
-
----
-
-<div align="center">
+- **🤖 Offline OCR** - Find photos by text content using ML Kit
+- **🌍 Multi-Language** - Latin + Devanagari scripts (80+ languages)
+- **⚡ Background Processing** - Continues even when app is closed
+- **🔍 Full-Text Search** - Lightning-fast SQLite FTS search
+- **📊 Real-Time Progress** - Live updates with notifications
 
 ### ✨ **Interactive Text Selection**
-*Select and copy text directly from your photos with precision*
+- **🎯 OCR Regions** - Auto-highlighted selectable text areas
+- **📱 Native Experience** - Word boundaries, context menus
+- **👆 Drag & Tap** - Intuitive selection with highlighting
+- **📖 Multi-Row Smart** - Intelligent cross-row selection
+- **⚙️ Context Actions** - Copy, Select All, Web Search
 
-</div>
+</td>
+<td width="50%">
 
-| Feature | Description |
-|---------|-------------|
-| **🎯 OCR-Detected Regions** | Text areas automatically highlighted as selectable overlays |
-| **📱 Native Android Experience** | Word boundaries, sentence selection, context menus |
-| **👆 Drag & Tap Selection** | Intuitive selection with semi-transparent highlighting |
-| **📖 Multi-Row Intelligence** | Smart selection across text rows following reading order |
-| **⚙️ Context Actions** | Copy, Select All, View All Text, and Web Search |
+### 🎨 **Premium Experience**
+- **🌟 Dynamic Status Bar** - Auto-hide for immersive browsing
+- **🎈 Floating Navigation** - Smooth shrink animations
+- **💎 Material Design 3** - Modern pill-shaped panels
+- **🎨 Smart Layout** - 3-column grid with date grouping
+- **🌙 Adaptive Themes** - Auto dark/light mode
 
----
+### 📱 **Smart & Secure**
+- **🔍 Google Lens** - One-tap visual search
+- **⚡ Quick Actions** - Copy, share, edit workflows
+- **🔒 Secure Vault** - Encrypted private storage
+- **📁 Album Management** - Drag selection support
+- **🛡️ 100% Offline** - All processing on your device
+- **🚫 Zero Tracking** - No data collection or transmission
+- **📖 Open Source** - GPL v3.0 transparent code
 
-<div align="center">
-
-### 🎨 **Premium User Experience**
-*Beautiful design that gets out of your way*
-
-</div>
-
-| Feature | Description |
-|---------|-------------|
-| **🌟 Dynamic Status Bar** | Automatically hides during photo browsing for immersive experience |
-| **🎈 Floating Navigation** | Elegant bottom app bar with smooth shrink animations |
-| **💎 Material Design 3** | Modern pill-shaped panels with smooth transitions |
-| **🎨 Intuitive Layout** | Three-column grid with configurable date grouping |
-| **🌙 Dark/Light Themes** | Adapts to your system preference automatically |
-
----
-
-<div align="center">
-
-### 📱 **Smart Integration & Privacy**
-*Powerful features that respect your privacy*
-
-</div>
-
-| Feature | Description |
-|---------|-------------|
-| **🔍 Google Lens Integration** | One-tap visual search and object identification |
-| **⚡ Quick Actions** | Copy, share, edit with seamless workflows |
-| **🔒 Secure Vault** | Encrypted storage for private photos |
-| **📁 Album Management** | Flexible organization with drag selection support |
-| **🛡️ 100% Offline Processing** | All OCR and AI features run completely on your device |
-| **🚫 Zero Data Collection** | No telemetry, analytics, or data transmission |
-| **📖 Open Source** | Fully transparent and auditable code under GPL v3.0 |
-| **🔋 Battery Optimized** | Efficient processing that respects device resources |
+</td>
+</tr>
+</table>
 
 ## 💡 Perfect For
 
