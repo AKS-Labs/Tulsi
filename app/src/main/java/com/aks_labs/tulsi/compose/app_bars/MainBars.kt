@@ -6,6 +6,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
@@ -38,6 +41,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
@@ -75,6 +79,9 @@ import com.aks_labs.tulsi.mediastore.MediaType
 import com.aks_labs.tulsi.ui.theme.PacificoFont
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import android.util.Log
+
+private const val TAG = "BOTTOM_BAR_ANIMATION"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -238,6 +245,69 @@ fun MainAppBottomBar(
                 )
             }
         }
+    }
+}
+
+/**
+ * Animated wrapper for MainAppBottomBar that provides smooth shrinking/expanding animations
+ * based on scroll state. Designed for Material Design animation principles.
+ *
+ * Features:
+ * - Smooth scale animation with Material Design curves
+ * - Fade effect for better visual feedback
+ * - Performance optimized with proper animation specs
+ * - Maintains navigation functionality during animations
+ */
+@Composable
+fun AnimatedBottomNavigationBar(
+    currentView: MutableState<BottomBarTab>,
+    tabs: List<BottomBarTab>,
+    selectedItemsList: SnapshotStateList<MediaStoreData>,
+    isVisible: Boolean = true
+) {
+    Log.d(TAG, "AnimatedBottomNavigationBar: isVisible=$isVisible")
+
+    // Animate scale with smooth Material Design curves
+    // Uses FastOutSlowInEasing for natural motion that feels responsive
+    val scale by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0.75f, // Slightly less aggressive shrinking
+        animationSpec = tween(
+            durationMillis = 280, // Slightly faster for better responsiveness
+            easing = FastOutSlowInEasing
+        ),
+        label = "bottomBarScale"
+    )
+
+    // Animate alpha for fade effect
+    // Separate timing for alpha creates layered animation effect
+    val alpha by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0.4f, // More visible when hidden for better UX
+        animationSpec = tween(
+            durationMillis = 220, // Faster alpha transition
+            easing = FastOutSlowInEasing
+        ),
+        label = "bottomBarAlpha"
+    )
+
+    Log.d(TAG, "AnimatedBottomNavigationBar: scale=$scale, alpha=$alpha")
+
+    // Apply transformations to the bottom bar
+    // Using graphicsLayer for hardware acceleration
+    Box(
+        modifier = Modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                this.alpha = alpha
+                // Add slight translation for more natural shrinking effect
+                translationY = if (!isVisible) 8.dp.toPx() else 0f
+            }
+    ) {
+        MainAppBottomBar(
+            currentView = currentView,
+            tabs = tabs,
+            selectedItemsList = selectedItemsList
+        )
     }
 }
 

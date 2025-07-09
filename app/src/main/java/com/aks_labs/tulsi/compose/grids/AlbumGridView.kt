@@ -95,16 +95,19 @@ import com.aks_labs.tulsi.mediastore.MediaStoreData
 import com.aks_labs.tulsi.mediastore.signature
 import com.aks_labs.tulsi.models.album_grid.AlbumsViewModel
 import com.aks_labs.tulsi.models.album_grid.AlbumsViewModelFactory
+import com.aks_labs.tulsi.compose.utils.handleBottomBarScrollVisibilityChange
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 private const val TAG = "ALBUMS_GRID_VIEW"
+private const val BOTTOM_BAR_TAG = "BOTTOM_BAR_ANIMATION"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlbumsGridView(
-    currentView: MutableState<BottomBarTab>
+    currentView: MutableState<BottomBarTab>,
+    onBottomBarVisibilityChange: (Boolean) -> Unit = {}
 ) {
     val context = LocalContext.current
     val navController = LocalNavController.current
@@ -256,6 +259,28 @@ fun AlbumsGridView(
         LaunchedEffect(lazyGridState.isScrollInProgress) {
             if (lazyGridState.isScrollInProgress && lazyGridState.canScrollBackward) lockHeader =
                 false
+        }
+
+        // Bottom bar scroll detection for albums screen
+        var lastScrollIndex by remember { mutableStateOf(0) }
+        LaunchedEffect(lazyGridState.firstVisibleItemIndex) {
+            val currentIndex = lazyGridState.firstVisibleItemIndex
+            Log.d(BOTTOM_BAR_TAG, "Albums: LaunchedEffect triggered - firstVisibleItemIndex=$currentIndex")
+            Log.d(BOTTOM_BAR_TAG, "Albums: Scroll detected - currentIndex=$currentIndex, lastIndex=$lastScrollIndex")
+
+            // Handle bottom bar scroll visibility for albums screen
+            Log.d(BOTTOM_BAR_TAG, "Albums: Calling handleBottomBarScrollVisibilityChange")
+            handleBottomBarScrollVisibilityChange(
+                currentIndex = currentIndex,
+                lastScrollIndex = lastScrollIndex,
+                scrollThreshold = 1, // Slight threshold for albums screen
+                onBottomBarVisibilityChange = { visible ->
+                    Log.d(BOTTOM_BAR_TAG, "Albums: Bottom bar visibility callback - visible=$visible")
+                    onBottomBarVisibilityChange(visible)
+                }
+            )
+
+            lastScrollIndex = currentIndex
         }
 
         SortModeHeader(

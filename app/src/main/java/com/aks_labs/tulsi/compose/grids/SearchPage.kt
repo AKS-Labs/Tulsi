@@ -71,6 +71,7 @@ import com.aks_labs.tulsi.compose.components.SearchBar
 import com.aks_labs.tulsi.compose.utils.DynamicStatusBarController
 import com.aks_labs.tulsi.compose.utils.ScrollVisibilityState
 import com.aks_labs.tulsi.compose.utils.handleScrollVisibilityChange
+import com.aks_labs.tulsi.compose.utils.handleBottomBarScrollVisibilityChange
 import com.aks_labs.tulsi.database.MediaDatabase
 import com.aks_labs.tulsi.database.Migration3to4
 import com.aks_labs.tulsi.database.Migration4to5
@@ -98,11 +99,14 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+private const val TAG = "BOTTOM_BAR_ANIMATION"
+
 @Composable
 fun SearchPage(
     selectedItemsList: SnapshotStateList<MediaStoreData>,
     currentView: MutableState<BottomBarTab>,
-    onTopBarVisibilityChange: (Boolean) -> Unit = {}
+    onTopBarVisibilityChange: (Boolean) -> Unit = {},
+    onBottomBarVisibilityChange: (Boolean) -> Unit = {}
 ) {
     val searchViewModel: SearchViewModel = viewModel(
         factory = SearchViewModelFactory(LocalContext.current, MediaItemSortMode.DateTaken)
@@ -143,6 +147,8 @@ fun SearchPage(
     // Monitor scroll state for auto-hide functionality
     LaunchedEffect(gridState.firstVisibleItemIndex) {
         val currentIndex = gridState.firstVisibleItemIndex
+        Log.d(TAG, "Search: LaunchedEffect triggered - firstVisibleItemIndex=$currentIndex")
+        Log.d(TAG, "Search: Scroll detected - currentIndex=$currentIndex, lastIndex=$lastScrollIndex")
 
         // Handle scroll visibility changes for both app bar and status bar
         handleScrollVisibilityChange(
@@ -156,6 +162,18 @@ fun SearchPage(
                 if (!newState.isAppBarVisible || currentIndex != lastScrollIndex) {
                     showFilterDropdown = false
                 }
+            }
+        )
+
+        // Handle bottom bar scroll visibility for search screen
+        Log.d(TAG, "Search: Calling handleBottomBarScrollVisibilityChange")
+        handleBottomBarScrollVisibilityChange(
+            currentIndex = currentIndex,
+            lastScrollIndex = lastScrollIndex,
+            scrollThreshold = 1, // Slight threshold for search screen to avoid too sensitive hiding
+            onBottomBarVisibilityChange = { visible ->
+                Log.d(TAG, "Search: Bottom bar visibility callback - visible=$visible")
+                onBottomBarVisibilityChange(visible)
             }
         )
 

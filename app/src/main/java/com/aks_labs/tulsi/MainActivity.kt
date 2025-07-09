@@ -105,6 +105,7 @@ import com.aks_labs.tulsi.compose.ErrorPage
 import com.aks_labs.tulsi.compose.LockedFolderEntryView
 import com.aks_labs.tulsi.compose.PermissionHandler
 import com.aks_labs.tulsi.compose.ViewProperties
+import com.aks_labs.tulsi.compose.app_bars.AnimatedBottomNavigationBar
 import com.aks_labs.tulsi.compose.app_bars.MainAppBottomBar
 import com.aks_labs.tulsi.compose.app_bars.MainAppSelectingBottomBar
 import com.aks_labs.tulsi.compose.app_bars.MainAppTopBar
@@ -113,6 +114,7 @@ import com.aks_labs.tulsi.compose.app_bars.setBarVisibility
 import com.aks_labs.tulsi.compose.utils.DynamicStatusBarController
 import com.aks_labs.tulsi.compose.utils.ScrollVisibilityState
 import com.aks_labs.tulsi.compose.utils.handleScrollVisibilityChange
+import com.aks_labs.tulsi.compose.utils.handleBottomBarScrollVisibilityChange
 import com.aks_labs.tulsi.compose.dialogs.MainAppDialog
 import com.aks_labs.tulsi.compose.grids.AlbumsGridView
 import com.aks_labs.tulsi.compose.grids.FavouritesGridView
@@ -216,6 +218,7 @@ class MainActivity : ComponentActivity() {
     companion object {
         lateinit var applicationDatabase: MediaDatabase
         lateinit var mainViewModel: MainViewModel
+        private const val TAG = "BOTTOM_BAR_ANIMATION"
     }
 
     private lateinit var mediaContentObserver: MediaContentObserver
@@ -968,6 +971,26 @@ class MainActivity : ComponentActivity() {
         var albumScrollVisibilityState by remember { mutableStateOf(ScrollVisibilityState()) }
         var albumLastScrollIndex by remember { mutableStateOf(0) }
 
+        // Bottom bar visibility state for scroll-based animations
+        var isBottomBarVisible by remember { mutableStateOf(true) }
+
+        // Log initial state
+        Log.d(TAG, "MainActivity: Initial isBottomBarVisible = $isBottomBarVisible")
+
+        // Log state changes
+        LaunchedEffect(isBottomBarVisible) {
+            Log.d(TAG, "MainActivity: isBottomBarVisible changed to $isBottomBarVisible")
+        }
+
+        // Reset bottom bar visibility when switching to secure screen
+        LaunchedEffect(currentView.value) {
+            Log.d(TAG, "MainActivity: Current view changed to ${currentView.value.name}")
+            if (currentView.value == DefaultTabs.TabTypes.secure) {
+                Log.d(TAG, "MainActivity: Switching to secure screen - forcing bottom bar visible")
+                isBottomBarVisible = true
+            }
+        }
+
         // Create scroll behavior for smooth top app bar animations
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
@@ -1045,7 +1068,8 @@ class MainActivity : ComponentActivity() {
                 BottomBar(
                     currentView = currentView,
                     selectedItemsList = selectedItemsList,
-                    tabs = tabList
+                    tabs = tabList,
+                    isBottomBarVisible = isBottomBarVisible
                 )
             },
             containerColor = Color.Transparent,
@@ -1120,6 +1144,8 @@ class MainActivity : ComponentActivity() {
                                 // Monitor scroll state for custom album page auto-hide functionality
                                 LaunchedEffect(sharedGridState.firstVisibleItemIndex) {
                                     val currentIndex = sharedGridState.firstVisibleItemIndex
+                                    Log.d(TAG, "Custom Album: LaunchedEffect triggered - firstVisibleItemIndex=$currentIndex")
+                                    Log.d(TAG, "Custom Album: Scroll detected - currentIndex=$currentIndex, lastIndex=$albumLastScrollIndex")
 
                                     // Handle scroll visibility changes for both app bar and status bar
                                     // Use immediate response for album pages like Photos screen
@@ -1130,6 +1156,18 @@ class MainActivity : ComponentActivity() {
                                         onVisibilityChange = { newState ->
                                             albumScrollVisibilityState = newState
                                             isTopBarVisible = newState.isAppBarVisible
+                                        }
+                                    )
+
+                                    // Handle bottom bar scroll visibility for album screen
+                                    Log.d(TAG, "Custom Album: Calling handleBottomBarScrollVisibilityChange")
+                                    handleBottomBarScrollVisibilityChange(
+                                        currentIndex = currentIndex,
+                                        lastScrollIndex = albumLastScrollIndex,
+                                        scrollThreshold = 0, // Immediate hiding for smooth animation
+                                        onBottomBarVisibilityChange = { visible ->
+                                            Log.d(TAG, "Custom Album: Bottom bar visibility callback - visible=$visible, previous=$isBottomBarVisible")
+                                            isBottomBarVisible = visible
                                         }
                                     )
 
@@ -1173,6 +1211,8 @@ class MainActivity : ComponentActivity() {
                                 // Monitor scroll state for photos page auto-hide functionality
                                 LaunchedEffect(sharedGridState.firstVisibleItemIndex) {
                                     val currentIndex = sharedGridState.firstVisibleItemIndex
+                                    Log.d(TAG, "Gallery: LaunchedEffect triggered - firstVisibleItemIndex=$currentIndex")
+                                    Log.d(TAG, "Gallery: Scroll detected - currentIndex=$currentIndex, lastIndex=$photosLastScrollIndex")
 
                                     // Handle scroll visibility changes for both app bar and status bar
                                     // Use immediate response (threshold = 0) for Photos screen since it has no search bar
@@ -1183,6 +1223,18 @@ class MainActivity : ComponentActivity() {
                                         onVisibilityChange = { newState ->
                                             photosScrollVisibilityState = newState
                                             isTopBarVisible = newState.isAppBarVisible
+                                        }
+                                    )
+
+                                    // Handle bottom bar scroll visibility for gallery screen
+                                    Log.d(TAG, "Gallery: Calling handleBottomBarScrollVisibilityChange")
+                                    handleBottomBarScrollVisibilityChange(
+                                        currentIndex = currentIndex,
+                                        lastScrollIndex = photosLastScrollIndex,
+                                        scrollThreshold = 0, // Immediate hiding for smooth animation
+                                        onBottomBarVisibilityChange = { visible ->
+                                            Log.d(TAG, "Gallery: Bottom bar visibility callback - visible=$visible, previous=$isBottomBarVisible")
+                                            isBottomBarVisible = visible
                                         }
                                     )
 
@@ -1203,7 +1255,12 @@ class MainActivity : ComponentActivity() {
                             )
 
                             stateValue == DefaultTabs.TabTypes.albums -> {
-                                AlbumsGridView(currentView)
+                                AlbumsGridView(
+                                    currentView = currentView,
+                                    onBottomBarVisibilityChange = { visible ->
+                                        isBottomBarVisible = visible
+                                    }
+                                )
                             }
 
                             stateValue == DefaultTabs.TabTypes.search -> {
@@ -1214,6 +1271,9 @@ class MainActivity : ComponentActivity() {
                                     currentView = currentView,
                                     onTopBarVisibilityChange = { visible ->
                                         isTopBarVisible = visible
+                                    },
+                                    onBottomBarVisibilityChange = { visible ->
+                                        isBottomBarVisible = visible
                                     }
                                 )
                             }
@@ -1263,8 +1323,11 @@ class MainActivity : ComponentActivity() {
     private fun BottomBar(
         currentView: MutableState<BottomBarTab>,
         tabs: List<BottomBarTab>,
-        selectedItemsList: SnapshotStateList<MediaStoreData>
+        selectedItemsList: SnapshotStateList<MediaStoreData>,
+        isBottomBarVisible: Boolean = true
     ) {
+        Log.d(TAG, "BottomBar: isBottomBarVisible=$isBottomBarVisible")
+
         val navController = LocalNavController.current
         val show by remember {
             derivedStateOf {
@@ -1281,10 +1344,11 @@ class MainActivity : ComponentActivity() {
             modifier = Modifier.background(Color.Transparent)
         ) { state ->
             if (!state) {
-                MainAppBottomBar(
+                AnimatedBottomNavigationBar(
                     currentView = currentView,
                     tabs = tabs,
-                    selectedItemsList = selectedItemsList
+                    selectedItemsList = selectedItemsList,
+                    isVisible = isBottomBarVisible
                 )
             } else {
                 MainAppSelectingBottomBar(selectedItemsList)

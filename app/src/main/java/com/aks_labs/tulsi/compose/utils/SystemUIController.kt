@@ -2,6 +2,7 @@ package com.aks_labs.tulsi.compose.utils
 
 import android.app.Activity
 import android.os.Build
+import android.util.Log
 import android.view.View
 import android.view.WindowInsetsController
 import androidx.activity.ComponentActivity
@@ -17,6 +18,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+
+private const val TAG = "BOTTOM_BAR_ANIMATION"
 
 /**
  * Controller for managing system UI visibility and styling
@@ -124,11 +127,12 @@ fun DynamicStatusBarController(
 }
 
 /**
- * Enhanced scroll behavior that tracks both app bar and status bar visibility
+ * Enhanced scroll behavior that tracks app bar, status bar, and bottom bar visibility
  */
 data class ScrollVisibilityState(
     val isAppBarVisible: Boolean = true,
-    val isStatusBarVisible: Boolean = true
+    val isStatusBarVisible: Boolean = true,
+    val isBottomBarVisible: Boolean = true
 ) {
     /**
      * Create a new state with updated app bar visibility
@@ -140,24 +144,35 @@ data class ScrollVisibilityState(
             isStatusBarVisible = visible
         )
     }
-    
+
     /**
-     * Create a new state for immersive mode (both bars hidden)
+     * Create a new state with updated bottom bar visibility
+     */
+    fun withBottomBarVisibility(visible: Boolean): ScrollVisibilityState {
+        return copy(
+            isBottomBarVisible = visible
+        )
+    }
+
+    /**
+     * Create a new state for immersive mode (all bars hidden)
      */
     fun toImmersiveMode(): ScrollVisibilityState {
         return copy(
             isAppBarVisible = false,
-            isStatusBarVisible = false
+            isStatusBarVisible = false,
+            isBottomBarVisible = false
         )
     }
-    
+
     /**
-     * Create a new state for normal mode (both bars visible)
+     * Create a new state for normal mode (all bars visible)
      */
     fun toNormalMode(): ScrollVisibilityState {
         return copy(
             isAppBarVisible = true,
-            isStatusBarVisible = true
+            isStatusBarVisible = true,
+            isBottomBarVisible = true
         )
     }
 }
@@ -189,5 +204,55 @@ fun handleScrollVisibilityChange(
             onVisibilityChange(ScrollVisibilityState().toImmersiveMode())
         }
         // No significant change - maintain current state
+    }
+}
+
+/**
+ * Utility function to handle scroll-based bottom bar visibility changes
+ * Specifically designed for bottom navigation bar animations with Material Design principles
+ *
+ * Features:
+ * - Smooth scroll-based hiding/showing behavior
+ * - Configurable scroll threshold for different screen types
+ * - Immediate response at top of content
+ * - Performance optimized with minimal state changes
+ *
+ * @param currentIndex Current first visible item index
+ * @param lastScrollIndex Previous first visible item index
+ * @param onBottomBarVisibilityChange Callback for visibility changes
+ * @param scrollThreshold Minimum scroll distance before hiding (0 = immediate)
+ */
+fun handleBottomBarScrollVisibilityChange(
+    currentIndex: Int,
+    lastScrollIndex: Int,
+    onBottomBarVisibilityChange: (Boolean) -> Unit,
+    scrollThreshold: Int = 1
+) {
+    Log.d(TAG, "handleBottomBarScrollVisibilityChange called: currentIndex=$currentIndex, lastScrollIndex=$lastScrollIndex, threshold=$scrollThreshold")
+
+    when {
+        // At top - always show bottom bar for better UX
+        currentIndex == 0 -> {
+            Log.d(TAG, "At top (index=0) - showing bottom bar")
+            onBottomBarVisibilityChange(true)
+        }
+        // Scrolling up - show bottom bar for content access
+        currentIndex < lastScrollIndex -> {
+            Log.d(TAG, "Scrolling up ($currentIndex < $lastScrollIndex) - showing bottom bar")
+            onBottomBarVisibilityChange(true)
+        }
+        // Scrolling down - hide bottom bar after threshold for content visibility
+        currentIndex > lastScrollIndex + scrollThreshold -> {
+            Log.d(TAG, "Scrolling down past threshold ($currentIndex > ${lastScrollIndex + scrollThreshold}) - hiding bottom bar")
+            onBottomBarVisibilityChange(false)
+        }
+        // For immediate response (threshold = 0), hide on any downward scroll
+        scrollThreshold == 0 && currentIndex > lastScrollIndex -> {
+            Log.d(TAG, "Immediate scroll down (threshold=0, $currentIndex > $lastScrollIndex) - hiding bottom bar")
+            onBottomBarVisibilityChange(false)
+        }
+        else -> {
+            Log.d(TAG, "No significant scroll change - maintaining current state")
+        }
     }
 }
