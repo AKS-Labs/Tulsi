@@ -1,1 +1,1 @@
-A sweet looking photos gallery app for android!
+AI-powered photo gallery with offline OCR text search and elegant design

@@ -1,0 +1,33 @@
+🎉 Gallery v1.1.0 - Major AI Features Update!
+
+🔍 NEW: Offline AI-Powered Text Search
+• Find photos by text content using offline OCR
+• Multi-language support: Latin + Devanagari scripts
+• Background processing even when app is closed
+• Lightning-fast full-text search results
+
+✨ NEW: Google Lens-Style Text Selection
+• OCR-detected text regions as selectable overlays
+• Native Android text selection with word boundaries
+• Drag/tap selection with context menu actions
+• Immersive mode with automatic status bar hiding
+
+🎨 Enhanced User Interface
+• Dynamic status bar hiding during photo browsing
+• Smooth shrink animations for bottom navigation
+• Improved Material Design patterns and transitions
+• Modern pill-shaped selection panels
+
+⚡ Performance & Stability
+• Robust background OCR processing with WorkManager
+• Optimized database with full-text search capabilities
+• Enhanced memory management and error handling
+• Battery-friendly smart resource usage
+
+🔧 Developer Improvements
+• Modular OCR architecture with separate language systems
+• Comprehensive text selection framework
+• Centralized system UI management
+• Extensive configuration options
+
+This update transforms Gallery into a powerful AI-enhanced photo manager while maintaining complete privacy with offline processing!
