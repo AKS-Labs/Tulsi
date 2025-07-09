@@ -2,7 +2,7 @@
   <img src="assets/images/tulsi.png" alt="Tulsi App Icon" width="180"/>
 </p>
 
-<h1 align="center">📸 Gallery</h1>
+<h1 align="center">📸 Tulsi Gallery</h1>
 
 <p align="center">
   <strong>The AI-powered gallery that finds your photos before you even remember taking them</strong>
@@ -14,21 +14,21 @@
 
 ---
 
-## ✨ What Makes Gallery Special
+## ✨ What Makes Tulsi Gallery Special
 
-**Gallery** transforms your photo collection into an intelligent, searchable library with cutting-edge AI capabilities. Built on the excellent [LavenderGallery](https://github.com/kaii-lb/LavenderPhotos) foundation, Gallery adds powerful offline OCR, text selection, and premium UI features.
+**Tulsi Gallery** transforms your photo collection into an intelligent, searchable library with cutting-edge AI capabilities. Built on the excellent [LavenderGallery](https://github.com/kaii-lb/LavenderPhotos) foundation, Tulsi Gallery adds powerful offline OCR, text selection, and premium UI features.
 
-### 🧠 **AI-Powered Text Search**
-Find any photo instantly by searching for text within it using offline OCR with multi-language support. Screenshots, documents, memes, signs - if it has text, Gallery can find it without sending data anywhere.
+### 🧠 **Smart Photo Discovery**
+Find any photo instantly by searching for text within it using offline AI. Screenshots, documents, memes, signs - if it has text, Tulsi Gallery can find it without sending data anywhere.
 
-### ✨ **Google Lens-Style Text Selection**
-Select and copy text directly from your photos with OCR-detected regions, drag selection, and native Android text handling - all working completely offline.
+### ✨ **Interactive Text Selection**
+Select and copy text directly from your photos with OCR-detected regions and native Android text handling - all working completely offline.
 
-### 🎨 **Premium Design**
-Dynamic status bar hiding, floating bottom bar with smooth shrink animations, and thoughtful Material Design make every interaction delightful.
+### 🎨 **Premium Experience**
+Immersive photo browsing with dynamic status bar hiding, floating navigation with smooth animations, and thoughtful Material Design.
 
-### 🔍 **One-Tap Google Lens**
-Identify objects, translate text, or get info about anything in your photos without leaving the app.
+### 🔍 **Integrated Visual Search**
+One-tap Google Lens integration for object identification, text translation, and instant information lookup.
 
 ## 🚀 Key Features
 
@@ -36,41 +36,42 @@ Identify objects, translate text, or get info about anything in your photos with
 <tr>
 <td width="50%">
 
-### 🔍 **Offline AI-Powered OCR**
-- **Text Recognition** - Find photos by text content using offline AI
+### 🔍 **AI-Powered Text Search**
+- **Offline OCR Engine** - Find photos by text content using Google ML Kit
 - **Multi-Language Support** - Latin scripts (English, Spanish, French, German, Italian, Portuguese) + Devanagari scripts (Hindi, Marathi, Nepali, Sanskrit)
-- **Background Processing** - OCR continues even when app is closed
-- **Instant Results** - Lightning-fast full-text search experience
-- **Smart Filters** - Search by name, date, or extracted text content
+- **Background Processing** - OCR continues with WorkManager even when app is closed
+- **Full-Text Search** - Lightning-fast search through extracted text using SQLite FTS
+- **Real-Time Progress** - Live progress updates with dismissible notifications
 
-### 🎨 **Beautiful Interface**
-- **Dynamic Status Bar** - Automatically hides during photo browsing for immersive experience
-- **Floating Navigation** - Elegant bottom app bar with smooth shrink animations
-- **Smooth Animations** - Buttery-smooth transitions with Material Design patterns
-- **Intuitive Layout** - Three-column grid with configurable date grouping
-- **Dark/Light Themes** - Adapts to your system preference
+### ✨ **Text Selection Mode**
+- **OCR-Detected Regions** - Text areas automatically highlighted as selectable overlays
+- **Native Android Experience** - Word boundaries, sentence selection, context menus
+- **Drag & Tap Selection** - Intuitive selection with semi-transparent highlighting
+- **Multi-Row Intelligence** - Smart selection across text rows following reading order
+- **Context Actions** - Copy, Select All, View All Text, and Web Search
 
 </td>
 <td width="50%">
 
-### ✨ **Text Selection Mode**
-- **OCR-Detected Regions** - Text areas automatically detected and selectable
-- **Native Selection** - Word boundary detection and sentence selection on long-press
-- **Drag/Tap Selection** - Intuitive selection with semi-transparent highlighting
-- **Context Actions** - Copy, Select All, View All Text, and Web Search
-- **Multi-Row Selection** - Smart text selection across multiple rows
+### 🎨 **Beautiful Interface**
+- **Dynamic Status Bar** - Automatically hides during photo browsing for immersive experience
+- **Floating Navigation** - Elegant bottom app bar with smooth shrink animations
+- **Material Design 3** - Modern pill-shaped panels with smooth transitions
+- **Intuitive Layout** - Three-column grid with configurable date grouping
+- **Dark/Light Themes** - Adapts to your system preference
 
 ### 📱 **Smart Integration**
 - **Google Lens** - One-tap visual search and object identification
-- **Quick Actions** - Copy, share, edit with ease
+- **Quick Actions** - Copy, share, edit with seamless workflows
 - **Secure Vault** - Encrypted storage for private photos
 - **Album Management** - Flexible organization with drag selection support
+- **Cross-Platform** - Works seamlessly across different Android devices
 
 ### 🔒 **Privacy-First**
-- **Offline Processing** - All OCR and AI features run completely on your device
-- **No Data Collection** - Zero telemetry, analytics, or data transmission
-- **Open Source** - Fully transparent and auditable code
-- **Battery Friendly** - Smart processing that respects device resources
+- **100% Offline Processing** - All OCR and AI features run completely on your device
+- **Zero Data Collection** - No telemetry, analytics, or data transmission
+- **Open Source** - Fully transparent and auditable code under GPL v3.0
+- **Battery Optimized** - Efficient processing that respects device resources
 
 </td>
 </tr>
@@ -91,75 +92,24 @@ Identify objects, translate text, or get info about anything in your photos with
 
 ---
 
-## 🧠 AI-Powered OCR & Text Selection
+## 🧠 How It Works
 
-**Turn every photo into searchable, selectable content.** Gallery's offline AI engine automatically reads text in your photos with multi-language support, making your entire collection instantly searchable and interactive without sending any data to the cloud.
+**Turn every photo into searchable, selectable content.** Tulsi Gallery's offline AI engine automatically reads text in your photos, making your entire collection instantly searchable and interactive without sending any data to the cloud.
 
-### ⚡ **How OCR Works**
+### ⚡ **Simple Process**
 1. **📸 Take Photos** - Screenshots, documents, signs, anything with text
-2. **🤖 Background Processing** - Automatic text recognition continues even when app is closed
-3. **🔍 Instant Search** - Type any word to find relevant photos with full-text search
-4. **🔒 Stay Private** - Everything happens locally on your device with zero data transmission
+2. **🤖 Auto-Processing** - Background OCR continues even when app is closed
+3. **🔍 Search & Select** - Find photos by text content or select text directly from images
+4. **🔒 Stay Private** - Everything happens locally with zero data transmission
 
-### ✨ **Text Selection Magic**
-1. **👆 Enter Selection Mode** - Tap the text selection icon or use the three-dot menu
-2. **🎯 OCR-Detected Regions** - Text areas are automatically highlighted as selectable overlays
-3. **📝 Select & Copy** - Drag to select text with native Android selection experience
-4. **🔗 Take Action** - Copy to clipboard, select all, view full text, or search the web
+### 🎯 **Perfect For**
+- **📱 Screenshots** - Find and copy info from social media, apps, or websites
+- **📄 Documents** - Locate receipts, business cards, and extract contact details
+- **🍕 Menus & Signs** - Search restaurant names, translate foreign text
+- **📚 Study Materials** - Find notes, whiteboards, textbooks and copy key information
+- **🌍 Multi-Language** - Supports Latin scripts (English, Spanish, French, German, Italian, Portuguese) and Devanagari scripts (Hindi, Marathi, Nepali, Sanskrit)
 
-### 🎯 **Use Cases**
-- **📱 Screenshots** - Find and copy important info from social media, apps, or websites
-- **📄 Documents** - Locate receipts, business cards, or handwritten notes and extract contact details
-- **🍕 Menus & Signs** - Search for restaurant names or street signs and translate foreign text
-- **📚 Study Materials** - Quickly find photos of notes, whiteboards, or textbooks and copy key information
-- **🌍 Multi-Language Content** - Process text in Latin scripts (English, Spanish, French, German, Italian, Portuguese) and Devanagari scripts (Hindi, Marathi, Nepali, Sanskrit)
-
----
-
-## 🆕 What's New in v1.1.0
-
-<div align="center">
-
-### 🎉 **Major AI Features Update**
-
-</div>
-
-<table>
-<tr>
-<td width="50%">
-
-### 🔍 **Enhanced OCR Engine**
-- **Dual Language Systems** - Independent Latin and Devanagari OCR processing
-- **Background Processing** - OCR continues with WorkManager even when app is closed
-- **Real-time Progress** - Live progress updates with dismissible notifications
-- **Full-Text Search** - Lightning-fast search through extracted text using SQLite FTS
-
-### ✨ **Text Selection Revolution**
-- **OCR-Detected Overlays** - Text regions automatically detected and selectable
-- **Native Android Experience** - Word boundaries, sentence selection, context menus
-- **Immersive Mode** - Status bar automatically hides during text selection
-- **Multi-Row Intelligence** - Smart selection across text rows following reading order
-
-</td>
-<td width="50%">
-
-### 🎨 **UI/UX Enhancements**
-- **Dynamic Status Bar** - Automatically hides during photo browsing for immersive experience
-- **Smooth Animations** - Enhanced bottom navigation with FastOutLinearInEasing curves
-- **Material Design 3** - Modern pill-shaped panels with 28dp-32dp corner radius
-- **Performance Optimized** - Efficient memory management and battery-friendly processing
-
-### 🔧 **Developer Improvements**
-- **Modular Architecture** - Separate OCR managers for different language systems
-- **Enhanced Database** - FTS-enabled database with migration support
-- **Robust Error Handling** - Comprehensive error handling for OCR failures
-- **Clean Repository** - Organized scripts directory and improved documentation
-
-</td>
-</tr>
-</table>
-
-## 📥 Download Gallery
+## 📥 Download Tulsi Gallery
 
 <p align="center">
   <a href="https://f-droid.org/packages/com.aks_labs.tulsi/">
@@ -204,7 +154,7 @@ Identify objects, translate text, or get info about anything in your photos with
 
 ## 🙏 Credits & License
 
-**Gallery** is built on [LavenderGallery](https://github.com/kaii-lb/LavenderPhotos) by [kaii-lb](https://github.com/kaii-lb). Licensed under [GPL v3.0](LICENSE).
+**Tulsi Gallery** is built on [LavenderGallery](https://github.com/kaii-lb/LavenderPhotos) by [kaii-lb](https://github.com/kaii-lb). Licensed under [GPL v3.0](LICENSE).
 
 ### 🔧 **Tech Stack**
 [Google ML Kit](https://developers.google.com/ml-kit) • [Jetpack Compose](https://developer.android.com/jetpack/compose) • [Room Database](https://developer.android.com/jetpack/androidx/releases/room) • [WorkManager](https://developer.android.com/topic/libraries/architecture/workmanager) • [Glide](https://github.com/bumptech/glide)
